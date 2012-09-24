@@ -1,0 +1,75 @@
+1. What do the members of your group have in common? What are the differences 
+between members? What are the strengths of each member?
+
+As far as commonalities are concerned, we are good friends and have known each
+other for over a year. We took several courses together and collaborated
+successfully in the past. Now in terms of differences, we have different 
+preferences in terms of work hours and coding style.
+
+Amine Sahibi: Strong Java and Design Patterns knowledge in addition to industry 
+experience and high interest in Compiler design and implementation.
+
+Dwijesh Bhageerutty: Good skills with Java and C, with experience in 
+Research at McGill. 
+
+Faiz Khan: Strong skills in Java and C. With experience in C# and GUI 
+development. 
+
+
+2.Which compiler compiler toolset do you think you will use? Why? 
+There is no need to repeat the reasons to use C / Java discussed 
+in class. Note that for the next milestone you will extend the 
+Tiny language using flex+bison, SableCC 2, and if you are feeling 
+adventurous SableCC 3 or whatever other alternative tool you wish 
+to use for your compiler instead. This is to give you some 
+experience with all toolsets and let you change your mind before 
+it is too late.
+
+We will use SableCC2 since we are using Java. SableCC3 will be used if it 
+is not considerably time consuming. 
+
+3.What problems, if any, do you anticipate in the functioning of your group?
+
+There are few problems we can anticipate in the functioning of the group. 
+During the design phase, reaching a consensus on the software architecture 
+of the compiler could be a challenge due to the differences in approaching 
+the problem. During the development phase, there might be  
+an uneven split of the workload and difficult remote collaboration at times.
+
+4.What are your plans for scheduling future group meetings?  
+
+The easiest way to schedule future group meetings is to use a weekly 
+doodle poll to have the latest member’s schedule. Quick updates can 
+occur before or after the lectures. 
+
+5.What are your plans for dividing the work? What are the roles 
+for each member? How will you ensure that every member knows how the different 
+parts of the compiler work? Describe your software development strategy.
+
+We will use a mix of workload estimate and interest to come up with an 
+even way of dividing work. Also we will keep the assignment of task 
+iterative so we can update as we further progress in the project and
+have a better understanding and time estimate of the tasks. 
+The workload will also vary based on the availability of the 
+member i.e. during illness or busy weeks other team members 
+can compensate.
+
+Roles:
+
+Amine Sahibi: Coder/Tester/Code Review
+
+Dwijesh Bhageerutty: Coder/Tester/Code Review
+
+Faiz Khan: Coder/Tester/Code Review
+
+To ensure every member knows what how the different parts of the compiler 
+work, we will try to discuss together the design of every major part before 
+implementing it. In addition, using Github we will do code reviews. This has 
+two advantages, we ensure a common coding style and while reading the code 
+we will understand how the part works.
+
+Software Development Strategy: Agile, Weekly SCRUM. There will be weekly 
+meetings about what has been accomplished and what needs to be 
+accomplished. Programming methodology will be iterative. 
+
+
