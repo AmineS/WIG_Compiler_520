@@ -1,0 +1,11 @@
+#!/bin/bash
+if [ -f result ] ; then
+ rm result
+fi
+
+#PARALIST = "cat ../testcase"
+for para in `cat ../testcases`; do
+    echo $para | java tiny.Main >> result
+done
+
+exit 0
