@@ -6,12 +6,20 @@
 extern int lineno;
 %}
 
+a [a]
+b [b]
+s [s]
+
+
 %%
 [ \t]+    /* ignore */;
 \n        lineno++;
 
 "*"       return '*';
 "/"       return '/';
+"%"       return '%';
+{a}{b}{s} return(ABS);
+"**"	  return(STARSTAR);
 "+"       return '+';
 "-"       return '-';
 "("       return '(';

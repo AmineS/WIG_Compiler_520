@@ -1,6 +1,6 @@
 #include "memory.h"
 #include "tree.h"
- 
+
 extern int lineno;
 
 EXP *makeEXPid(char *id)
@@ -39,6 +39,35 @@ EXP *makeEXPdiv(EXP *left, EXP *right)
   e->val.divE.left = left;
   e->val.divE.right = right;
   return e; 
+}
+
+EXP *makeEXPmod(EXP *left, EXP *right)
+{ EXP *e;
+  e = NEW(EXP);
+  e->lineno = lineno;
+  e->kind = modK;
+  e->val.divE.left = left;
+  e->val.divE.right = right;
+  return e; 
+}
+
+EXP *makeEXPabs(EXP *right)
+{ EXP *e;
+  e = NEW(EXP);
+  e->lineno = lineno;
+  e->kind = absK;
+  e->val.absE.right = right;
+  return e; 
+}
+
+EXP *makeEXPexpon(EXP *left, EXP *right)
+{ EXP *e;
+  e = NEW(EXP);
+  e->lineno = lineno;
+  e->kind = exponK;
+  e->val.exponE.left = left;
+  e->val.exponE.right = right;
+  return e;
 }
 
 EXP *makeEXPplus(EXP *left, EXP *right)
