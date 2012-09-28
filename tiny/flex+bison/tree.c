@@ -60,6 +60,15 @@ EXP *makeEXPabs(EXP *right)
   return e; 
 }
 
+EXP *makeEXPneg(EXP *right)
+{ EXP *e;
+  e = NEW(EXP);
+  e->lineno = lineno;
+  e->kind = negK;
+  e->val.negE.right = right;
+  return e; 
+}
+
 EXP *makeEXPexpon(EXP *left, EXP *right)
 { EXP *e;
   e = NEW(EXP);
