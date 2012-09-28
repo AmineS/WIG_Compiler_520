@@ -53,5 +53,7 @@ exp : tIDENTIFIER
       { $$ = makeEXPabs ($3); }
     | exp STARSTAR exp
       { $$ = makeEXPexpon ($1, $3); }
+    | '-' exp
+      { $$ = makeEXPneg ($2); }
 ;
 %%

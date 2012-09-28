@@ -36,6 +36,10 @@ switch (e->kind) {
          prettyEXP(e->val.absE.right);
          printf(")");
          break;
+    case negK:
+         printf("-");
+         prettyEXP(e->val.negE.right);
+         break;
     case exponK:
          printf("(");
          prettyEXP(e->val.exponE.left);
@@ -44,18 +48,18 @@ switch (e->kind) {
          printf(")");
          break;
     case plusK:
-         /*printf("(");*/
+         printf("(");
          prettyEXP(e->val.plusE.left);
          printf("+");
          prettyEXP(e->val.plusE.right);
-         /*printf(")");*/
+         printf(")");
          break;
     case minusK:
-         /*printf("(");*/
+         printf("(");
          prettyEXP(e->val.minusE.left);
          printf("-");
          prettyEXP(e->val.minusE.right);
-         /*printf(")");*/
+         printf(")");
          break;
     default:
          printf("Wrong kind");
