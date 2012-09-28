@@ -16,6 +16,6 @@ int main()
   printf("\nThe result of evaluating:\n");
   prettyEXP(theexpression);
   printf("\n");
-  printf("is: %d\n",evalEXP(theexpression));
+  prettyEXP(evalEXP(theexpression));
   return(1);
 }

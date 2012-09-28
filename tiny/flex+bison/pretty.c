@@ -1,8 +1,9 @@
 #include <stdio.h>
 #include "pretty.h"
- 
+
 void prettyEXP(EXP *e)
-{ switch (e->kind) {
+{
+switch (e->kind) {
     case idK:
          printf("%s",e->val.idE);
          break;
@@ -23,19 +24,41 @@ void prettyEXP(EXP *e)
          prettyEXP(e->val.divE.right);
          printf(")");
          break;
-    case plusK:
+    case modK:
          printf("(");
+         prettyEXP(e->val.modE.left);
+         printf("%%");
+         prettyEXP(e->val.modE.right);
+         printf(")");
+         break;
+    case absK:
+         printf("abs(");
+         prettyEXP(e->val.absE.right);
+         printf(")");
+         break;
+    case exponK:
+         printf("(");
+         prettyEXP(e->val.exponE.left);
+         printf("**");
+         prettyEXP(e->val.exponE.right);
+         printf(")");
+         break;
+    case plusK:
+         /*printf("(");*/
          prettyEXP(e->val.plusE.left);
          printf("+");
          prettyEXP(e->val.plusE.right);
-         printf(")");
+         /*printf(")");*/
          break;
     case minusK:
-         printf("(");
+         /*printf("(");*/
          prettyEXP(e->val.minusE.left);
          printf("-");
          prettyEXP(e->val.minusE.right);
-         printf(")");
+         /*printf(")");*/
+         break;
+    default:
+         printf("Wrong kind");
          break;
   }
 }
