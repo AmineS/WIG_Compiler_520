@@ -16,6 +16,8 @@ Tokens
   blank = ' ' | tab;
   star  = '*';
   slash = '/';
+  mod = '%';
+  abs = 'abs';
   plus  = '+';
   minus = '-';
   l_par = '(';
@@ -35,6 +37,7 @@ Productions
   factor  =
       {mult}    factor star term |
       {divd}    factor slash term |
+      {mod}     factor mod term |
       {term}    term;
 
   term  =
