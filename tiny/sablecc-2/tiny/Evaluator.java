@@ -61,6 +61,10 @@ public class Evaluator extends DepthFirstAdapter
   public void outADivdFactor(ADivdFactor node)
   { setValue(node, getValue(node.getFactor()) / getValue(node.getTerm())); }
 
+  /* mod */
+  public void outAModFactor(AModFactor node)
+  { setValue(node, getValue(node.getFactor()) % getValue(node.getTerm())); }
+
   /* term */
   public void outATermFactor(ATermFactor node)
   { setValue(node, getValue(node.getTerm())); }
