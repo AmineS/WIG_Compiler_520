@@ -3,6 +3,6 @@
 
 #include "tree.h"
 
-void prettyEXP(EXP *e);
+void prettyEXP(EXP *e, EXP *parent);
 
 #endif /* !PRETTY_H */
