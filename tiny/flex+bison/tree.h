@@ -17,7 +17,7 @@ typedef struct EXP {
     struct {struct EXP *left; struct EXP *right;} minusE;
   } val;
 } EXP;
- 
+
 EXP *makeEXPid(char *id);
 
 EXP *makeEXPintconst(int intconst);
