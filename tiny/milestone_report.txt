@@ -1,0 +1,18 @@
+1. Which toolset you will use for the WIG project?
+
+Sable-cc 3 will be used. 
+
+2. What was frustrating about this milestone? Difficult? Time consuming? Boring? Easy? Interesting? Fun? You can include discussion of things such as using version control, group coordination, and environment setup.
+
+Some parts of the flex+bison part of the assignment was boring. There were some times where the coding was just repetitive.
+
+Figuring out how the sable-cc3 was a little bit harder than flex+bison, but once we understood
+how it worked, everything went on quite smoothly.
+
+We decided to use git-svn - setting that up and making it work properly took some time. 
+
+Group coordination was perfect, we all had fun doing this assignment. 
+
+3. What devious extension to the Tiny expressions should we ask students for next year?
+
+You could ask them to implement partial evaluation fully.        

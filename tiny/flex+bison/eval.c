@@ -5,19 +5,30 @@
 typedef enum {false = 0, true = 1 } bool;
 
 void checkForZeroDivision(EXP *);
-bool isLowerOrEqualPrecedence(EXP *, EXP *);
-bool isBasicOperation(EXP*);
-
 
 EXP* evalEXP(EXP *e)
 {
     switch (e->kind) {
+
+        /* Base case */
         case idK:
             return e;
             break;
+
+        /* Base case */
         case intconstK:
             return e;
             break;
+
+        /*
+         * Case the expression is of type exp * exp
+         * If both left and right expressions are of kind intConstK return their product as intConst expression
+         * Else evaluate recursively the left and right expressions, this allows us to get partial evaluation.
+         * If the left is of kind int and the right is also an int return their product as intConst expression.
+         * Else if the left or the right are intconst and are equal to 0 return an intcontst expression with value 0.
+         * Else if left is equal to 1 return right, the same applies in case right is 1.
+         * Finally if neither is of type intconst return a times expressions with the left and right values.
+         */
         case timesK:
             if(e->val.timesE.left->kind == intconstK && e->val.timesE.right->kind == intconstK)
             {
@@ -257,34 +268,16 @@ EXP* evalEXP(EXP *e)
     }
 }
 
+/*
+ * Evaluates the right val of divE and modE and in case its value is 0
+ * it prints an error message and aborts the program.
+ */
 void checkForZeroDivision(EXP *e)
 {
     EXP* expFinalVal = evalEXP(e->val.divE.right);
     if(expFinalVal->kind == intconstK && expFinalVal->val.intconstE == 0)
     {
         printf("ERROR: Division by zero!\n"); 
-        exit(-1);
+        abort();
     }
-}
-
-bool isBasicOperation(EXP* e)
-{
-    if(e->kind == timesK || e->kind == divK || e->kind == plusK || e->kind == minusK)
-    {
-        return true;
-    }
-    else
-    {
-        return false;
-    }
-}
-
-bool isLowerOrEqualPrecedence(EXP *e1, EXP *e2)
-{
-    if(e2 == NULL)
-    {
-        return false;
-    }
-
-    return calculatePrecedence(e1) <= calculatePrecedence(e2);
 }
