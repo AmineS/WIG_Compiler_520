@@ -2,7 +2,12 @@
 #include <math.h>
 #include "eval.h"
 
+typedef enum {false = 0, true = 1 } bool;
+
 void checkForZeroDivision(EXP *);
+bool isLowerOrEqualPrecedence(EXP *, EXP *);
+bool isBasicOperation(EXP*);
+
 
 EXP* evalEXP(EXP *e)
 {
@@ -157,6 +162,44 @@ EXP* evalEXP(EXP *e)
                     int sum2 = leftVal->val.intconstE + rightVal->val.intconstE;
                     return makeEXPintconst(sum2);
                 }
+                else if(rightVal->kind == intconstK && isBasicOperation(leftVal) && isLowerOrEqualPrecedence(e, leftVal))
+                {
+                    if(leftVal->kind == plusK)
+                    {
+                        if(leftVal->val.plusE.left->kind == intconstK)
+                        {
+                            return makeEXPplus(evalEXP(makeEXPplus(rightVal, leftVal->val.plusE.left)), leftVal->val.plusE.right);
+                        }
+                        else if(leftVal->val.plusE.right->kind == intconstK)
+                        {
+                            return makeEXPplus(evalEXP(makeEXPplus(rightVal, leftVal->val.plusE.right)), leftVal->val.plusE.left);
+                        }
+                        else
+                        {
+                            return makeEXPplus(leftVal, rightVal);  
+                        }
+                    }
+                    if(leftVal->kind == minusK)
+                    {
+                        if(leftVal->val.minusE.left->kind == intconstK)
+                        {
+                            return makeEXPminus(evalEXP(makeEXPplus(rightVal, leftVal->val.minusE.left)), leftVal->val.minusE.right);
+                        }
+                        else if(leftVal->val.plusE.right->kind == intconstK)
+                        {
+                            return makeEXPplus(evalEXP(makeEXPminus(rightVal, leftVal->val.minusE.right)), leftVal->val.minusE.left);
+                        }
+                        else
+                        {
+                            return makeEXPminus(leftVal, rightVal);  
+                        }
+                    }
+                }
+                /* TODO: Add case where exp on the right is of type (intConstK + exp) or (exp + intConstk)
+                         Once we define where the intConstK is, all we need to do is feed it in a function
+                         prototyped on the one above.
+                */
+
                 else
                 {
                     return makeEXPplus(leftVal, rightVal);
@@ -194,4 +237,26 @@ void checkForZeroDivision(EXP *e)
         printf("ERROR: Division by zero!\n"); 
         exit(-1);
     }
+}
+
+bool isBasicOperation(EXP* e)
+{
+    if(e->kind == timesK || e->kind == divK || e->kind == plusK || e->kind == minusK)
+    {
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+
+bool isLowerOrEqualPrecedence(EXP *e1, EXP *e2)
+{
+    if(e2 == NULL)
+    {
+        return false;
+    }
+
+    return calculatePrecedence(e1) <= calculatePrecedence(e2);
 }

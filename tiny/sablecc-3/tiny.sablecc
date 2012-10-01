@@ -16,6 +16,9 @@ Tokens
   blank = ' ' | tab;
   star  = '*';
   slash = '/';
+  mod   = '%';
+  abs   = 'abs';
+  starstar = '**';
   plus  = '+';
   minus = '-';
   l_par = '(';
@@ -31,7 +34,11 @@ cst_exp {-> exp} =
   {cst_plus}    cst_exp plus factor 
                 {-> New exp.plus(cst_exp.exp,factor.exp)}
 | {cst_minus}   cst_exp minus factor 
-	              {-> New exp.minus(cst_exp.exp,factor.exp)}
+	            {-> New exp.minus(cst_exp.exp,factor.exp)}
+| {cst_abs}		abs factor
+				{-> New exp.abs(factor.exp)}
+| {cst_neg}		minus factor
+				{-> New exp.neg(factor.exp)}
 | {factor}      factor {-> factor.exp};
 
 factor {-> exp} =
@@ -39,6 +46,10 @@ factor {-> exp} =
                 {-> New exp.mult(factor.exp,term.exp)}
 | {cst_divd}    factor slash term 
                 {-> New exp.divd(factor.exp,term.exp)}
+| {cst_mod}     factor mod term 
+                {-> New exp.mod(factor.exp,term.exp)}
+| {cst_expon}   factor starstar term
+                {-> New exp.expon(factor.exp,term.exp)}
 | {term}        term {-> term.exp};
 
 term {-> exp} =
@@ -52,5 +63,9 @@ exp =
 | {minus}    [l]:exp [r]:exp
 | {mult}     [l]:exp [r]:exp 
 | {divd}     [l]:exp [r]:exp 
+| {mod}      [l]:exp [r]:exp
+| {expon}    [l]:exp [r]:exp
+| {abs}		 [r]:exp
+| {neg}		 [r]:exp	
 | {id}       id 
 | {number}   number;
