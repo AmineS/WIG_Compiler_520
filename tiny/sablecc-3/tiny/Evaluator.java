@@ -66,15 +66,15 @@ public class Evaluator extends DepthFirstAdapter
      Integer rightNodeValue = getValue(node.getR());
      Integer leftNodeValue = getValue(node.getL());
                
-     if (leftNodeValue != null && leftNodeValue==0)
+     if(leftNodeValue != null && leftNodeValue==0)
      {
         node.replaceBy(node.getR());
      }
-     else if (rightNodeValue != null && rightNodeValue==0)
+     else if(rightNodeValue != null && rightNodeValue==0)
      {
         node.replaceBy(node.getL()); 
      }
-     else if (rightNodeValue == null || leftNodeValue == null)  
+     else if(rightNodeValue == null || leftNodeValue == null)  
      {
         return;
      }
@@ -87,11 +87,11 @@ public class Evaluator extends DepthFirstAdapter
   /* minus */
   public void outAMinusExp(AMinusExp node)
   {
-     if (getValue(node.getL())==0)
+     if(getValue(node.getL())==0)
      {
         setValue(node, -getValue(node.getR())); 
      }
-     else if (getValue(node.getR())==0)
+     else if(getValue(node.getR())==0)
      {
         setValue(node, getValue(node.getL())); 
      }
@@ -104,18 +104,29 @@ public class Evaluator extends DepthFirstAdapter
   /* mult */
   public void outAMultExp(AMultExp node)
   { 
-     if (getValue(node.getL()) == 0 || getValue(node.getR()) == 0)
-     {
-        setValue(node, 0); 
-     }
-     else if (getValue(node.getL())==1)
-     {
-        setValue(node, getValue(node.getR())); 
-     }
-     else if (getValue(node.getL())==1)
-     {
-        setValue(node, getValue(node.getR())); 
-     }
+      Integer rightNodeValue = getValue(node.getR());
+      Integer leftNodeValue = getValue(node.getL());
+                
+      if(leftNodeValue != null && leftNodeValue == 0)
+      {
+         node.replaceBy(node.getL());
+      }
+      else if(rightNodeValue != null && rightNodeValue == 0)
+      {
+          node.replaceBy(node.getR()); 
+      }
+      else if(rightNodeValue != null && rightNodeValue == 1)
+      {
+          node.replaceBy(node.getL());
+      }
+      else if(leftNodeValue != null && leftNodeValue == 1)
+      {
+          node.replaceBy(node.getR());
+      }
+      else if(rightNodeValue == null || leftNodeValue == null)  
+      {
+         return;
+      }
      else
      {
         setValue(node, getValue(node.getL()) * getValue(node.getR())); 

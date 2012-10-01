@@ -242,7 +242,7 @@ EXP* evalEXP(EXP *e)
                 }
                 else if(leftVal->kind == intconstK && leftVal->val.intconstE == 0)
                 {
-                    return rightVal;
+                    return makeEXPneg(rightVal);
                 }
                 else if(rightVal->kind == intconstK && rightVal->val.intconstE == 0)
                 {
