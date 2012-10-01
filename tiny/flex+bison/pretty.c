@@ -10,12 +10,22 @@ int calculatePrecedence(EXP *);
 void prettyEXP(EXP *e, EXP *parent)
 {
 switch (e->kind) {
+
+    /* Base case */
     case idK:
          printf("%s",e->val.idE);
          break;
+
+    /* Base case */
     case intconstK:
          printf("%i",e->val.intconstE);
          break;
+
+    /* Case exp * exp 
+     * We only print the opening and closing parentheses
+     * when the child node's operator has a lower 
+     * precedence than the parent's node operator.
+     */
     case timesK:
          if(isLowerPrecedence(e, parent)) 
          {
