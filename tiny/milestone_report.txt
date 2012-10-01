@@ -15,4 +15,4 @@ Group coordination was perfect, we all had fun doing this assignment.
 
 3. What devious extension to the Tiny expressions should we ask students for next year?
 
-You could ask them to implement partial evaluation fully. 
+You could ask them to implement partial evaluation fully.        
