@@ -253,7 +253,14 @@ public class Evaluator extends DepthFirstAdapter
          * exponent of 1 returns itself and and 1 to the 
          * exponent of anything returns 1. 
          */
-        if (leftNodeValue != null && leftNodeValue==0)
+        
+        if (leftNodeValue != null && leftNodeValue == 0 &&
+            rightNodeValue !=null && rightNodeValue == 0)
+        {
+            System.out.println("0**0 is undefined!");
+            System.exit(0);            
+        }
+        else if (leftNodeValue != null && leftNodeValue==0)
         {
             setValue(node.getR(),0);
             node.replaceBy(node.getR());
@@ -261,7 +268,7 @@ public class Evaluator extends DepthFirstAdapter
         else if (rightNodeValue != null && rightNodeValue==0)
         {
             setValue(node.getR(),1);
-            node.replaceBy(node.getL()); 
+            node.replaceBy(node.getR()); 
         }
         else if (leftNodeValue != null && leftNodeValue == 1)
         {
