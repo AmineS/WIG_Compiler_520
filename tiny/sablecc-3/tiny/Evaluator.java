@@ -54,15 +54,58 @@ public class Evaluator extends DepthFirstAdapter
 
   /* plus */ 
   public void outAPlusExp(APlusExp node)
-  { setValue(node, getValue(node.getL()) + getValue(node.getR())); }
+  { 
+     if (getValue(node.getL())==0)
+     {
+        setValue(node, getValue(node.getR())); 
+     }
+     else if (getValue(node.getR())==0)
+     {
+        setValue(node, getValue(node.getL())); 
+     }
+     else
+     {
+        setValue(node, getValue(node.getL()) + getValue(node.getR())); 
+     }
+  }
   
   /* minus */
   public void outAMinusExp(AMinusExp node)
-  { setValue(node, getValue(node.getL()) - getValue(node.getR())); }
+  {
+     if (getValue(node.getL())==0)
+     {
+        setValue(node, -getValue(node.getR())); 
+     }
+     else if (getValue(node.getR())==0)
+     {
+        setValue(node, getValue(node.getL())); 
+     }
+     else
+     {
+        setValue(node, getValue(node.getL()) - getValue(node.getR())); 
+     }
+  }
 
   /* mult */
   public void outAMultExp(AMultExp node)
-  { setValue(node, getValue(node.getL()) * getValue(node.getR())); }
+  { 
+     if (getValue(node.getL()) == 0 || getValue(node.getR()) == 0)
+     {
+        setValue(node, 0); 
+     }
+     else if (getValue(node.getL())==1)
+     {
+        setValue(node, getValue(node.getR())); 
+     }
+     else if (getValue(node.getL())==1)
+     {
+        setValue(node, getValue(node.getR())); 
+     }
+     else
+     {
+        setValue(node, getValue(node.getL()) * getValue(node.getR())); 
+     }
+  }
 
   /* div */
   public void outADivdExp(ADivdExp node)
@@ -72,22 +115,68 @@ public class Evaluator extends DepthFirstAdapter
 		  System.out.println("Attempting division by zero!");
 		  System.exit(0);
 	  }	 	 
-	  setValue(node, getValue(node.getL()) / getValue(node.getR())); 
+	  else if (getValue(node.getL())==0)
+	  {
+        setValue(node, 0); 
+	  }
+	  else if (getValue(node.getR())==1)
+	  {
+        setValue(node, getValue(node.getL())); 
+	  }
+	  else
+	  {
+	     setValue(node, getValue(node.getL()) / getValue(node.getR())); 
+	  }
   }
   
   /* mod */
   public void outAModExp(AModExp node)
-  { setValue(node, getValue(node.getL()) % getValue(node.getR())); }
+  { 
+     if (getValue(node.getR()) == 0)
+     {
+        System.out.println("Attempting division by zero!");
+        System.exit(0);
+     }
+     else if (getValue(node.getL()) == 0)
+     {
+        setValue(node, 0);
+     }
+     else
+     {
+        setValue(node, getValue(node.getL()) % getValue(node.getR())); 
+     }
+  }
   
   /* exponentiation */
   public void outAExponExp(AExponExp node)
-  { setValue(node, (int)(Math.pow(getValue(node.getL()), getValue(node.getR())))); }
+  { 
+     if (getValue(node.getL())==0)
+     {
+        setValue(node, 0);
+     }
+     else if (getValue(node.getR())==0)
+     {
+        setValue(node, 1);
+     }
+     else if (getValue(node.getL())==1)
+     {
+        setValue(node, 1);
+     }
+     else if (getValue(node.getR())==1)
+     {
+        setValue(node, getValue(node.getL()));
+     }
+     else
+     {
+        setValue(node, (int)(Math.pow(getValue(node.getL()), getValue(node.getR()))));
+     }
+  }
   
   /* abs*/
   public void outAAbsExp(AAbsExp node)
   { setValue(node, Math.abs(getValue(node.getR()))); }
 
-  /* neg*/
+  /* neg */
   public void outANegExp(ANegExp node)
   { setValue(node, -1*(getValue(node.getR()))); }
   
