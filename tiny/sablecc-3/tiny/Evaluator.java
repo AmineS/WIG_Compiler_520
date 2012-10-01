@@ -9,11 +9,20 @@ import java.util.*;
 public class Evaluator extends DepthFirstAdapter
 {
   /* (static) eval function */
-  public static int eval(Node ast)
+  public static Node eval(Node ast)
   {
     Evaluator e = new Evaluator();
+    
     ast.apply(e);
-    return e.getValue(ast);
+    
+    if(e.hasValue(ast))
+    {
+       return new TNumber(Integer.toString(e.getValue(ast)));
+    }
+    else
+    {
+       return ast;
+    }    
   }
     
   /* Hashtable, holding intermediate values for AST nodes */
@@ -21,8 +30,7 @@ public class Evaluator extends DepthFirstAdapter
 
   /* Utility methods to set/get values for AST nodes */
   private void setValue(Node node, int value)
-  { values.put(node, new Integer(value));
-  }
+  { values.put(node, new Integer(value));}
 
   private int getValue(Node node)
   { /* gets and removes the associated value.
@@ -35,6 +43,9 @@ public class Evaluator extends DepthFirstAdapter
     return value.intValue();
   }
 
+  /* checks if the node has a value in the hash table */ 
+  private boolean hasValue(Node node)
+  { return null != values.get(node); }
   /* We deal with each grammar alternative, one by one */
 
   /* AST root (hidden [start = exp;] production) */
@@ -82,9 +93,23 @@ public class Evaluator extends DepthFirstAdapter
   
   /* identifier (!!!) */
   public void outAIdExp(AIdExp node)
-  { throw new RuntimeException("I can't evaluate the value of an identifier!"); }
+  { return; }
   
   /* number */
   public void outANumberExp(ANumberExp node)
   { setValue(node, Integer.parseInt(node.getNumber().getText())); }
+  
+  private void replaceNodesWithValues(Node node)
+  {
+     //null check 
+     if(node == null) return; 
+     
+     //check if there is a value for the node 
+     Integer nodeValue = (Integer) this.values.get(node);     
+     if(nodeValue != null)
+     {
+        //if there is an integer value then return the value 
+        node.replaceBy(new TNumber(nodeValue.toString()));
+     }
+  }
 }
