@@ -14,10 +14,9 @@ int main()
   printf("Type in a tiny exp folowed by one or two Ctrl-d's:\n");
   yyparse();
   printf("\nThe result of evaluating:\n");
-  prettyEXP(theexpression);
+  prettyEXP(theexpression, NULL);
   printf("\n\n");
-  /*printf("is: %d\n",evalEXP(theexpression));*/
-  prettyEXP(evalEXP(theexpression));
+  prettyEXP(evalEXP(theexpression), NULL);
   printf("\n\n");
   return(1);
 }
