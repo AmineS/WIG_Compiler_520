@@ -8,13 +8,16 @@ import java.util.*;
 
 public class Evaluator extends DepthFirstAdapter
 {
-  /* (static) eval function */
+  /* (static) eval function, returns expression node 
+   * containing full or partial evaluation 
+   */
   public static Node eval(Node ast)
   {
-    Evaluator e = new Evaluator();
-    
+    Evaluator e = new Evaluator();    
     ast.apply(e);
     
+    // Return a number expression in case of full evaluation otherwise
+    // return the ast that has been modified for partial evaluation 
     if(e.getValue(ast) != null)
     {
        return new ANumberExp(new TNumber(Integer.toString(e.getValue(ast))));
@@ -31,6 +34,9 @@ public class Evaluator extends DepthFirstAdapter
   /* Utility methods to set/get values for AST nodes */
   private void setValue(Node node, int value)
   {
+     // in case of full evaluation, associate the value 
+     // with the root node otherwise replace the node in 
+     // the tree with a new number expression.
      if(node.getClass() == tiny.node.Start.class)
      {
         values.put(node, new Integer(value));
@@ -56,6 +62,9 @@ public class Evaluator extends DepthFirstAdapter
   /* AST root (hidden [start = exp;] production) */
   public void outStart(Start node)
   { 
+     // if there is no value associated with the 
+     // then the method will return, indicating 
+     // partial evaluation.
      if(getValue(node.getPExp()) == null) return;
      setValue(node, getValue(node.getPExp())); 
   }
@@ -65,7 +74,14 @@ public class Evaluator extends DepthFirstAdapter
   { 
      Integer rightNodeValue = getValue(node.getR());
      Integer leftNodeValue = getValue(node.getL());
-               
+
+     // If there is a zero in either of the children 
+     // then the current node is replaced by the 
+     // other child. If either of the children did 
+     // not have a value, this means that evaluation 
+     // was partially done and the addition does not 
+     // need to proceed. If evaluation is successful 
+     // the addition step proceeds. 
      if(leftNodeValue != null && leftNodeValue==0)
      {
         node.replaceBy(node.getR());
