@@ -103,18 +103,35 @@ public class Evaluator extends DepthFirstAdapter
   /* minus */
   public void outAMinusExp(AMinusExp node)
   {
-     if(getValue(node.getL())==0)
-     {
-        setValue(node, -getValue(node.getR())); 
-     }
-     else if(getValue(node.getR())==0)
-     {
-        setValue(node, getValue(node.getL())); 
-     }
-     else
-     {
-        setValue(node, getValue(node.getL()) - getValue(node.getR())); 
-     }
+      Integer rightNodeValue = getValue(node.getR());
+      Integer leftNodeValue = getValue(node.getL());
+                
+      if (leftNodeValue != null && leftNodeValue==0)
+      {
+         if (rightNodeValue!=null)
+         {
+             setValue(node.getR(),-getValue(node.getR()));
+             node.replaceBy(node.getR());
+         }
+         else
+         {
+             ANegExp newNegExp = new ANegExp();
+             newNegExp.setR(node.getR());
+             node.replaceBy(newNegExp);
+         }
+      }
+      else if (rightNodeValue != null && rightNodeValue==0)
+      {
+         node.replaceBy(node.getL()); 
+      }
+      else if (rightNodeValue == null || leftNodeValue == null)  
+      {
+         return;
+      }
+      else
+      {
+         setValue(node, leftNodeValue - rightNodeValue);
+      }
   }
 
   /* mult */
@@ -207,26 +224,36 @@ public class Evaluator extends DepthFirstAdapter
   /* exponentiation */
   public void outAExponExp(AExponExp node)
   { 
-     if (getValue(node.getL())==0)
-     {
-        setValue(node, 0);
-     }
-     else if (getValue(node.getR())==0)
-     {
-        setValue(node, 1);
-     }
-     else if (getValue(node.getL())==1)
-     {
-        setValue(node, 1);
-     }
-     else if (getValue(node.getR())==1)
-     {
-        setValue(node, getValue(node.getL()));
-     }
-     else
-     {
-        setValue(node, (int)(Math.pow(getValue(node.getL()), getValue(node.getR()))));
-     }
+      Integer rightNodeValue = getValue(node.getR());
+      Integer leftNodeValue = getValue(node.getL());
+                
+      if (leftNodeValue != null && leftNodeValue==0)
+      {
+         setValue(node.getR(),0);
+         node.replaceBy(node.getR());
+      }
+      else if (rightNodeValue != null && rightNodeValue==0)
+      {
+         setValue(node.getR(),1);
+         node.replaceBy(node.getL()); 
+      }
+      else if (leftNodeValue != null && leftNodeValue == 1)
+      {
+          setValue(node.getR(),1);
+          node.replaceBy(node.getR());
+      }
+      else if (rightNodeValue != null && rightNodeValue == 1)
+      {
+          node.replaceBy(node.getL());
+      }
+      else if (rightNodeValue == null || leftNodeValue == null)  
+      {
+         return;
+      }
+      else
+      {
+          setValue(node, (int)(Math.pow(getValue(node.getL()), getValue(node.getR()))));
+      }
   }
   
   /* abs*/
