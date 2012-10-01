@@ -66,15 +66,15 @@ public class Evaluator extends DepthFirstAdapter
      Integer rightNodeValue = getValue(node.getR());
      Integer leftNodeValue = getValue(node.getL());
                
-     if (leftNodeValue != null && leftNodeValue==0)
+     if(leftNodeValue != null && leftNodeValue==0)
      {
         node.replaceBy(node.getR());
      }
-     else if (rightNodeValue != null && rightNodeValue==0)
+     else if(rightNodeValue != null && rightNodeValue==0)
      {
         node.replaceBy(node.getL()); 
      }
-     else if (rightNodeValue == null || leftNodeValue == null)  
+     else if(rightNodeValue == null || leftNodeValue == null)  
      {
         return;
      }
@@ -121,18 +121,29 @@ public class Evaluator extends DepthFirstAdapter
   /* mult */
   public void outAMultExp(AMultExp node)
   { 
-     if (getValue(node.getL()) == 0 || getValue(node.getR()) == 0)
-     {
-        setValue(node, 0); 
-     }
-     else if (getValue(node.getL())==1)
-     {
-        setValue(node, getValue(node.getR())); 
-     }
-     else if (getValue(node.getL())==1)
-     {
-        setValue(node, getValue(node.getR())); 
-     }
+      Integer rightNodeValue = getValue(node.getR());
+      Integer leftNodeValue = getValue(node.getL());
+                
+      if(leftNodeValue != null && leftNodeValue == 0)
+      {
+         node.replaceBy(node.getL());
+      }
+      else if(rightNodeValue != null && rightNodeValue == 0)
+      {
+          node.replaceBy(node.getR()); 
+      }
+      else if(rightNodeValue != null && rightNodeValue == 1)
+      {
+          node.replaceBy(node.getL());
+      }
+      else if(leftNodeValue != null && leftNodeValue == 1)
+      {
+          node.replaceBy(node.getR());
+      }
+      else if(rightNodeValue == null || leftNodeValue == null)  
+      {
+         return;
+      }
      else
      {
         setValue(node, getValue(node.getL()) * getValue(node.getR())); 
@@ -141,41 +152,56 @@ public class Evaluator extends DepthFirstAdapter
 
   /* div */
   public void outADivdExp(ADivdExp node)
-  { 	  	  
-	  if (getValue(node.getR())==0)
+  {
+     Integer rightNodeValue = getValue(node.getR());
+     Integer leftNodeValue = getValue(node.getL());
+     
+	  if (rightNodeValue != null && rightNodeValue==0)
 	  {
 		  System.out.println("Attempting division by zero!");
 		  System.exit(0);
 	  }	 	 
-	  else if (getValue(node.getL())==0)
+	  else if (leftNodeValue != null && leftNodeValue ==0)
 	  {
-        setValue(node, 0); 
+        node.replaceBy(node.getL()); 
 	  }
-	  else if (getValue(node.getR())==1)
+	  else if (rightNodeValue != null && rightNodeValue==1)
 	  {
-        setValue(node, getValue(node.getL())); 
+        node.replaceBy(node.getL()); 
+	  }
+	  else if (rightNodeValue == null || leftNodeValue == null)
+	  {
+	     return;
 	  }
 	  else
 	  {
-	     setValue(node, getValue(node.getL()) / getValue(node.getR())); 
+	     setValue(node, leftNodeValue / rightNodeValue); 
 	  }
   }
   
   /* mod */
   public void outAModExp(AModExp node)
-  { 
-     if (getValue(node.getR()) == 0)
+  {
+     
+     Integer rightNodeValue = getValue(node.getR());
+     Integer leftNodeValue = getValue(node.getL());
+     
+     if(rightNodeValue!= null && rightNodeValue == 0)
      {
         System.out.println("Attempting division by zero!");
         System.exit(0);
      }
-     else if (getValue(node.getL()) == 0)
+     else if(leftNodeValue != null && leftNodeValue == 0)
      {
-        setValue(node, 0);
+        node.replaceBy(node.getL());
+     }
+     else if(leftNodeValue == null || rightNodeValue == null)
+     {
+        return;
      }
      else
      {
-        setValue(node, getValue(node.getL()) % getValue(node.getR())); 
+        setValue(node, leftNodeValue % rightNodeValue); 
      }
   }
   
@@ -216,7 +242,13 @@ public class Evaluator extends DepthFirstAdapter
   
   /* abs*/
   public void outAAbsExp(AAbsExp node)
-  { setValue(node, Math.abs(getValue(node.getR()))); }
+  {
+      Integer rightNodeValue = getValue(node.getR());
+      
+      if(rightNodeValue == null) return;
+      
+      setValue(node, Math.abs(rightNodeValue)); 
+  }
 
   /* neg */
   public void outANegExp(ANegExp node)
