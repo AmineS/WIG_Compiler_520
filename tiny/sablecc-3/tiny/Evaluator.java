@@ -31,7 +31,7 @@ public class Evaluator extends DepthFirstAdapter
        lookup the same value more than once (e.g.: in
        an interpreter). */
 
-    Integer value = (Integer) values.remove(node);
+    Integer value = (Integer) values.get(node);
     return value.intValue();
   }
 
@@ -55,8 +55,31 @@ public class Evaluator extends DepthFirstAdapter
 
   /* div */
   public void outADivdExp(ADivdExp node)
-  { setValue(node, getValue(node.getL()) / getValue(node.getR())); }
+  { 	  	  
+	  if (getValue(node.getR())==0)
+	  {
+		  System.out.println("Attempting division by zero!");
+		  System.exit(0);
+	  }	 	 
+	  setValue(node, getValue(node.getL()) / getValue(node.getR())); 
+  }
+  
+  /* mod */
+  public void outAModExp(AModExp node)
+  { setValue(node, getValue(node.getL()) % getValue(node.getR())); }
+  
+  /* exponentiation */
+  public void outAExponExp(AExponExp node)
+  { setValue(node, (int)(Math.pow(getValue(node.getL()), getValue(node.getR())))); }
+  
+  /* abs*/
+  public void outAAbsExp(AAbsExp node)
+  { setValue(node, Math.abs(getValue(node.getR()))); }
 
+  /* neg*/
+  public void outANegExp(ANegExp node)
+  { setValue(node, -1*(getValue(node.getR()))); }
+  
   /* identifier (!!!) */
   public void outAIdExp(AIdExp node)
   { throw new RuntimeException("I can't evaluate the value of an identifier!"); }
