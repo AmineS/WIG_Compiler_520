@@ -33,6 +33,22 @@ EXP* evalEXP(EXP *e)
                     int prod2 = leftVal->val.intconstE * rightVal->val.intconstE;
                     return makeEXPintconst(prod2);
                 }
+                else if(leftVal->kind == intconstK && leftVal->val.intconstE == 0)
+                {
+                    return makeEXPintconst(0);
+                }
+                else if(rightVal->kind == intconstK && rightVal->val.intconstE == 0)
+                {
+                    return makeEXPintconst(0);
+                }
+                else if(leftVal->kind == intconstK && leftVal->val.intconstE == 1)
+                {
+                    return rightVal;
+                }
+                else if(rightVal->kind == intconstK && rightVal->val.intconstE == 1)
+                {
+                    return leftVal;
+                }
                 else
                 {
                     return makeEXPtimes(leftVal, rightVal);
@@ -55,6 +71,14 @@ EXP* evalEXP(EXP *e)
                     int quot2 = leftVal->val.intconstE / rightVal->val.intconstE;
                     return makeEXPintconst(quot2);
                 }
+                else if(leftVal->kind == intconstK && leftVal->val.intconstE == 0)
+                {
+                    return makeEXPintconst(0);
+                }
+                else if(rightVal->kind == intconstK && rightVal->val.intconstE == 1)
+                {
+                    return leftVal;
+                }
                 else
                 {
                     return makeEXPdiv(leftVal, rightVal);
@@ -62,6 +86,7 @@ EXP* evalEXP(EXP *e)
             }
             break;
         case modK:
+            checkForZeroDivision(e);
             if(e->val.modE.left->kind == intconstK && e->val.modE.right->kind == intconstK)
             {
                 int mod = e->val.modE.left->val.intconstE % e->val.modE.right->val.intconstE;
@@ -75,6 +100,10 @@ EXP* evalEXP(EXP *e)
                 {
                     int mod2 = leftVal->val.intconstE % rightVal->val.intconstE;
                     return makeEXPintconst(mod2);
+                }
+                else if(leftVal->kind == intconstK && leftVal->val.intconstE == 0)
+                {
+                    return makeEXPintconst(0);
                 }
                 else
                 {
@@ -98,6 +127,10 @@ EXP* evalEXP(EXP *e)
                 {
                     return makeEXPintconst(fabs(abs1->val.intconstE));
                 }
+                else if(abs1->kind == intconstK && abs1->val.intconstE == 0)
+                {
+                    return makeEXPintconst(0);
+                }
                 else
                 {
                     return makeEXPabs(abs1);
@@ -120,6 +153,10 @@ EXP* evalEXP(EXP *e)
                 {
                     return makeEXPintconst(-1 * (neg1->val.intconstE));
                 }
+                else if(neg1->kind == intconstK && neg1->val.intconstE == 0)
+                {
+                    return makeEXPintconst(0);
+                }
                 else
                 {
                     return makeEXPneg(neg1);
@@ -140,6 +177,18 @@ EXP* evalEXP(EXP *e)
                 {
                     int result2 = pow(leftVal->val.intconstE, rightVal->val.intconstE);
                     return makeEXPintconst(result2);
+                }
+                else if(leftVal->kind == intconstK && leftVal->val.intconstE == 0)
+                {
+                    return makeEXPintconst(0);
+                }
+                else if(rightVal->kind == intconstK && rightVal->val.intconstE == 0)
+                {
+                    return makeEXPintconst(1);
+                }
+                else if(rightVal->kind == intconstK && rightVal->val.intconstE == 1)
+                {
+                    return leftVal;
                 }
                 else
                 {
@@ -162,44 +211,14 @@ EXP* evalEXP(EXP *e)
                     int sum2 = leftVal->val.intconstE + rightVal->val.intconstE;
                     return makeEXPintconst(sum2);
                 }
-                else if(rightVal->kind == intconstK && isBasicOperation(leftVal) && isLowerOrEqualPrecedence(e, leftVal))
+                else if(leftVal->kind == intconstK && leftVal->val.intconstE == 0)
                 {
-                    if(leftVal->kind == plusK)
-                    {
-                        if(leftVal->val.plusE.left->kind == intconstK)
-                        {
-                            return makeEXPplus(evalEXP(makeEXPplus(rightVal, leftVal->val.plusE.left)), leftVal->val.plusE.right);
-                        }
-                        else if(leftVal->val.plusE.right->kind == intconstK)
-                        {
-                            return makeEXPplus(evalEXP(makeEXPplus(rightVal, leftVal->val.plusE.right)), leftVal->val.plusE.left);
-                        }
-                        else
-                        {
-                            return makeEXPplus(leftVal, rightVal);  
-                        }
-                    }
-                    if(leftVal->kind == minusK)
-                    {
-                        if(leftVal->val.minusE.left->kind == intconstK)
-                        {
-                            return makeEXPminus(evalEXP(makeEXPplus(rightVal, leftVal->val.minusE.left)), leftVal->val.minusE.right);
-                        }
-                        else if(leftVal->val.plusE.right->kind == intconstK)
-                        {
-                            return makeEXPplus(evalEXP(makeEXPminus(rightVal, leftVal->val.minusE.right)), leftVal->val.minusE.left);
-                        }
-                        else
-                        {
-                            return makeEXPminus(leftVal, rightVal);  
-                        }
-                    }
+                    return rightVal;
                 }
-                /* TODO: Add case where exp on the right is of type (intConstK + exp) or (exp + intConstk)
-                         Once we define where the intConstK is, all we need to do is feed it in a function
-                         prototyped on the one above.
-                */
-
+                else if(rightVal->kind == intconstK && rightVal->val.intconstE == 0)
+                {
+                    return leftVal;
+                }
                 else
                 {
                     return makeEXPplus(leftVal, rightVal);
@@ -221,6 +240,14 @@ EXP* evalEXP(EXP *e)
                     int diff2 = leftVal->val.intconstE - rightVal->val.intconstE;
                     return makeEXPintconst(diff2);
                 }
+                else if(leftVal->kind == intconstK && leftVal->val.intconstE == 0)
+                {
+                    return rightVal;
+                }
+                else if(rightVal->kind == intconstK && rightVal->val.intconstE == 0)
+                {
+                    return leftVal;
+                }
                 else
                 {
                     return makeEXPminus(leftVal, rightVal);
@@ -232,7 +259,8 @@ EXP* evalEXP(EXP *e)
 
 void checkForZeroDivision(EXP *e)
 {
-    if(evalEXP(e->val.divE.right) == 0)
+    EXP* expFinalVal = evalEXP(e->val.divE.right);
+    if(expFinalVal->kind == intconstK && expFinalVal->val.intconstE == 0)
     {
         printf("ERROR: Division by zero!\n"); 
         exit(-1);
