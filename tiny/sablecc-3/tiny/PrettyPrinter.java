@@ -13,7 +13,7 @@ public class PrettyPrinter extends DepthFirstAdapter
       node.apply(new PrettyPrinter());
   }
 
-  private void puts(String s) 
+  protected void puts(String s) 
   {
       System.out.print(s);
       System.out.flush();
