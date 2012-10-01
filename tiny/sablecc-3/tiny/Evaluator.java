@@ -15,9 +15,9 @@ public class Evaluator extends DepthFirstAdapter
     
     ast.apply(e);
     
-    if(e.hasValue(ast))
+    if(e.getValue(ast) != null)
     {
-       return new TNumber(Integer.toString(e.getValue(ast)));
+       return new ANumberExp(new TNumber(Integer.toString(e.getValue(ast))));
     }
     else
     {
@@ -30,42 +30,57 @@ public class Evaluator extends DepthFirstAdapter
 
   /* Utility methods to set/get values for AST nodes */
   private void setValue(Node node, int value)
-  { values.put(node, new Integer(value));}
+  {
+     if(node.getClass() == tiny.node.Start.class)
+     {
+        values.put(node, new Integer(value));
+     }
+     else
+     {
+        Node newNode = this.replaceNodesWithValues(node, value);
+        values.put(newNode, new Integer(value));
+     }
+  }
 
-  private int getValue(Node node)
+  private Integer getValue(Node node)
   { /* gets and removes the associated value.
        This reduces memory pressure, but you should 
        replace "remove" with "get" if you intend to
        lookup the same value more than once (e.g.: in
        an interpreter). */
 
-    Integer value = (Integer) values.get(node);
-    return value.intValue();
+    return (Integer) values.get(node);
   }
-
-  /* checks if the node has a value in the hash table */ 
-  private boolean hasValue(Node node)
-  { return null != values.get(node); }
   /* We deal with each grammar alternative, one by one */
 
   /* AST root (hidden [start = exp;] production) */
   public void outStart(Start node)
-  { setValue(node, getValue(node.getPExp())); }
+  { 
+     if(getValue(node.getPExp()) == null) return;
+     setValue(node, getValue(node.getPExp())); 
+  }
 
   /* plus */ 
   public void outAPlusExp(APlusExp node)
   { 
-     if (getValue(node.getL())==0)
+     Integer rightNodeValue = getValue(node.getR());
+     Integer leftNodeValue = getValue(node.getL());
+               
+     if (leftNodeValue != null && leftNodeValue==0)
      {
-        setValue(node, getValue(node.getR())); 
+        node.replaceBy(node.getR());
      }
-     else if (getValue(node.getR())==0)
+     else if (rightNodeValue != null && rightNodeValue==0)
      {
-        setValue(node, getValue(node.getL())); 
+        node.replaceBy(node.getL()); 
+     }
+     else if (rightNodeValue == null || leftNodeValue == null)  
+     {
+        return;
      }
      else
      {
-        setValue(node, getValue(node.getL()) + getValue(node.getR())); 
+        setValue(node, leftNodeValue + rightNodeValue);
      }
   }
   
@@ -188,17 +203,15 @@ public class Evaluator extends DepthFirstAdapter
   public void outANumberExp(ANumberExp node)
   { setValue(node, Integer.parseInt(node.getNumber().getText())); }
   
-  private void replaceNodesWithValues(Node node)
+  private Node replaceNodesWithValues(Node node, Integer nodeValue)
   {
      //null check 
-     if(node == null) return; 
+     if(node == null) return null; 
      
-     //check if there is a value for the node 
-     Integer nodeValue = (Integer) this.values.get(node);     
-     if(nodeValue != null)
-     {
+     Node newNode = new ANumberExp(new TNumber(nodeValue.toString()));
         //if there is an integer value then return the value 
-        node.replaceBy(new TNumber(nodeValue.toString()));
-     }
+     node.replaceBy(newNode);
+     
+     return newNode;
   }
 }

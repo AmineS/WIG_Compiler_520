@@ -21,7 +21,8 @@ class Main {
       PrettyPrinter.print(tree);
 
       /* evaluate */
-      System.out.println("\nis: " + Evaluator.eval(tree));
+      System.out.println("\nis: ");
+      PrettyPrinter.print(Evaluator.eval(tree));
 
     } 
    catch(Exception e) 
