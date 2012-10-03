@@ -1,0 +1,36 @@
+1. Which toolset you will use for the WIG project?
+
+Sable-cc 3 will be used. 
+
+2. What was frustrating about this milestone? Difficult? Time consuming? Boring? Easy? Interesting? Fun? You can include discussion of things such as using version control, group coordination, and environment setup.
+
+Some parts of the flex+bison part of the assignment was boring. There were some times where the coding was just repetitive.
+
+Figuring out how the sable-cc3 was a little bit harder than flex+bison, but once we understood
+how it worked, everything went on quite smoothly.
+
+It was difficult to implement partial evaluation in Sable-cc3 because of the auto-generated code. 
+The detailed explanation is given below. 
+
+We decided to use git-svn - setting that up and making it work properly took some time. 
+
+Group coordination was perfect, we all had fun doing this assignment.
+
+3. What devious extension to the Tiny expressions should we ask students for next year?
+
+You could ask them to implement partial evaluation fully.        
+
+-----Sable-cc3 partial evaluation-----
+Since the recursion was being doing in DepthFirstAdapter which is auto-generated
+code. It was difficult to use the same approach applied in C. Therefore, a 
+round-about strategy was applied. 
+
+If the expression contains an identifier then the hash table values 
+was left with a null for that node. From then on, all other 
+operations checked their children for null values in the table. 
+In such a case no evaluation is done. This ultimately goes back 
+to the eval where it checks if partial or full evaluation is done. 
+In the case of partial the original node is returned that 
+has all the numeric sub trees evaluted. In the case of 
+a full evaluation, a new number node is returned. PrettyPrinter
+takes care of the rest. 
