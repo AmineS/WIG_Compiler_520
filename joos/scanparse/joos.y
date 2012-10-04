@@ -66,13 +66,13 @@ extern CLASSFILE *theclassfile;
 %type <method> externmethods externnemethods externmethod
 %type <formal> formals neformals formal
 %type <statement> statements nestatements statement simplestatement
-%type <statement> ifthenstatement whilestatement expressionstatement 
+%type <statement> ifthenstatement whilestatement expressionstatement forstatement
 %type <statement> ifthenelsestatement returnstatement statementnoshortif 
 %type <statement> ifthenelsestatementnoshortif whilestatementnoshortif 
 %type <statement> declaration
 %type <exp> statementexpression assignment methodinvocation
 %type <exp> classinstancecreation returnexpression expression orexpression 
-%type <exp> andexpression eqexpression relexpression addexpression 
+%type <exp> andexpression eqexpression incexpression relexpression addexpression 
 %type <exp> multexpression unaryexpression castexpression postfixexpression 
 %type <exp> primaryexpression literal unaryexpressionnotminus
 %type <receiver> receiver
@@ -331,6 +331,13 @@ whilestatementnoshortif : tWHILE '(' expression ')' statementnoshortif
                           {$$ = makeSTATEMENTwhile($3,$5);}
 ;
 
+forstatement : tFOR '(' expression ';' expression ';' expression ')' statements
+               { $$ = makeSTATEMENTwhile($5, $7); }
+;
+
+
+
+
 expressionstatement : statementexpression ';'
                       {$$ = makeSTATEMENTexp($1);}
 ;
@@ -428,6 +435,9 @@ unaryexpressionnotminus :
                   {$$ = makeEXPnot($2);}
                 | castexpression
                   {$$ = $1;}
+                | incexpression
+                  {$$ = $1;}
+;
 
 castexpression : '(' expression ')' unaryexpressionnotminus
                  {if ($2->kind!=idK) yyerror("identifier expected");
@@ -452,6 +462,12 @@ primaryexpression : literal
                     {$$ = $1;}
                   | methodinvocation
                     {$$ = $1;}
+;
+
+incexpression : expression tINC
+                { $$ = makeEXPplus($1,makeEXPintconst(1)); }
+                | tINC expression
+                { $$ = makeEXPplus($2,makeEXPintconst(1)); }
 ;
 
 classinstancecreation : tNEW tIDENTIFIER '(' arguments ')'
