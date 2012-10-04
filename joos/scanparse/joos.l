@@ -17,6 +17,7 @@
 
 extern int lineno;
 %}
+%x comment
 %%
 [ \t]+                   /* ignore */;
 \n                       lineno++;
@@ -134,4 +135,9 @@ false                  { yylval.boolconst = 0;
                          return tIDENTIFIER; }
 "import "([a-zA-Z_][a-zA-Z0-9_]*".")*("*"|[a-zA-Z_][a-zA-Z0-9_]*); return tPATH;
 .                        return tERROR;
+"/*"                     BEGIN(comment);
+<comment>[^\n]*          /* ignore all that isn't a * */
+<comment>"*"+[^*/\n]*    /* ignore all *s not followed by / */ 
+<comment>\n              ++lineno;
+<comment>"*"+"/"         BEGIN(INITIAL); 
 %%
