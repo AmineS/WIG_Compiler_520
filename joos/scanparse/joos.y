@@ -141,7 +141,7 @@ fields : /* empty */
 nefields : field 
            {$$ = $1;}
          | nefields field
-           {$$ = appendFIELD($2,$1);}
+           {$$ = appendFIELD($2,$1);}       
 ;
 
 field : tPROTECTED type idlist ';' 
@@ -286,6 +286,8 @@ statement : simplestatement
             {$$ = $1;}
           | whilestatement
             {$$ = $1;}
+          | forstatement
+            {$$ = $1;}
 ;
 
 declaration : type idlist ';'
@@ -332,11 +334,8 @@ whilestatementnoshortif : tWHILE '(' expression ')' statementnoshortif
 ;
 
 forstatement : tFOR '(' expression ';' expression ';' expression ')' statements
-               { $$ = makeSTATEMENTwhile($5, $7); }
+               {$$ = makeSTATEMENTsequence(makeSTATEMENTexp($3), makeSTATEMENTwhile($5, makeSTATEMENTsequence($9, makeSTATEMENTexp($7))));}
 ;
-
-
-
 
 expressionstatement : statementexpression ';'
                       {$$ = makeSTATEMENTexp($1);}
@@ -466,8 +465,6 @@ primaryexpression : literal
 
 incexpression : expression tINC
                 { $$ = makeEXPplus($1,makeEXPintconst(1)); }
-                | tINC expression
-                { $$ = makeEXPplus($2,makeEXPintconst(1)); }
 ;
 
 classinstancecreation : tNEW tIDENTIFIER '(' arguments ')'
