@@ -66,7 +66,7 @@ extern CLASSFILE *theclassfile;
 %type <method> externmethods externnemethods externmethod
 %type <formal> formals neformals formal
 %type <statement> statements nestatements statement simplestatement
-%type <statement> ifthenstatement whilestatement expressionstatement 
+%type <statement> ifthenstatement whilestatement forstatement expressionstatement 
 %type <statement> ifthenelsestatement returnstatement statementnoshortif 
 %type <statement> ifthenelsestatementnoshortif whilestatementnoshortif 
 %type <statement> declaration
