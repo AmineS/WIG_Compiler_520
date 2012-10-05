@@ -348,7 +348,7 @@ statementexpression : assignment
                     | classinstancecreation
                       {$$ = $1;}
                	    | incexpression
-			 		  {$$ = $1;}
+			 		            {$$ = $1;}
 ;
 
 returnstatement : tRETURN returnexpression ';'
@@ -369,7 +369,8 @@ expression : orexpression
              {$$ = $1;}
            | assignment
              {$$ = $1;}
-
+           | incexpression
+             {$$ = $1;}
 ;
 
 orexpression : andexpression 
@@ -465,9 +466,7 @@ primaryexpression : literal
 ;
 
 incexpression : tIDENTIFIER tINC
-                { $$ = makeEXPintconst(1); }
-              | tINC tIDENTIFIER
-                { $$ = makeEXPintconst(1); }
+                { $$ = makeEXPassign($1, makeEXPplus(makeEXPid($1), makeEXPintconst(1))); }
 ;
 
 classinstancecreation : tNEW tIDENTIFIER '(' arguments ')'
