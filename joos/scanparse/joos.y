@@ -66,15 +66,15 @@ extern CLASSFILE *theclassfile;
 %type <method> externmethods externnemethods externmethod
 %type <formal> formals neformals formal
 %type <statement> statements nestatements statement simplestatement
-%type <statement> ifthenstatement whilestatement expressionstatement forstatement
+%type <statement> ifthenstatement whilestatement expressionstatement 
 %type <statement> ifthenelsestatement returnstatement statementnoshortif 
 %type <statement> ifthenelsestatementnoshortif whilestatementnoshortif 
 %type <statement> declaration
 %type <exp> statementexpression assignment methodinvocation
 %type <exp> classinstancecreation returnexpression expression orexpression 
-%type <exp> andexpression eqexpression incexpression relexpression addexpression 
+%type <exp> andexpression eqexpression relexpression addexpression 
 %type <exp> multexpression unaryexpression castexpression postfixexpression 
-%type <exp> primaryexpression literal unaryexpressionnotminus
+%type <exp> primaryexpression literal unaryexpressionnotminus incexpression
 %type <receiver> receiver
 %type <argument> arguments nearguments 
 %type <stringconst> extension 
@@ -331,12 +331,6 @@ whilestatementnoshortif : tWHILE '(' expression ')' statementnoshortif
                           {$$ = makeSTATEMENTwhile($3,$5);}
 ;
 
-forstatement : tFOR '(' expression ';' expression ';' expression ')' statements
-               { $$ = makeSTATEMENTwhile($5, $7); }
-;
-
-
-
 
 expressionstatement : statementexpression ';'
                       {$$ = makeSTATEMENTexp($1);}
@@ -348,6 +342,8 @@ statementexpression : assignment
                       {$$ = $1;}
                     | classinstancecreation
                       {$$ = $1;}
+               	    | incexpression
+			 		  {$$ = $1;}
 ;
 
 returnstatement : tRETURN returnexpression ';'
@@ -368,6 +364,7 @@ expression : orexpression
              {$$ = $1;}
            | assignment
              {$$ = $1;}
+
 ;
 
 orexpression : andexpression 
@@ -435,8 +432,6 @@ unaryexpressionnotminus :
                   {$$ = makeEXPnot($2);}
                 | castexpression
                   {$$ = $1;}
-                | incexpression
-                  {$$ = $1;}
 ;
 
 castexpression : '(' expression ')' unaryexpressionnotminus
@@ -464,10 +459,10 @@ primaryexpression : literal
                     {$$ = $1;}
 ;
 
-incexpression : expression tINC
-                { $$ = makeEXPplus($1,makeEXPintconst(1)); }
-                | tINC expression
-                { $$ = makeEXPplus($2,makeEXPintconst(1)); }
+incexpression : tIDENTIFIER tINC
+                { $$ = makeEXPintconst(1); }
+              | tINC tIDENTIFIER
+                { $$ = makeEXPintconst(1); }
 ;
 
 classinstancecreation : tNEW tIDENTIFIER '(' arguments ')'

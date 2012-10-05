@@ -83,6 +83,7 @@ while                    return tWHILE;
 "!="                     return tNEQ;
 "&&"                     return tAND;
 "||"                     return tOR;
+"++"                     return tINC;
 "+"                      return '+';
 "-"                      return '-';
 "*"                      return '*';
@@ -94,10 +95,9 @@ while                    return tWHILE;
 "("                      return '(';
 ")"                      return ')';
 "["                      return '[';
-"]"                      return ']';
+"]"                       return ']';
 ","                      return ',';
 "."                      return '.';
-"++"                     return tINC;
 '\\b'                  { yylval.charconst = '\b';
                          return tCHARCONST; }
 '\\t'                  { yylval.charconst = '\t';
@@ -135,9 +135,10 @@ false                  { yylval.boolconst = 0;
                          return tIDENTIFIER; }
 "import "([a-zA-Z_][a-zA-Z0-9_]*".")*("*"|[a-zA-Z_][a-zA-Z0-9_]*); return tPATH;
 .                        return tERROR;
-"/*"                     BEGIN(comment);
-<comment>[^\n]*          /* ignore all that isn't a * */
-<comment>"*"+[^*/\n]*    /* ignore all *s not followed by / */ 
-<comment>\n              ++lineno;
-<comment>"*"+"/"         BEGIN(INITIAL); 
+"/*"         BEGIN(comment);
+
+<comment>[^*\n]*        /* eat anything that's not a '*' */
+<comment>"*"+[^*/\n]*   /* eat up '*'s not followed by '/'s */
+<comment>\n             ++lineno;
+<comment>"*"+"/"        BEGIN(INITIAL); 
 %%
