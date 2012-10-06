@@ -29,7 +29,7 @@ public class ShellingSimulation
             {
                 if(fGrid[i][j] != EMPTY && !isToleranceLevelMet(i, j, fGrid[i][j]))
                 {
-                    relocate(i, j, false);
+                    relocate(i, j);
                 }
             }
         }
@@ -49,30 +49,39 @@ public class ShellingSimulation
         }
     }
     
-    private void relocate(int row, int col, boolean randomLocationFlag)
+    private void relocate(int row, int col)
     {
         boolean toleranceMetInNewLocation = false;
+        boolean isFallbackRandomLocationSet = false;
+        int fallbackRandomLocationRow = 0;
+        int fallbackRandomLocationCol = 0;
 
+        // New location should meet tolerance level
         for(int i=0; i < fGridSize; i++)
         {
             for(int j=0; j < fGridSize; j++)
             {
-                if(fGrid[i][j] == EMPTY && (isToleranceLevelMet(i, j, fGrid[i][j]) || randomLocationFlag))
+                if(!isFallbackRandomLocationSet && fGrid[i][j] == EMPTY)
+                {
+                    fallbackRandomLocationRow = i;
+                    fallbackRandomLocationCol = j;
+                    isFallbackRandomLocationSet = true;
+                }
+                if(fGrid[i][j] == EMPTY && (isToleranceLevelMet(i, j, fGrid[i][j])))
                 {
                     char type = fGrid[row][col];
                     fGrid[i][j] = type;
                     fGrid[row][col] = EMPTY;
                     toleranceMetInNewLocation = true;
-                    break;
+                    return;
                 }
             }
         }
         
-        if(!toleranceMetInNewLocation)
-        {
-            relocate(row, col, true);
-        }
-
+        // Fallback random location
+        char type = fGrid[row][col];
+        fGrid[fallbackRandomLocationRow][fallbackRandomLocationCol] = type;
+        fGrid[row][col] = EMPTY;
     }
     private boolean isToleranceLevelMet(int i, int j, char type)
     {
