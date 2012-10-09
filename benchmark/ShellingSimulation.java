@@ -1,197 +1,301 @@
 import java.util.Random;
-
+import java.util.Vector;
+import joos.lib.*;
 
 public class ShellingSimulation
 {
-    public ShellingSimulation(int toleranceLevel, int gridSize, int population, int simulationSpeed)
+    
+    //Simulation Parameters
+    protected int toleranceLevel;
+    protected int gridSize;
+    protected int population;
+    protected int simulationSpeed;
+    protected int entriesCount;
+    
+    // Constants
+    protected int  ERROR;
+    protected Character EMPTY; 
+    protected Character TYPE1;
+    protected Character TYPE2;
+    protected char DELIMITER;
+    protected int RANDOM_NUMBER_RANGE;
+    protected int ONE_SECOND_SPEED;
+   
+    //Simulation State 
+    protected SimulationGrid grid;
+    protected Vector cornerToleranceLevels; 
+    protected Vector nonCornerToleranceLevels; 
+
+    
+    /*
+     * Constructor
+     */
+    public ShellingSimulation(
+     	int toleranceLevel_, 
+        int gridSize_, 
+    	int population_, 
+    	int simulationSpeed_
+	)
     {
-        fToleranceLevel = toleranceLevel;
-        fGridSize = gridSize;
-        fPopulation = population;
-        fSimulationSpeed = simulationSpeed;
-        fGrid = new char[fGridSize][fGridSize];
-        initializeEmptyGrid();
-        initializeGridEntries(fPopulation);
+	    super(); 
+
+    	//initialize constants 
+	    ERROR = 1; 
+	    EMPTY = new Character('.');
+        TYPE1 = new Character('*');    
+        TYPE2 = new Character('@');
+        DELIMITER = ' ';
+	    RANDOM_NUMBER_RANGE = 100;
+    	ONE_SECOND_SPEED = 1000;
+
+	    //set parameters 
+        toleranceLevel = toleranceLevel_;
+        gridSize = gridSize_;
+        population = population_;
+        simulationSpeed = simulationSpeed_;
+        grid = new SimulationGrid(gridSize, gridSize); 
+
+    	//run initializers 
+        this.initializeEmptyGrid();
+        this.initializeToleranceLevelVectors();
+        this.initializeGridEntries(population);        
     }
         
+    /*
+     * Simulate function
+     */
     public void simulate()
     {
-        printGrid();
-        updateLocations();
-        sleep();
+        //output grid
+        grid.printGrid(DELIMITER);
+        
+        //move unhappy people 
+	    this.updateLocations();
+	    
+	    //wait a specified amount of time 
+        this.sleep();
     }
     
-    private void updateLocations()
+    public void updateLocations()
     {
-        for(int i=0; i < fGridSize; i++)
+		int i; 
+		int j;
+        Character _c; 
+        char _charValue;         
+
+        
+        //traverse the grid 
+        for(i=0; i < gridSize; i++)
         {
-            for(int j=0; j < fGridSize; j++)
-            {
-                if(fGrid[i][j] != EMPTY && !isToleranceLevelMet(i, j, fGrid[i][j]))
+            for(j=0; j < gridSize; j++)
+            {                
+                _c = grid.get(i,j); 
+
+                
+                //find unhappy people 
+                if(
+                    _c != null  && 
+                    !_c.equals(EMPTY) && 
+                    !this.isToleranceLevelMet(i, j, _c.charValue())
+                    )
                 {
-                    relocate(i, j);
+                    //relocate them 
+                    this.relocate(i, j);                    
                 }
             }
         }
     }
     
-    private void sleep()
+    /*
+     * Makes the program wait the specified amount of time 
+     */
+    public void sleep()
     {
-        try
-        {
-            Thread.currentThread();
-            Thread.sleep(fSimulationSpeed * ONE_SECOND_SPEED);
-        } catch (InterruptedException e)
-        {
-            // Vomit
-            e.printStackTrace();
+        //JOOS Wrappers
+        Thread _t1;
+        JoosThread _thread; 
         
-        }
+        _t1 = new Thread();          
+        _thread = new JoosThread(_t1);
+        
+        //sleep the current thread
+        _thread.currentThread(); 
+        _thread.sleep(simulationSpeed * ONE_SECOND_SPEED);
     }
     
-    private void relocate(int row, int col)
+    /*
+     * Move Unhappy people
+     */
+    public void relocate(int row_, int col_)
     {
-        boolean toleranceMetInNewLocation = false;
-        boolean isFallbackRandomLocationSet = false;
-        int fallbackRandomLocationRow = 0;
-        int fallbackRandomLocationCol = 0;
+        boolean _toleranceMetInNewLocation;
+        boolean _isFallbackRandomLocationSet; 
+        
+        int _fallbackRandomLocationRow;
+        int _fallbackRandomLocationCol;
+        int i;
+        int j; 
+        
+        Character _c;
+        Character _c1; 
+        Character _type; 
+
+        _toleranceMetInNewLocation = false;  
+        _isFallbackRandomLocationSet = false; 
+        _fallbackRandomLocationRow = 0; 
+        _fallbackRandomLocationCol = 0;
 
         // New location should meet tolerance level
-        for(int i=0; i < fGridSize; i++)
+        for(i=0; i < gridSize; i++)
         {
-            for(int j=0; j < fGridSize; j++)
+            for(j=0; j < gridSize; j++)
             {
-                if(!isFallbackRandomLocationSet && fGrid[i][j] == EMPTY)
+                _c = grid.get(i,j);
+                
+                if(!_isFallbackRandomLocationSet)
                 {
-                    fallbackRandomLocationRow = i;
-                    fallbackRandomLocationCol = j;
-                    isFallbackRandomLocationSet = true;
+                    _fallbackRandomLocationRow = i;
+                    _fallbackRandomLocationCol = j;
+                    _isFallbackRandomLocationSet = true;
                 }
-                if(fGrid[i][j] == EMPTY && (isToleranceLevelMet(i, j, fGrid[i][j])))
+        
+                if(this.isToleranceLevelMet(i, j, _c.charValue()))
                 {
-                    char type = fGrid[row][col];
-                    fGrid[i][j] = type;
-                    fGrid[row][col] = EMPTY;
-                    toleranceMetInNewLocation = true;
+                    _c1  = grid.get(row_, col_);               
+                    grid.set(i, j, _c1);
+                    grid.set(row_, col_, _c);
+                    _toleranceMetInNewLocation = true;
                     return;
                 }
             }
         }
         
         // Fallback random location
-        char type = fGrid[row][col];
-        fGrid[fallbackRandomLocationRow][fallbackRandomLocationCol] = type;
-        fGrid[row][col] = EMPTY;
+        _type = grid.get(row_, col_);
+        grid.set(_fallbackRandomLocationRow, _fallbackRandomLocationCol, _type);
+        grid.set(row_, col_, EMPTY);
     }
-    private boolean isToleranceLevelMet(int i, int j, char type)
+
+    /*
+     * Checks all neighbours for tolerance level
+     */
+    public boolean isToleranceLevelMet(int row_, int col_, char type_)
     {
-        int countSimilar = 0;
-        int countNeighbours = 0;
+        int _countSimilar;
+        int _countNeighbours;
+        int _equivalenceToleranceLevels;
+    	Character _neighbour;
+	
+        _countSimilar = 0; 
+        _countNeighbours = 0;
+        _equivalenceToleranceLevels = 0;
         
-        if(i >= 1)
+        if(row_ >= 1)
         {
-            
            // left top
-           if(j >= 1)
-           {
-               if(fGrid[i-1][j-1] != EMPTY)
+           if(col_ >= 1)
+           {          
+	           _neighbour = grid.get(row_-1, col_-1);
+               _countNeighbours++;
+
+               if(type_ == _neighbour.charValue())
                {
-                   countNeighbours++;
-               }
-               if(type == fGrid[i-1][j-1])
-               {
-                   countSimilar++;
+                   _countSimilar++;
                }
            }
            
            // center top
-           if(type == fGrid[i-1][j])
-           {
-               if(fGrid[i-1][j] != EMPTY)
-               {
-                   countNeighbours++;
-               }
-               countSimilar++;
+           _neighbour = grid.get(row_-1, col_); 
+           if(type_ == _neighbour.charValue())
+           {    
+               _countNeighbours++;
+               _countSimilar++;
            }
            
            // Right top
-           if(j <= (fGridSize-2))
+           if(col_ <= (gridSize-2))
            {
-               if(fGrid[i-1][j+1] != EMPTY)
+                _neighbour = grid.get(row_-1, col_+1); 
+                _countNeighbours++;
+
+               if(type_ == _neighbour.charValue())
                {
-                   countNeighbours++;
-               }
-               if(type == fGrid[i-1][j+1])
-               {
-                   countSimilar++;
+                   _countSimilar++;
                }
            }
         }
         
         // Left 
-        if(j >= 1)
+        if(col_ >= 1)
         {
-            if(fGrid[i][j-1] != EMPTY)
+            _neighbour = grid.get(row_, col_ -1 );  
+            _countNeighbours++;
+            
+            if(type_ == _neighbour.charValue())
             {
-                countNeighbours++;
-            }
-            if(type == fGrid[i][j-1])
-            {
-                countSimilar++;
+                _countSimilar++;
             }
         }
         
         // Right
-        if(j <= (fGridSize-2))
+        if(col_ <= (gridSize-2))
         {
-            if(fGrid[i][j+1] != EMPTY)
+            _neighbour = grid.get(row_, col_+1); 
+            _countNeighbours++;
+            
+            if(type_ == _neighbour.charValue())
             {
-                countNeighbours++;
-            }
-            if( type == fGrid[i][j+1])
-            {
-                countSimilar++;
+                _countSimilar++;
             }
         }
-        if(i <= (fGridSize-2))
+
+        if(row_ <= (gridSize-2))
         {
             // Bottom left
-            if(j >= 1)
+            if(col_ >= 1)
             {
-                if(fGrid[i+1][j-1] != EMPTY)
+                _neighbour = grid.get(row_+1, col_-1); 
+                _countNeighbours++;
+                                
+                if(type_ == _neighbour.charValue())
                 {
-                    countNeighbours++;
-                }
-                if(type == fGrid[i+1][j-1])
-                {
-                    countSimilar++;
+                    _countSimilar++;
                 }
             }
-            
-            if(fGrid[i+1][j] != EMPTY)
-            {
-                countNeighbours++;
-            }
+           
             // Bottom
-            if(type == fGrid[i+1][j])
+            _neighbour = grid.get(row_+1, col_);  
+            _countNeighbours++;                        
+
+            if(type_ == _neighbour.charValue())
             {
-                countSimilar++;
+                _countSimilar++;
             }
             
             // Bottom Right
-            if(j <= (fGridSize-2))
+            if(col_ <= gridSize-2)
             {
-                if(fGrid[i+1][j+1] != EMPTY)
+                _neighbour = grid.get(row_+1, col_+1); 
+                _countNeighbours++;
+                
+                if(type_ == _neighbour.charValue())
                 {
-                    countNeighbours++;
-                }
-                if(type == fGrid[i+1][j+1])
-                {
-                    countSimilar++;
+                    _countSimilar++;
                 }
             }
         }
-        if(((double)countSimilar/(double)countNeighbours) >= ((double)((double)fToleranceLevel/100) - ERROR))
+        
+        //determines tolerance 
+        if(_countNeighbours == 3 || _countNeighbours == 5)
+        {
+            _equivalenceToleranceLevels = this.getEquivalentToleranceLevel(_countNeighbours);
+        }
+        else 
+        {
+            _equivalenceToleranceLevels = toleranceLevel; 
+        }
+                
+        if(_countSimilar >= _equivalenceToleranceLevels) 
         {
             return true;
         }
@@ -201,96 +305,128 @@ public class ShellingSimulation
         }
     }
     
-    public void printGrid()
+    /*
+     * Determines the tolerance equivalence 
+     */
+    public int getEquivalentToleranceLevel(int countNeighbours_)
     {
-        for(int i=0; i < fGridSize; i++)
+        Integer _value; 
+        if(countNeighbours_ == 3)
         {
-            for(int j=0; j < fGridSize; j++)
-            {
-                String s = fGrid[i][j]+"";
-                System.out.print(s + DELIMITER);
-            }
-            System.out.println();
+            _value = (Integer) cornerToleranceLevels.elementAt(toleranceLevel);
+            return _value.intValue();
         }
-        System.out.println();
+        else
+        {
+            _value = (Integer) nonCornerToleranceLevels.elementAt(toleranceLevel);
+            return _value.intValue();
+        }
     }
     
-    private void initializeEmptyGrid()
+    /*
+     * Initializes the grid to empty value 
+     */
+    public void initializeEmptyGrid()
     {
-        for(int i=0; i < fGridSize; i++)
-        {
-            for(int j=0; j < fGridSize; j++)
-            {
-                fGrid[i][j] = EMPTY;
-            }
-        }
-    }
-    private void initializeGridEntries(int populationLeft)
-    {
-        entriesCount = populationLeft;
-        Random random = new Random(19580427);
+        int i;
+        int j; 
         
-        for(int i=0; i < fGridSize; i++)
+        for(i=0; i < gridSize; i++)
         {
-            for(int j=0; j < fGridSize; j++)
+            for(j=0; j < gridSize; j++)
             {
-                if(fGrid[i][j] == EMPTY)
+                grid.set(i, j, EMPTY);
+            }
+        }        
+    }
+
+    /*
+     * Generates the tolerance vectors 
+     */
+    public void initializeToleranceLevelVectors()
+    {                 
+        Integer _zeroLevel;
+        Integer _firstLevel; 
+        Integer _secondLevel; 
+        Integer _thirdLevel;         
+        Integer _fourthLevel; 
+        Integer _fifthLevel; 
+        
+        _zeroLevel = new Integer(0);
+        _firstLevel = new Integer(1); 
+        _secondLevel = new Integer(2);
+        _thirdLevel = new Integer(3);
+        _fourthLevel = new Integer(4); 
+        _fifthLevel = new Integer(5);
+        
+        cornerToleranceLevels = new Vector(); 
+        nonCornerToleranceLevels = new Vector();
+        
+        //non-corner cases 
+        nonCornerToleranceLevels.insertElementAt(_zeroLevel, 0);
+        nonCornerToleranceLevels.insertElementAt(_firstLevel, 1);
+        nonCornerToleranceLevels.insertElementAt(_firstLevel, 2);                
+        nonCornerToleranceLevels.insertElementAt(_secondLevel, 3);        
+        nonCornerToleranceLevels.insertElementAt(_secondLevel, 4);        
+        nonCornerToleranceLevels.insertElementAt(_thirdLevel, 5);
+        nonCornerToleranceLevels.insertElementAt(_thirdLevel, 6);        
+        nonCornerToleranceLevels.insertElementAt(_fourthLevel, 7);        
+        nonCornerToleranceLevels.insertElementAt(_fifthLevel, 8);        
+        
+        //corner cases 
+        cornerToleranceLevels.insertElementAt(_zeroLevel, 0);
+        cornerToleranceLevels.insertElementAt(_firstLevel, 1);
+        cornerToleranceLevels.insertElementAt(_firstLevel, 2);
+        cornerToleranceLevels.insertElementAt(_firstLevel, 3);        
+        cornerToleranceLevels.insertElementAt(_secondLevel, 4);
+        cornerToleranceLevels.insertElementAt(_secondLevel, 5);
+        cornerToleranceLevels.insertElementAt(_secondLevel, 6);        
+        cornerToleranceLevels.insertElementAt(_thirdLevel, 7);
+        cornerToleranceLevels.insertElementAt(_thirdLevel, 8);                
+    }
+        
+    /*
+     * Creates a randomly distributed grid  
+     */
+    public void initializeGridEntries(int populationLeft_)
+    {
+        Random _random; 
+        int i; 
+        int j; 
+        int _randomInteger; 
+        Character _c; 
+ 
+        //seed random and set population count 
+        _random = new Random();
+        entriesCount = populationLeft_;
+        
+        while(entriesCount > 0)
+        {
+            for(i=0; i < gridSize; i++)
+            {
+                for(j=0; j < gridSize; j++)
                 {
-                    if(random.nextInt(RANDOM_NUMBER_RANGE) >= (RANDOM_NUMBER_RANGE/2))
+                    _c = grid.get(i, j); 
+                    if(_c.equals(EMPTY))
                     {
-                        if(random.nextInt(RANDOM_NUMBER_RANGE) >= (RANDOM_NUMBER_RANGE/2))
+                        _randomInteger = _random.nextInt(50);
+                        _randomInteger = _randomInteger % 3; 
+                        
+                        if(_randomInteger > 0)
                         {
-                            fGrid[i][j] = TYPE1;
-                        }
-                        else
-                        {
-                            fGrid[i][j] = TYPE2;
-                        }
-                        entriesCount--;
-                        if(entriesCount == 0)
-                        {
-                            return;
+                            if(_randomInteger == 1)
+                            {
+                                 grid.set(i, j, TYPE1);
+                            }
+                            else
+                            {
+                                grid.set(i, j, TYPE2);
+                            }            
+                            entriesCount = entriesCount - 1;
                         }
                     }
                 }
             }
-        }
-        while(entriesCount > 0)
-        {
-            initializeGridEntries(entriesCount);
-        }
-    }
-    
-    // Tolerance level represents the required minimum of similar people
-    private final int fToleranceLevel;
-    private final int fGridSize;
-    private final int fPopulation;
-    private final int fSimulationSpeed;
-    private char[][] fGrid;
-    private int entriesCount;
-    
-    
-    
-    // Constants
-    private double ERROR = 0.01;
-    private final char EMPTY = '.';
-    private final char TYPE1 = '*';
-    private final char TYPE2 = '@';
-    private final char DELIMITER = ' ';
-    private final int RANDOM_NUMBER_RANGE = 100;
-    private final int ONE_SECOND_SPEED = 1000;
-    
-    public static void main(String args[])
-    {
-        // TODO write code to read values
-        // First value is tolerance and is on a scale of 0 - 100(intolerant)
-        // Second is gridSize
-        // Third is population
-        // 4th is speed in seconds
-        ShellingSimulation shellingSimulation = new ShellingSimulation(80, 15, 100, 1);
-        while(true)
-        {
-            shellingSimulation.simulate();
-        }
+        }               
     }
 }

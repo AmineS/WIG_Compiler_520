@@ -333,8 +333,8 @@ whilestatementnoshortif : tWHILE '(' expression ')' statementnoshortif
                           {$$ = makeSTATEMENTwhile($3,$5);}
 ;
 
-forstatement : tFOR '(' expression ';' expression ';' expression ')' statements
-               {$$ = makeSTATEMENTsequence(makeSTATEMENTexp($3), makeSTATEMENTwhile($5, makeSTATEMENTsequence($9, makeSTATEMENTexp($7))));}
+forstatement : tFOR '(' expression ';' expression ';' expression ')' '{'  statements '}'
+               {$$ = makeSTATEMENTsequence(makeSTATEMENTexp($3), makeSTATEMENTwhile($5, makeSTATEMENTsequence($10, makeSTATEMENTexp($7))));}
 ;
 
 expressionstatement : statementexpression ';'
@@ -348,7 +348,7 @@ statementexpression : assignment
                     | classinstancecreation
                       {$$ = $1;}
                	    | incexpression
-			 		            {$$ = $1;}
+	              {$$ = $1;}
 ;
 
 returnstatement : tRETURN returnexpression ';'
@@ -467,6 +467,8 @@ primaryexpression : literal
 
 incexpression : tIDENTIFIER tINC
                 { $$ = makeEXPassign($1, makeEXPplus(makeEXPid($1), makeEXPintconst(1))); }
+              | tINC tIDENTIFIER
+               { $$ = makeEXPassign($2, makeEXPplus(makeEXPid($2), makeEXPintconst(1))); }
 ;
 
 classinstancecreation : tNEW tIDENTIFIER '(' arguments ')'
