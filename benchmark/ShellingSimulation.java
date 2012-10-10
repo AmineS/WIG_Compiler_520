@@ -34,7 +34,8 @@ public class ShellingSimulation
      	int toleranceLevel_, 
         int gridSize_, 
     	int population_, 
-    	int simulationSpeed_
+    	int simulationSpeed_,
+    	SimulationGrid grid_
 	)
     {
 	    super(); 
@@ -53,12 +54,20 @@ public class ShellingSimulation
         gridSize = gridSize_;
         population = population_;
         simulationSpeed = simulationSpeed_;
-        grid = new SimulationGrid(gridSize, gridSize); 
-
-    	//run initializers 
-        this.initializeEmptyGrid();
+        
+      //run initializers
+        if(grid_ == null)
+        {
+            grid = new SimulationGrid(gridSize, gridSize); 
+             
+            this.initializeEmptyGrid();            
+            this.initializeGridEntries(population);
+        }
+        else
+        {
+            grid = grid_;
+        }
         this.initializeToleranceLevelVectors();
-        this.initializeGridEntries(population);        
     }
         
     /*
