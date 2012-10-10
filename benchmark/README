@@ -1,0 +1,25 @@
+The benchmark is an implementation of Schelling's Segregation Model:
+(http://web.mit.edu/rajsingh/www/lab/alife/schelling.html)
+
+Schelling showed that a small preference for one's neighbours of thei
+same color could lead to total segregation.
+People within a certain tolerance stay in their current position. 
+If their neighbours are intolerable or new neighbours come in that 
+are intolerable they move. The simulation shows that this could lead
+to a constant segregation where the community never settles or in some 
+cases it settles. 
+
+The input grid is loaded on to the file in. If the first parameter of the 
+file is set to false, the program randomly generates the grid. Otherwise 
+it reads the grid in. The first four integers after that represent the 
+tolerancei level, grid size, _population and simulation wait respectively. 
+If a large number of output is desired, simulation wait should be changed 
+to 0. 
+
+After the parameters are read, each int represents the character type in 
+the grid which should be the ascii equivalent of '@', '*' or '.'. The 
+ascii equivalent is loaded on to a 2D vector grid. The simulation code
+itself is commented. There are two primary classes, a SimulationGrid 
+which represents the data structure being manipulated and a ShellingSimulation
+which runs the actual simulation itself. 
+
