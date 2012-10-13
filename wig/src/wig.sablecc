@@ -1,0 +1,280 @@
+Package wig;
+
+Helpers
+    tab     = 9; 
+    cr      = 13; 
+    lf      = 10;
+    digit   = ['0'..'9'];
+    lowercase = ['a'..'z'];
+    uppercase = ['A'..'Z']; 
+    letter  = lowercase | uppercase;
+    idletter = letter | '_';
+    idchar  = letter | '_' | digit;    
+
+Tokens
+// whitespace
+    eol   = cr | lf | cr lf;
+    blank = ' ' | tab;
+
+// digits
+    identifier = idletter idchar*;
+    intconst = '0'| [digit-'0'] digit*;
+    stringconst = '"' .* '"';
+    meta = '<!--' .* '-->';
+    whatever =  [^<^>]*;
+
+// separators
+    l_par = '(';
+    r_par = ')';
+
+// operators
+    
+    starstar = '**';
+    star  = '*';    
+    slash = '/';
+    mod   = '%';
+    plus  = '+';
+    minus = '-';
+
+// wig html syntax
+
+    html = 'const' 'html' identifier '=' '<html>' htmlbodies '</html>';
+
+    htmls = html | htmls html;
+
+    htmlbodies  =   /* empty */ | nehtmlbodies; 
+
+    nehtmlbodies =  htmlbody | nehtmlbodies htmlbody; 
+
+    htmlbody = '<' identifier attributes '>'
+            |   '</' identifier '>'
+            |   '<[' identifier ']'
+            |   whatever
+            |   meta
+            |   '<' 'input' inputattrs '>'
+            |   '<' 'select' inputattrs '>' htmlbodies '</' 'select' '>'
+    ;
+
+    inputattrs = inputattr | inputattrs inputattr; 
+
+    inputattr = 'name' '=' attr
+            | 'type' '=' inputtype 
+            | attribute 
+    ;
+
+    inputtype = 'text' 
+            | 'radio' 
+    ;
+
+    attributes = /* empty */ 
+            | neattributes
+    ;
+
+    neattributes = attribute 
+            | neattributes attribute 
+    ;
+
+    attribute = attr 
+            | attr '=' attr 
+    ;
+
+    attr = identifier 
+            | stringconst
+    ; 
+
+// wig statements syntax 
+
+    stms = /* empty */ 
+            | nestms
+    ;
+
+    nestms = stm 
+        | nestms stm
+    ;
+
+    stm = ';'
+    | 'show' document receive ';'
+    | 'exit' document ';'
+    | 'return' ';'
+    | 'return' exp ';'
+    | 'if' '(' exp ')' stm
+    | 'if' '(' exp ')' stm 'else' stm   
+    | 'while' '(' exp ')' stm
+    | compoundstm    
+    | exp ';'
+    ;
+
+    document = identifier
+        | 'plug' identifier '[' plugs ']'
+    ;
+
+    receive = /* empty */
+        | 'receive' '[' inputs ']'
+    ;
+
+    compoundstm = '{' variables stms '}';
+
+    plugs = plug 
+        | plugs ',' plug;
+
+    plug = identifier '=' exp;
+
+    inputs = /* empty */ 
+        | neinputs;
+
+    neinputs = input 
+        | neinputs ',' input;
+
+    input = lvalue '=' identifier;
+
+// wig expression syntax 
+
+    exp = lvalue
+        | lvalue '=' exp
+        | exp '==' exp
+        | exp '!=' exp
+        | exp '<' exp
+        | exp '>' exp
+        | exp '<=' exp
+        | exp '>=' exp
+        | '!' exp
+        | '-' exp
+        | exp '+' exp
+        | exp '-' exp
+        | exp '*' exp
+        | exp '/' exp
+        | exp '%' exp
+        | exp '&&' exp
+        | exp '||' exp
+        | exp '<<' exp
+        | exp '\+' identifiers
+        | exp '\-' identifiers
+        | identifier '(' exps ')'
+        | intconst
+        | 'true'
+        | 'false'
+        | stringconst
+        | 'tuple' '{' fieldvalues '}'
+        | '(' exp ')'
+    ;
+
+    exps = /* empty */ 
+        | neexps
+    ;
+
+    neexps = exp 
+        | neexps ',' exp
+    ;
+
+    lvalue = identifier 
+        | identifier '.' identifier
+    ;
+
+    fieldvalues = /* empty */ 
+            | nefieldvalues 
+    ;
+    
+    nefieldvalues = fieldvalue 
+            | fieldvalues ',' fieldvalue 
+    ;
+    
+    fieldvalue = identifier '=' exp;
+
+// wig schemas, types and functions
+
+    schemas = /* empty */ 
+        | neschemas
+    ;
+    
+    neschemas = schema 
+        | neschemas schema
+    ;
+    
+    schema = 'schema' identifier '{' fields '}';
+
+    fields = /* empty */ 
+        | nefields
+    ;
+    
+    nefields = field 
+        | nefields field
+    ;
+    
+    field = simpletype identifier ';' ;
+
+    simpletype = 'int' 
+        | 'bool' 
+        | 'string' 
+        | 'void'
+    ;
+    
+    type = simpletype 
+        | 'tuple' identifier
+    ;
+    
+    functions = /* empty */ 
+        | nefunctions
+    ;
+    
+    nefunctions = function 
+        | nefunctions function
+    ;
+    
+    function = type identifier '(' arguments ')' compoundstm;
+    
+    arguments = /* empty */ 
+        | nearguments
+    ;
+    
+    nearguments = argument 
+        | nearguments ',' argument
+    ;
+    
+    argument = type identifier;
+
+
+// wig sessions, variables and services 
+    
+    sessions = session 
+        | sessions session
+    ;
+    
+    session = 'session' identifier '(' ')' compoundstm;
+
+    variables = /* empty */ 
+        | nevariables
+    ;
+    
+    nevariables = variable 
+        | nevariables variable
+    ;
+    
+    variable = type identifiers ';';
+    
+    identifiers = identifier 
+        | identifiers ',' identifier
+    ;
+    
+    service = 'service' '{' htmls schemas variables functions sessions '}';
+
+IgnoredTokens
+    blank, eol;
+
+Productions
+
+
+
+Abstract Syntax Tree
+    exp = 
+      {plus}     [l]:exp [r]:exp 
+    | {minus}    [l]:exp [r]:exp
+    | {mult}     [l]:exp [r]:exp 
+    | {divd}     [l]:exp [r]:exp 
+    | {mod}      [l]:exp [r]:exp
+    | {expon}    [l]:exp [r]:exp
+    | {abs}      [r]:exp
+    | {neg}      [r]:exp    
+    | {id}       identifier 
+    | {intconst}   intconst
+    | {stringconst} stringconst
+    ;
