@@ -1,6 +1,9 @@
 Package wig;
 
 Helpers
+    any = [0x0 .. 0xfffff];
+    
+
     tab     = 9; 
     cr      = 13; 
     lf      = 10;
@@ -10,271 +13,274 @@ Helpers
     letter  = lowercase | uppercase;
     idletter = letter | '_';
     idchar  = letter | '_' | digit;    
+    double_quote = '"';
+
+    any_str = [any - [cr + lf]];
 
 Tokens
-// whitespace
     eol   = cr | lf | cr lf;
+
     blank = ' ' | tab;
 
-// digits
-    identifier = idletter idchar*;
-    intconst = '0'| [digit-'0'] digit*;
-    stringconst = '"' .* '"';
-    meta = '<!--' .* '-->';
-    whatever =  [^<^>]*;
+    service = 'service';
+    const = 'const';
+    html = 'html';
+    html_tag_start = '<html>';
+    html_tag_end = '</html>';
+    input = 'input';
+    select = 'select';
+    type = 'type';
+    name = 'name';
+    text = 'text';
+    radio = 'radio';
+    schema = 'schema';
+    session = 'session';
+    show = 'show';
+    exit = 'exit';
+    return = 'return';
+    if = 'if';
+    else = 'else';
+    while = 'while';
+    plug = 'plug';
+    receive = 'receive';
+    int = 'int';
+    bool = 'bool';
+    string = 'string';
+    void = 'void';
+    tuple = 'tuple';
+    true = 'true';
+    false = 'false';
 
-// separators
+    l_brace = '{';
+    r_brace = '}';
+    assign = '=';
+    semicolon = ';';
+    lt = '<';
+    gt = '>';
+    lt_slash = '</';
+    lt_bracket = '<[';
+    gt_bracket = ']>';
     l_par = '(';
     r_par = ')';
-
-// operators
-    
-    starstar = '**';
-    star  = '*';    
-    slash = '/';
-    mod   = '%';
-    plus  = '+';
+    l_bracket = '[';
+    r_bracket = ']';
+    comma = ',';
+    keep = '\+';
+    remove = '\-';
+    join = '<<';
+    eq = '==';
+    neq = '!=';
+    lteq = '<=';
+    gteq = '>=';
+    not = '!';
     minus = '-';
+    plus = '+';
+    mult = '*';
+    div = '/';
+    mod = '%';
+    and = '&&';
+    or = '||';
+    dot = '.';
 
-// wig html syntax
+    identifier = idletter idchar*;
 
-    html = 'const' 'html' identifier '=' '<html>' htmlbodies '</html>';
+    intconst = '0'| [digit-'0'] digit*;
 
-    htmls = html | htmls html;
+    stringconst = double_quote any_str* double_quote;
+ 
+    meta = '<!--' any* '-->';
 
-    htmlbodies  =   /* empty */ | nehtmlbodies; 
+    whatever = [any - ['>' + '<']]*;
 
-    nehtmlbodies =  htmlbody | nehtmlbodies htmlbody; 
-
-    htmlbody = '<' identifier attributes '>'
-            |   '</' identifier '>'
-            |   '<[' identifier ']'
-            |   whatever
-            |   meta
-            |   '<' 'input' inputattrs '>'
-            |   '<' 'select' inputattrs '>' htmlbodies '</' 'select' '>'
-    ;
-
-    inputattrs = inputattr | inputattrs inputattr; 
-
-    inputattr = 'name' '=' attr
-            | 'type' '=' inputtype 
-            | attribute 
-    ;
-
-    inputtype = 'text' 
-            | 'radio' 
-    ;
-
-    attributes = /* empty */ 
-            | neattributes
-    ;
-
-    neattributes = attribute 
-            | neattributes attribute 
-    ;
-
-    attribute = attr 
-            | attr '=' attr 
-    ;
-
-    attr = identifier 
-            | stringconst
-    ; 
-
-// wig statements syntax 
-
-    stms = /* empty */ 
-            | nestms
-    ;
-
-    nestms = stm 
-        | nestms stm
-    ;
-
-    stm = ';'
-    | 'show' document receive ';'
-    | 'exit' document ';'
-    | 'return' ';'
-    | 'return' exp ';'
-    | 'if' '(' exp ')' stm
-    | 'if' '(' exp ')' stm 'else' stm   
-    | 'while' '(' exp ')' stm
-    | compoundstm    
-    | exp ';'
-    ;
-
-    document = identifier
-        | 'plug' identifier '[' plugs ']'
-    ;
-
-    receive = /* empty */
-        | 'receive' '[' inputs ']'
-    ;
-
-    compoundstm = '{' variables stms '}';
-
-    plugs = plug 
-        | plugs ',' plug;
-
-    plug = identifier '=' exp;
-
-    inputs = /* empty */ 
-        | neinputs;
-
-    neinputs = input 
-        | neinputs ',' input;
-
-    input = lvalue '=' identifier;
-
-// wig expression syntax 
-
-    exp = lvalue
-        | lvalue '=' exp
-        | exp '==' exp
-        | exp '!=' exp
-        | exp '<' exp
-        | exp '>' exp
-        | exp '<=' exp
-        | exp '>=' exp
-        | '!' exp
-        | '-' exp
-        | exp '+' exp
-        | exp '-' exp
-        | exp '*' exp
-        | exp '/' exp
-        | exp '%' exp
-        | exp '&&' exp
-        | exp '||' exp
-        | exp '<<' exp
-        | exp '\+' identifiers
-        | exp '\-' identifiers
-        | identifier '(' exps ')'
-        | intconst
-        | 'true'
-        | 'false'
-        | stringconst
-        | 'tuple' '{' fieldvalues '}'
-        | '(' exp ')'
-    ;
-
-    exps = /* empty */ 
-        | neexps
-    ;
-
-    neexps = exp 
-        | neexps ',' exp
-    ;
-
-    lvalue = identifier 
-        | identifier '.' identifier
-    ;
-
-    fieldvalues = /* empty */ 
-            | nefieldvalues 
-    ;
-    
-    nefieldvalues = fieldvalue 
-            | fieldvalues ',' fieldvalue 
-    ;
-    
-    fieldvalue = identifier '=' exp;
-
-// wig schemas, types and functions
-
-    schemas = /* empty */ 
-        | neschemas
-    ;
-    
-    neschemas = schema 
-        | neschemas schema
-    ;
-    
-    schema = 'schema' identifier '{' fields '}';
-
-    fields = /* empty */ 
-        | nefields
-    ;
-    
-    nefields = field 
-        | nefields field
-    ;
-    
-    field = simpletype identifier ';' ;
-
-    simpletype = 'int' 
-        | 'bool' 
-        | 'string' 
-        | 'void'
-    ;
-    
-    type = simpletype 
-        | 'tuple' identifier
-    ;
-    
-    functions = /* empty */ 
-        | nefunctions
-    ;
-    
-    nefunctions = function 
-        | nefunctions function
-    ;
-    
-    function = type identifier '(' arguments ')' compoundstm;
-    
-    arguments = /* empty */ 
-        | nearguments
-    ;
-    
-    nearguments = argument 
-        | nearguments ',' argument
-    ;
-    
-    argument = type identifier;
-
-
-// wig sessions, variables and services 
-    
-    sessions = session 
-        | sessions session
-    ;
-    
-    session = 'session' identifier '(' ')' compoundstm;
-
-    variables = /* empty */ 
-        | nevariables
-    ;
-    
-    nevariables = variable 
-        | nevariables variable
-    ;
-    
-    variable = type identifiers ';';
-    
-    identifiers = identifier 
-        | identifiers ',' identifier
-    ;
-    
-    service = 'service' '{' htmls schemas variables functions sessions '}';
 
 IgnoredTokens
     blank, eol;
 
 Productions
+    service =
+        T.service l_brace P.html+ P.schema* variable* function* P.session+ r_brace;
 
+    html = 
+        const T.html identifier assign html_tag_start htmlbody* html_tag_end semicolon;
 
+    htmlbody =
+        {tag_start} lt identifier attribute* gt |
+        {tag_end}   lt_slash identifier gt |
+        {hole}      lt_bracket identifier gt_bracket |
+        {whatever}  whatever |
+        {meta}      meta |
+        {input}     lt T.input inputattr+ gt |
+        {select}    lt [select_tag]:select inputattr+ [first_gt]:gt htmlbody* lt_slash select [second_gt]:gt;
 
-Abstract Syntax Tree
-    exp = 
-      {plus}     [l]:exp [r]:exp 
-    | {minus}    [l]:exp [r]:exp
-    | {mult}     [l]:exp [r]:exp 
-    | {divd}     [l]:exp [r]:exp 
-    | {mod}      [l]:exp [r]:exp
-    | {expon}    [l]:exp [r]:exp
-    | {abs}      [r]:exp
-    | {neg}      [r]:exp    
-    | {id}       identifier 
-    | {intconst}   intconst
-    | {stringconst} stringconst
-    ;
+    inputattr =
+        {name}      name assign attr |
+        {type}      T.type assign inputtype |
+        {attribute} attribute;
+
+    inputtype =
+        {text}  text |
+        {radio} radio;
+
+    attribute =
+        {attr}  attr | 
+        {assign} [left_attr]:attr assign [right_attr]:attr;
+
+    attr = 
+        {id}  identifier | 
+        {str} stringconst;
+
+    schema =
+        T.schema identifier l_brace field* r_brace;
+
+    field =
+        simpletype identifier semicolon;
+
+    variable =
+        P.type identifiers semicolon;
+
+    identifiers =
+        {one}  identifier | 
+        {many} identifiers comma identifier;
+
+    simpletype =
+        {int}    int | 
+        {bool}   bool |
+        {string} string |
+        {void}   void;
+
+    type =
+        {simple} simpletype |
+        {tuple}  tuple identifier;
+
+    function =
+        P.type identifier l_par arguments? r_par compoundstm;
+
+    arguments =
+        {one}  argument |
+        {many} arguments comma argument;
+
+    argument =
+        P.type identifier;
+
+    session =
+        T.session identifier l_par r_par compoundstm;
+
+    stm =
+        {no}     semicolon |
+        {show}   show document P.receive? semicolon |
+        {exit}   exit document semicolon |
+        {return} return semicolon |
+        {retexp} return exp semicolon |
+        {if}     if l_par exp r_par stm |
+        {ifelse} if l_par exp r_par [then_stm]:stm_no_short_if else [else_stm]:stm |
+        {while}  while l_par exp r_par stm |
+        {comp}   compoundstm |
+        {exp}    exp semicolon;
+
+    stm_no_short_if =
+        {no}     semicolon |
+        {show}   show document P.receive? semicolon |
+        {exit}   exit document semicolon |
+        {return} return semicolon |
+        {retexp} return exp semicolon |
+        {ifelse} if l_par exp r_par [then_stm]:stm_no_short_if else [else_stm]:stm_no_short_if |
+        {while}  while l_par exp r_par stm_no_short_if |
+        {comp}   compoundstm |
+        {exp}    exp semicolon;
+
+    document =
+        {id}   identifier |
+        {plug} T.plug identifier l_bracket plugs r_bracket;
+
+    receive =
+       T.receive l_bracket inputs  r_bracket;
+
+    compoundstm =
+        l_brace variable* stm* r_brace;
+
+    plugs =
+        {one}  P.plug | 
+        {many} P.plugs comma P.plug;
+
+    plug =
+        identifier assign exp;
+
+    inputs =
+        {one} P.input |
+        {many} P.inputs comma P.input;
+
+    input =
+        lvalue assign identifier;
+
+    exp =
+        {assign}  lvalue assign or_exp |
+        {default} or_exp;
+
+    or_exp =
+        {or}      [left]:or_exp or [right]:and_exp |
+        {default} and_exp;
+
+    and_exp =
+        {and}     [left]:and_exp and [right]:cmp_exp |
+        {default} cmp_exp;
+
+    cmp_exp =
+        {eq}      [left]:add_exp eq [right]:add_exp |
+        {neq}     [left]:add_exp neq [right]:add_exp |
+        {lt}      [left]:add_exp lt [right]:add_exp |
+        {gt}      [left]:add_exp gt [right]:add_exp |
+        {lteq}    [left]:add_exp lteq [right]:add_exp |
+        {gteq}    [left]:add_exp gteq [right]:add_exp |
+        {default} add_exp;
+
+    add_exp =
+        {plus}    [left]:add_exp plus [right]:mult_exp |
+        {minus}   [left]:add_exp minus [right]:mult_exp |
+        {default} mult_exp;
+
+    mult_exp =
+        {mult}    [left]:mult_exp mult [right]:join_exp |
+        {div}     [left]:mult_exp div [right]:join_exp |
+        {mod}     [left]:mult_exp mod [right]:join_exp |
+        {default} join_exp;
+
+    join_exp = 
+        {join}    [left]:tuple_exp join [right]:join_exp |
+        {default} tuple_exp;
+        
+    tuple_exp =
+        {keep}        tuple_exp keep identifier |
+        {remove}      tuple_exp remove identifier |
+        {keep_many}   tuple_exp keep l_par identifiers r_par |
+        {remove_many} tuple_exp remove l_par identifiers r_par |
+        {default}     unary_exp;
+
+    unary_exp =
+        {not}     not base_exp |
+        {neg}     minus base_exp |
+        {default} base_exp;
+
+    base_exp =
+        {lvalue} lvalue |
+        {call}   identifier l_par exps? r_par |
+        {int}    intconst |
+        {true}   true |
+        {false}  false |
+        {string} stringconst |
+        {tuple}  tuple l_brace fieldvalues? r_brace |
+        {paren}  l_par exp r_par;
+
+    exps =
+        {one}  exp |
+        {many} exps comma exp;
+
+    lvalue =
+        {simple}    identifier | 
+        {qualified} [left]:identifier dot [right]:identifier;
+
+    fieldvalues =
+        {one}  fieldvalue | 
+        {many} fieldvalues comma fieldvalue;
+
+    fieldvalue =
+        identifier assign exp;

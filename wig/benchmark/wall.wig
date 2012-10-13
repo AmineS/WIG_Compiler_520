@@ -35,7 +35,7 @@ service
   	while (another != "no")
   	{
   		show setup receive[userMsg=userMsg];
-      messages = messages + "</br><center><i>" + userMsg + "</center></i>";
+      	messages = messages + "</br><center><i>" + userMsg + "</center></i>";
   		show plug Return [allMsg=messages] receive[another=another];
   	}
   	exit exitMsg;
