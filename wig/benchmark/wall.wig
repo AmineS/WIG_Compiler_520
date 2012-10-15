@@ -1,3 +1,7 @@
+/*
+A simple wall which prints messages people leave.
+*/
+
 service
 {
   const html setup = <html><body>

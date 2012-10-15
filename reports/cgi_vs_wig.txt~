@@ -1,0 +1,44 @@
+Links:
+
+wig:
+http://cs.mcgill.ca/~fkhan24/cgi-bin/wig_benchmark/wall.pl?Calculate
+
+cgi:
+http://cs.mcgill.ca/~fkhan24/wall.html
+
+
+Question 3:
+
+Our WIG service benchmark is a 'wall'. It accepts messages and prints 
+all messages people have left over time once a message is submitted.
+
+It is a little bit like a facebook wall (a very primitive one obviously)
+except that you have to submit a message first to see what the others posted.
+
+Question 4:
+
+We created cgi scripts for the Wall in python. 
+
+// discuss how a compiler might go about generating this code starting from a WIG service
+
+Since the services are session based, the Web service is many 
+complex sequences of interactions between servers and clients,
+compared to cgi which can be viewed as a collection of scripts.
+
+The service logic in the program source (our wig benchmark) can 
+can be translated to links between scripts just like in cgi.
+
+The global shared state could be used to generate html scripts.
+Then the sessions would be translated to cgi scripts. 
+
+// what extra complications might be required to translate your actual WIG benchmark
+
+The redirection from the 'return' page to the wall might create problems. 
+It would be preferable to put this also in a script so that it can be called
+by the html script when a user inputs a message. 
+
+Question 5:
+
+//  In particular, what language features do not have immediately apparent semantics, based on your knowledge of C, Java, and HTML? What might be the right semantics for these features?
+
+

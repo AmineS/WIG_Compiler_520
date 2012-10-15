@@ -1,9 +1,11 @@
-Working Links:
+Links:
 
 wig:
 http://cs.mcgill.ca/~fkhan24/cgi-bin/wig_benchmark/wall.pl?Calculate
 
-python:
+cgi:
 http://cs.mcgill.ca/~fkhan24/wall.html
 
-
+The benchmark is essentially a 'wall' where you can leave
+messages. On inputting a message and submitting it, you 
+can then see messages other people left.
