@@ -19,7 +19,7 @@ Helpers
 
 
 States
-	wig_scope, html_scope, html_comment_scope, holes_scope, html_tags, wig_comment_scope;
+	wig_scope, html_scope, wig_comment_scope, html_comment_scope, holes_scope, html_tags_scope;
 
 Tokens
     eol = cr | lf | cr lf;
@@ -30,14 +30,12 @@ Tokens
     {wig_scope} const = 'const';
     {wig_scope} html = 'html';
 
-    {html_scope} html_tag_start = '<html>';
-    {html_scope} html_tag_end = '</html>';
-    {html_tags} input = 'input';
-    {html_tags} select = 'select';
-    {html_tags} type = 'type';
-    {html_tags} name = 'name';
-    {html_tags} text = 'text';
-    {html_tags} radio = 'radio';
+    {html_tags_scope} input = 'input';
+    {html_tags_scope} select = 'select';
+    {html_tags_scope} type = 'type';
+    {html_tags_scope} name = 'name';
+    {html_tags_scope} text = 'text';
+    {html_tags_scope} radio = 'radio';
 
     {wig_scope} schema = 'schema';
     {wig_scope} session = 'session';
@@ -59,7 +57,7 @@ Tokens
     {wig_scope} l_brace = '{';
     {wig_scope} r_brace = '}';
 
-    assign = '=';
+    {wig_scope} assign = '=';
 
     {wig_scope} semicolon = ';';
     {wig_scope} lt = '<';
@@ -67,11 +65,8 @@ Tokens
 
     {html_scope} lt_slash = '</';
 
-    {holes_scope} lt_bracket = '<[';
-    {holes_scope} gt_bracket = ']>';
-
-    l_par = '(';
-    r_par = ')';
+    {wig_scope} l_par = '(';
+    {wig_scope} r_par = ')';
     {wig_scope} l_bracket = '[';
     {wig_scope} r_bracket = ']';
     {wig_scope} comma = ',';
@@ -92,17 +87,32 @@ Tokens
     {wig_scope} or = '||';
     {wig_scope} dot = '.';
 
-    identifier = idletter idchar*;
+    {wig_scope, holes_scope} identifier = idletter idchar*;
 
-    intconst = '0'| [digit-'0'] digit*;
+    {wig_scope} intconst = '0'| [digit-'0'] digit*;
 
-    stringconst = double_quote any_str* double_quote;
+    {wig_scope} stringconst = double_quote any_str* double_quote;
+
+    {html_scope->html_comment_scope} html_comment_start = '<!--';
+    {html_comment_scope->html_scope} html_comment_end = '-->';
+
+    {html_scope->html_tags_scope} html_tags_start = '<';
+    {html_tags_scope->html_scope} html_tags_end = '>';
  
-	{html_scope->html_comment_scope, html_comment_scope} html_comment_start = '<!--';
- 	{html_scope, html_comment_scope->html_scope} html_comment_end = '-->';
+    {html_scope->holes_scope} lt_bracket = '<[';
+    {holes_scope->html_scope} gt_bracket = ']>';
+
+    {wig_scope->html_scope} html_tag_start = '<html>';
+    {html_scope->wig_scope} html_tag_end = '</html>';
+
 
     {html_comment_scope} meta = '<!--' any* '-->';
 	
+    {wig_scope->wig_comment_scope} wig_comment_start = '/*';
+    {wig_comment_scope->wig_scope} wig_comment_end = '*/';
+
+
+
     {html_scope} whatever = [any - ['>' + '<']]*;
 
 IgnoredTokens
@@ -165,11 +175,11 @@ Productions
 
     field =
         simpletype identifier semicolon
-        {-> New field(simpletype.atype, identifier)};
+        {-> New field(simpletype.type, identifier)};
 
     variable =
         [ptype]:P.type identifier_list semicolon
-        {-> New variable(ptype.atype,[identifier_list.identifier])};
+        {-> New variable(ptype.type,[identifier_list.identifier])};
 
     identifier_list {-> identifier*} =
         identifier identifier_list_tail*
@@ -179,25 +189,22 @@ Productions
         comma identifier
         {-> identifier};
 
-    simpletype {-> atype} =
+    simpletype {-> P.type} =
         {int}    int
-        {-> New atype.int(int)} | 
+        {-> New type.int(int)} | 
         {bool}   bool 
-        {-> New atype.bool(bool)}|
+        {-> New type.bool(bool)}|
         {string} string 
-        {-> New atype.string(string)}|
+        {-> New type.string(string)}|
         {void}   void
-        {-> New atype.void(void)};
+        {-> New type.void(void)};
 
-    type {-> atype} =
+    type {-> P.type} =
         {simple} simpletype 
-        {-> simpletype.atype} |
+        {-> simpletype.type} |
         {tuple}  tuple identifier
-        {-> New atype.tuple(identifier)};
+        {-> New type.tuple(identifier)};
 
-    function =
-        P.type identifier l_par arguments? r_par compoundstm
-        {-> New function.simple(P.type.atype, identifier, [arguments.argument], compoundstm)};
 
     arguments{-> argument*} =
         argument arguments_tail*
@@ -209,130 +216,231 @@ Productions
 
     argument{-> argument} =
         P.type identifier
-        {-> New argment(P.type.atype, identifier)};
+        {-> New argument(P.type.type, identifier)};
 
     session =
-        T.session identifier l_par r_par compoundstm;
+        T.session identifier l_par r_par compoundstm
+        {-> New session(identifier, compoundstm.stm)};
 
-    stm =
-        {no}     semicolon |
-        {show}   show document P.receive? semicolon |
-        {exit}   exit document semicolon |
-        {return} return semicolon |
-        {retexp} return exp semicolon |
-        {if}     if l_par exp r_par stm |
-        {ifelse} if l_par exp r_par [then_stm]:stm_no_short_if else [else_stm]:stm |
-        {while}  while l_par exp r_par stm |
-        {comp}   compoundstm |
-        {exp}    exp semicolon;
+    stm{-> stm} =
+        {no}     semicolon 
+        {-> New stm.no()} |
+        {declaration} variable
+        {-> New stm.declaration(variable)}|            
+        {show}   show document P.receive? semicolon 
+        {-> New stm.show(document, receive.exp)} |
+        {exit}   exit document semicolon 
+        {-> New stm.exit(document)} |
+        {return} return semicolon 
+        {-> New stm.return()} |
+        {retexp} return exp semicolon 
+        {-> New stm.retexp(exp)} |
+        {if}     if l_par exp r_par stm 
+        {-> New stm.if(exp, stm)} |
+        {ifelse} if l_par exp r_par [then_stm]:stm_no_short_if else [else_stm]:stm 
+        {-> New stm.ifelse(exp, then_stm.stm, else_stm.stm)} |
+        {while}  while l_par exp r_par stm 
+        {-> New stm.while(exp, stm)} |
+        {comp}   compoundstm 
+        {-> compoundstm.stm } |                
+        {exp}    exp semicolon
+        {-> New stm.exp(exp) };
 
-    stm_no_short_if =
-        {no}     semicolon |
-        {show}   show document P.receive? semicolon |
-        {exit}   exit document semicolon |
-        {return} return semicolon |
-        {retexp} return exp semicolon |
-        {ifelse} if l_par exp r_par [then_stm]:stm_no_short_if else [else_stm]:stm_no_short_if |
-        {while}  while l_par exp r_par stm_no_short_if |
-        {comp}   compoundstm |
-        {exp}    exp semicolon;
+    stm_no_short_if{-> stm} =
+        {no}     semicolon 
+        {-> New stm.no()} |
+        {declaration} variable
+        {-> New stm.declaration(variable)}|               
+        {show}   show document P.receive? semicolon 
+        {-> New stm.show(document, receive.exp)} |
+        {exit}   exit document semicolon 
+        {-> New stm.exit(document)} |
+        {return} return semicolon 
+        {-> New stm.return()} |
+        {retexp} return exp semicolon 
+        {-> New stm.retexp(exp)} |
+        {ifelse} if l_par exp r_par [then_stm]:stm_no_short_if else [else_stm]:stm_no_short_if 
+        {-> New stm.ifelse(exp, then_stm.stm, else_stm.stm)} |
+        {while}  while l_par exp r_par stm 
+        {-> New stm.while(exp, stm)} |
+        {comp}   compoundstm 
+        {-> compoundstm.stm } |                
+        {exp}    exp semicolon
+        {-> New stm.exp(exp) };
 
-    document =
-        {id}   identifier |
-        {plug} T.plug identifier l_bracket plugs r_bracket;
+    document{-> document} =
+        {id}   identifier 
+        {-> New document.id(identifier)} |
+        {plug} T.plug identifier l_bracket plugs r_bracket
+        {-> New document.plug(identifier, [plugs.plug])};
 
-    receive =
-       T.receive l_bracket inputs  r_bracket;
+    receive{-> exp} =
+       T.receive l_bracket inputs r_bracket
+       {-> New exp.receive([inputs.exp])};
 
-    compoundstm =
-        l_brace variable* stm* r_brace;
+    compoundstm{-> stm} =
+        l_brace [var_list]:variable* [stm_list]:stm* r_brace
+        {->New stm.comp([var_list], [stm_list])};
 
-    plugs =
-        {one}  P.plug | 
-        {many} P.plugs comma P.plug;
+    block_item_list {-> stm*} = 
+        block_item+
+        {-> [block_item.stm]};
 
-    plug =
-        identifier assign exp;
+    block_item {->stm} = 
+        {decl} variable 
+        {-> New stm.declaration(variable)} |
+        {stm} stm
+        {-> stm};  
+    
+    function =
+        P.type identifier l_par arguments? r_par compoundstm
+        {-> New function.simple(P.type.type, identifier, [arguments.argument], compoundstm.stm)};
 
-    inputs =
-        {one} P.input |
-        {many} P.inputs comma P.input;
+    plugs{-> P.plug*} =
+        P.plug plugs_tail*
+        {-> [P.plug, plugs_tail.plug]};
+    
+    plugs_tail{-> P.plug} = 
+        P.plug
+        {-> P.plug}; 
+    
+    plug {-> P.plug} =
+        identifier assign exp
+        {-> New plug(identifier, exp)};
 
-    input =
-        lvalue assign identifier;
+    inputs{-> exp*} =
+        P.input input_tail*
+        {-> [input.exp, input_tail.exp]};
+    
+    input_tail{-> exp} = 
+        P.input
+        {-> input.exp};
 
-    exp =
-        {assign}  lvalue assign or_exp |
-        {default} or_exp;
+    input{-> exp} =
+        lvalue assign identifier
+        {-> New exp.input(lvalue, identifier)};
 
-    or_exp =
-        {or}      [left]:or_exp or [right]:and_exp |
-        {default} and_exp;
+    exp{-> exp} =
+        {assign}  lvalue assign or_exp 
+        {-> New exp.assign(lvalue, or_exp.exp)} |
+        {default} or_exp
+        {-> or_exp.exp};
 
-    and_exp =
-        {and}     [left]:and_exp and [right]:cmp_exp |
-        {default} cmp_exp;
+    or_exp{-> exp}=
+        {or} [left]:or_exp or [right]:and_exp 
+        {-> New exp.or(left.exp, right.exp)}|
+        {default} and_exp
+        {-> and_exp.exp};
 
-    cmp_exp =
-        {eq}      [left]:add_exp eq [right]:add_exp |
-        {neq}     [left]:add_exp neq [right]:add_exp |
-        {lt}      [left]:add_exp lt [right]:add_exp |
-        {gt}      [left]:add_exp gt [right]:add_exp |
-        {lteq}    [left]:add_exp lteq [right]:add_exp |
-        {gteq}    [left]:add_exp gteq [right]:add_exp |
-        {default} add_exp;
+    and_exp{-> exp} =
+        {and} [left]:and_exp and [right]:cmp_exp
+        {-> New exp.and(left.exp, right.exp)} |
+        {default} cmp_exp
+        {-> cmp_exp.exp};
 
-    add_exp =
-        {plus}    [left]:add_exp plus [right]:mult_exp |
-        {minus}   [left]:add_exp minus [right]:mult_exp |
-        {default} mult_exp;
+    cmp_exp{-> exp} =
+        {eq} [left]:add_exp eq [right]:add_exp 
+        {-> New exp.eq(left.exp, right.exp)} |
+        {neq} [left]:add_exp neq [right]:add_exp 
+        {-> New exp.neq(left.exp, right.exp)} |
+        {lt} [left]:add_exp lt [right]:add_exp 
+        {-> New exp.lt(left.exp, right.exp)} |
+        {gt} [left]:add_exp gt [right]:add_exp 
+        {-> New exp.gt(left.exp, right.exp)} |
+        {lteq} [left]:add_exp lteq [right]:add_exp 
+        {-> New exp.lteq(left.exp, right.exp)} |
+        {gteq} [left]:add_exp gteq [right]:add_exp 
+        {-> New exp.gteq(left.exp, right.exp)} |
+        {default} add_exp
+        {-> add_exp.exp};
 
-    mult_exp =
-        {mult}    [left]:mult_exp mult [right]:join_exp |
-        {div}     [left]:mult_exp div [right]:join_exp |
-        {mod}     [left]:mult_exp mod [right]:join_exp |
-        {default} join_exp;
+    add_exp{-> exp} =
+        {plus} [left]:add_exp plus [right]:mult_exp 
+        {-> New exp.plus(left.exp, right.exp)} |
+        {minus} [left]:add_exp minus [right]:mult_exp 
+        {-> New exp.minus(left.exp, right.exp)} |
+        {default} mult_exp
+        {-> mult_exp.exp};
 
-    join_exp = 
-        {join}    [left]:tuple_exp join [right]:join_exp |
-        {default} tuple_exp;
+    mult_exp{-> exp} =
+        {mult} [left]:mult_exp mult [right]:join_exp 
+        {-> New exp.mult(left.exp, right.exp)}|
+        {div} [left]:mult_exp div [right]:join_exp 
+        {-> New exp.div(left.exp, right.exp)}|
+        {mod} [left]:mult_exp mod [right]:join_exp 
+        {-> New exp.mod(left.exp, right.exp)} |
+        {default} join_exp
+        {-> join_exp.exp};
+
+    join_exp{-> exp} = 
+        {join} [left]:tuple_exp join [right]:join_exp 
+        {-> New exp.join(left.exp, right.exp)}|
+        {default} tuple_exp
+        {-> tuple_exp.exp};
         
-    tuple_exp =
-        {keep}        tuple_exp keep identifier |
-        {remove}      tuple_exp remove identifier |
-        {keep_many}   tuple_exp keep l_par identifier_list r_par |
-        {remove_many} tuple_exp remove l_par identifier_list r_par |
-        {default}     unary_exp;
+    tuple_exp{-> exp} =
+        {keep} tuple_exp keep identifier 
+        {-> New exp.keep(tuple_exp.exp, identifier)}|
+        {remove} tuple_exp remove identifier 
+        {-> New exp.remove(tuple_exp.exp, identifier)}|
+        {keep_many} tuple_exp keep l_par identifier_list r_par 
+        {-> New exp.keep_many(tuple_exp.exp, [identifier_list.identifier])}|
+        {remove_many} tuple_exp remove l_par identifier_list r_par 
+        {-> New exp.remove_many(tuple_exp.exp, [identifier_list.identifier])}|
+        {default} unary_exp
+        {-> unary_exp.exp};
 
-    unary_exp =
-        {not}     not base_exp |
-        {neg}     minus base_exp |
-        {default} base_exp;
+    unary_exp{-> exp} =
+        {not} not base_exp 
+        {-> New exp.not(base_exp.exp)}|
+        {neg} minus base_exp 
+        {-> New exp.neg(base_exp.exp)}|
+        {default} base_exp
+        {-> base_exp.exp};
 
-    base_exp =
-        {lvalue} lvalue |
-        {call}   identifier l_par exps? r_par |
-        {int}    intconst |
-        {true}   true |
-        {false}  false |
-        {string} stringconst |
-        {tuple}  tuple l_brace fieldvalues? r_brace |
-        {paren}  l_par exp r_par;
+    base_exp{-> exp} =
+        {lvalue} lvalue 
+        {-> New exp.lvalue(lvalue)}|
+        {call}   identifier l_par [expressions]:exps? r_par 
+        {-> New exp.call(identifier, [expressions.exp]) }|
+        {int}    intconst 
+        {-> New exp.int(intconst)}|
+        {true}   true 
+        {-> New exp.true(true)}|
+        {false}  false 
+        {-> New exp.false(false)}|
+        {string} stringconst 
+        {-> New exp.string(stringconst)}|
+        {tuple}  tuple l_brace [fieldvaluelist]:fieldvalues? r_brace 
+        {-> New exp.tuple([fieldvaluelist.exp])}|
+        {paren}  l_par exp r_par
+        {-> New exp.paren(exp)};
 
-    exps =
-        {one}  exp |
-        {many} exps comma exp;
+    exps {-> exp*} =
+       exp exps_tail*
+        {-> [exp, exps_tail.exp]};
 
-    lvalue =
-        {simple}    identifier | 
-        {qualified} [left]:identifier dot [right]:identifier;
+    exps_tail {-> exp} = 
+        comma exp
+        {-> exp};
 
-    fieldvalues =
-        {one}  fieldvalue | 
-        {many} fieldvalues comma fieldvalue;
+    lvalue {-> lvalue} =
+        {simple} identifier 
+        {-> New lvalue.simple(identifier)}| 
+        {qualified} [left]:identifier dot [right]:identifier
+        {-> New lvalue.qualified(left, right)};
 
-    fieldvalue =
-        identifier assign exp;
+    fieldvalues {-> exp*} =
+        fieldvalue fieldvalue_tail*
+        {-> [fieldvalue.exp, fieldvalue_tail.exp]};
+
+    fieldvalue_tail {-> exp} =
+        comma fieldvalue
+        {-> fieldvalue.exp};
+
+    fieldvalue {-> exp} =
+        identifier assign exp
+        {-> New exp.assign(New lvalue.simple(identifier), exp)};
 
 Abstract Syntax Tree
 
@@ -340,7 +448,7 @@ Abstract Syntax Tree
         [htmls]:P.html+ [schemas]:P.schema* [variables]:variable* [functions]:P.function* [sessions]:P.session+;
     
     variable = 
-        atype [identifiers]:identifier+;
+        P.type [identifiers]:identifier+;
 
     html = 
         identifier [htmlbodies]:htmlbody*;
@@ -377,7 +485,7 @@ Abstract Syntax Tree
     schema = 
         identifier [fields]:field*;
 
-    atype =
+    type =
         {int} int |
         {bool} bool |
         {string} string |
@@ -385,25 +493,26 @@ Abstract Syntax Tree
         {tuple} identifier;
 
     function = 
-        {simple} atype identifier [arguments]:argument* stm;
+        {simple} P.type identifier [arguments]:argument* stm;
 
     argument =
-        atype identifier;
+        P.type identifier;
 
     stm =
         {no} |
-        {show} document receive? |
+        {declaration} variable |
+        {show} document exp? |
         {exit} document |
         {return} |
         {retexp} exp |
         {if} exp stm |
         {ifelse} exp [then_stm]:stm [else_stm]:stm | 
         {while} exp stm |
-        {comp} variable* stm* | 
+        {comp} [first]:variable* [second]:stm* | 
         {exp} exp;
 
     field = 
-        atype identifier;
+        P.type identifier;
 
     document = 
         {id} identifier | 
@@ -441,9 +550,9 @@ Abstract Syntax Tree
         {true} true |
         {false} false |
         {string} stringconst |
-        {tuple} tuple [field_decls]:exp+ |
+        {tuple} [field_decls]:exp* |
         {paren} exp |
-        {input} exp |
+        {input} lvalue identifier |
         {receive} [values]:exp+;
 
     lvalue =
