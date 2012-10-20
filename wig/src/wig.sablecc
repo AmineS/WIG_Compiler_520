@@ -165,31 +165,31 @@ Productions
 
     field =
         simpletype identifier semicolon
-        {-> New field(simpletype, identifier)};
+        {-> New field(simpletype.atype, identifier)};
 
     variable =
         [ptype]:P.type identifiers semicolon
-        {-> New variable(ptype,identifiers)};
+        {-> New variable(ptype.atype,[identifiers.identifier])};
 
     identifiers {-> exp*} =
         {one}  identifier | 
         {many} identifiers comma identifier;
 
-    simpletype {-> type} =
+    simpletype {-> atype} =
         {int}    int
-        {-> New type.int(int)} | 
+        {-> New atype.int(int)} | 
         {bool}   bool 
-        {-> New type.bool(bool)}|
+        {-> New atype.bool(bool)}|
         {string} string 
-        {-> New type.string(string)}|
+        {-> New atype.string(string)}|
         {void}   void
-        {-> New type.void(void)};
+        {-> New atype.void(void)};
 
-    type =
+    type {-> atype} =
         {simple} simpletype 
-        {-> simpletype.type}|
+        {-> simpletype.atype} |
         {tuple}  tuple identifier
-        {-> New type.tuple(identifier)};
+        {-> New atype.tuple(identifier)};
 
     function =
         P.type identifier l_par arguments? r_par compoundstm;
@@ -330,7 +330,7 @@ Abstract Syntax Tree
         [htmls]:P.html+ [schemas]:P.schema* [variables]:variable* [functions]:P.function* [sessions]:P.session+;
     
     variable = 
-        P.type [identifiers]:identifier+;
+        atype [identifiers]:identifier+;
 
     html = 
         identifier [htmlbodies]:htmlbody*;
@@ -367,7 +367,7 @@ Abstract Syntax Tree
     schema = 
         identifier [fields]:field*;
 
-    type =
+    atype =
         {int} int |
         {bool} bool |
         {string} string |
@@ -375,10 +375,10 @@ Abstract Syntax Tree
         {tuple} identifier;
 
     function = 
-        {simple} P.type identifier [arguments]:argument* stm;
+        {simple} atype identifier [arguments]:argument* stm;
 
     argument =
-        P.type identifier;
+        atype identifier;
 
     stm =
         {no} |
@@ -393,7 +393,7 @@ Abstract Syntax Tree
         {exp} exp;
 
     field = 
-        P.type identifier;
+        atype identifier;
 
     document = 
         {id} identifier | 
