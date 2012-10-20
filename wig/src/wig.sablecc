@@ -168,12 +168,16 @@ Productions
         {-> New field(simpletype.atype, identifier)};
 
     variable =
-        [ptype]:P.type identifiers semicolon
-        {-> New variable(ptype.atype,[identifiers.identifier])};
+        [ptype]:P.type identifier_list semicolon
+        {-> New variable(ptype.atype,[identifier_list.identifier])};
 
-    identifiers {-> exp*} =
-        {one}  identifier | 
-        {many} identifiers comma identifier;
+    identifier_list {-> identifier*} =
+        identifier identifier_list_tail*
+        {-> [identifier, identifier_list_tail.identifier]};  
+
+    identifier_list_tail{-> identifier} = 
+        comma identifier
+        {-> identifier};
 
     simpletype {-> atype} =
         {int}    int
@@ -192,14 +196,20 @@ Productions
         {-> New atype.tuple(identifier)};
 
     function =
-        P.type identifier l_par arguments? r_par compoundstm;
+        P.type identifier l_par arguments? r_par compoundstm
+        {-> New function.simple(P.type.atype, identifier, [arguments.argument], compoundstm)};
 
-    arguments =
-        {one}  argument |
-        {many} arguments comma argument;
+    arguments{-> argument*} =
+        argument arguments_tail*
+        {-> [argument.argument, arguments_tail.argument]};
 
-    argument =
-        P.type identifier;
+    arguments_tail {-> argument} = 
+        comma argument
+        {-> argument.argument};
+
+    argument{-> argument} =
+        P.type identifier
+        {-> New argment(P.type.atype, identifier)};
 
     session =
         T.session identifier l_par r_par compoundstm;
@@ -290,8 +300,8 @@ Productions
     tuple_exp =
         {keep}        tuple_exp keep identifier |
         {remove}      tuple_exp remove identifier |
-        {keep_many}   tuple_exp keep l_par identifiers r_par |
-        {remove_many} tuple_exp remove l_par identifiers r_par |
+        {keep_many}   tuple_exp keep l_par identifier_list r_par |
+        {remove_many} tuple_exp remove l_par identifier_list r_par |
         {default}     unary_exp;
 
     unary_exp =
