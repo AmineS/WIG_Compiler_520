@@ -17,70 +17,80 @@ Helpers
 
     any_str = [any - [cr + lf]];
 
+
+States
+	wig_scope, html_scope, html_comment_scope, holes_scope, html_tags, wig_comment_scope;
+
 Tokens
-    eol   = cr | lf | cr lf;
+    eol = cr | lf | cr lf;
 
     blank = ' ' | tab;
 
-    service = 'service';
-    const = 'const';
-    html = 'html';
-    html_tag_start = '<html>';
-    html_tag_end = '</html>';
-    input = 'input';
-    select = 'select';
-    type = 'type';
-    name = 'name';
-    text = 'text';
-    radio = 'radio';
-    schema = 'schema';
-    session = 'session';
-    show = 'show';
-    exit = 'exit';
-    return = 'return';
-    if = 'if';
-    else = 'else';
-    while = 'while';
-    plug = 'plug';
-    receive = 'receive';
-    int = 'int';
-    bool = 'bool';
-    string = 'string';
-    void = 'void';
-    tuple = 'tuple';
-    true = 'true';
-    false = 'false';
+    {wig_scope} service = 'service';
+    {wig_scope} const = 'const';
+    {wig_scope} html = 'html';
 
-    l_brace = '{';
-    r_brace = '}';
+    {html_scope} html_tag_start = '<html>';
+    {html_scope} html_tag_end = '</html>';
+    {html_tags} input = 'input';
+    {html_tags} select = 'select';
+    {html_tags} type = 'type';
+    {html_tags} name = 'name';
+    {html_tags} text = 'text';
+    {html_tags} radio = 'radio';
+
+    {wig_scope} schema = 'schema';
+    {wig_scope} session = 'session';
+    {wig_scope} show = 'show';
+    {wig_scope} exit = 'exit';
+    {wig_scope} return = 'return';
+    {wig_scope} if = 'if';
+    {wig_scope} else = 'else';
+    {wig_scope} while = 'while';
+    {wig_scope} plug = 'plug';
+    {wig_scope} receive = 'receive';
+    {wig_scope} int = 'int';
+    {wig_scope} bool = 'bool';
+    {wig_scope} string = 'string';
+    {wig_scope} void = 'void';
+    {wig_scope} tuple = 'tuple';
+    {wig_scope} true = 'true';
+    {wig_scope} false = 'false';
+    {wig_scope} l_brace = '{';
+    {wig_scope} r_brace = '}';
+
     assign = '=';
-    semicolon = ';';
-    lt = '<';
-    gt = '>';
-    lt_slash = '</';
-    lt_bracket = '<[';
-    gt_bracket = ']>';
+
+    {wig_scope} semicolon = ';';
+    {wig_scope} lt = '<';
+    {wig_scope} gt = '>';
+
+    {html_scope} lt_slash = '</';
+
+    {holes_scope} lt_bracket = '<[';
+    {holes_scope} gt_bracket = ']>';
+
     l_par = '(';
     r_par = ')';
-    l_bracket = '[';
-    r_bracket = ']';
-    comma = ',';
-    keep = '\+';
-    remove = '\-';
-    join = '<<';
-    eq = '==';
-    neq = '!=';
-    lteq = '<=';
-    gteq = '>=';
-    not = '!';
-    minus = '-';
-    plus = '+';
-    mult = '*';
-    div = '/';
-    mod = '%';
-    and = '&&';
-    or = '||';
-    dot = '.';
+    {wig_scope} l_bracket = '[';
+    {wig_scope} r_bracket = ']';
+    {wig_scope} comma = ',';
+    {wig_scope} keep = '\+';
+    {wig_scope} remove = '\-';
+    {wig_scope} join = '<<';
+    {wig_scope} eq = '==';
+    {wig_scope} neq = '!=';
+    {wig_scope} lteq = '<=';
+    {wig_scope} gteq = '>=';
+    {wig_scope} not = '!';
+    {wig_scope} minus = '-';
+    {wig_scope} plus = '+';
+    {wig_scope} mult = '*';
+    {wig_scope} div = '/';
+    {wig_scope} mod = '%';
+    {wig_scope} and = '&&';
+    {wig_scope} or = '||';
+    {wig_scope} dot = '.';
 
     identifier = idletter idchar*;
 
@@ -88,69 +98,98 @@ Tokens
 
     stringconst = double_quote any_str* double_quote;
  
-    meta = '<!--' any* '-->';
+	{html_scope->html_comment_scope, html_comment_scope} html_comment_start = '<!--';
+ 	{html_scope, html_comment_scope->html_scope} html_comment_end = '-->';
 
-    whatever = [any - ['>' + '<']]*;
-
+    {html_comment_scope} meta = '<!--' any* '-->';
+	
+    {html_scope} whatever = [any - ['>' + '<']]*;
 
 IgnoredTokens
     blank, eol;
 
 Productions
     service =
-        T.service l_brace P.html+ P.schema* variable* function* P.session+ r_brace;
+        T.service l_brace [p_html]:P.html+ [schemas]:P.schema* [vars]:variable* [funcs]:function* [sessions]:P.session+ r_brace
+        {-> New service([p_html], [schemas], [vars], [funcs], [sessions])};
 
     html = 
-        const T.html identifier assign html_tag_start htmlbody* html_tag_end semicolon;
+        const T.html identifier assign html_tag_start [html_bodies]:htmlbody* html_tag_end semicolon
+        {-> New html(identifier, [html_bodies])};
 
     htmlbody =
-        {tag_start} lt identifier attribute* gt |
-        {tag_end}   lt_slash identifier gt |
-        {hole}      lt_bracket identifier gt_bracket |
-        {whatever}  whatever |
-        {meta}      meta |
-        {input}     lt T.input inputattr+ gt |
-        {select}    lt [select_tag]:select inputattr+ [first_gt]:gt htmlbody* lt_slash select [second_gt]:gt;
+        {tag_start} lt identifier attribute* gt
+        {-> New htmlbody.tag_start(identifier, [attribute])} |
+        {tag_end}   lt_slash identifier gt
+        {-> New htmlbody.tag_end(identifier)} |
+        {hole} lt_bracket identifier gt_bracket
+        {-> New htmlbody.hole(identifier)} |
+        {whatever}  whatever 
+        {-> New htmlbody.whatever(whatever)}|
+        {meta} meta 
+        {-> New htmlbody.meta(meta)}|
+        {input} lt T.input inputattr+ gt
+        {-> New htmlbody.input([inputattr])} |
+        {select} lt [select_tag]:select inputattr+ [first_gt]:gt htmlbody* lt_slash select [second_gt]:gt
+        {-> New htmlbody.select(select_tag, [inputattr], [htmlbody], select)};
 
     inputattr =
-        {name}      name assign attr |
-        {type}      T.type assign inputtype |
-        {attribute} attribute;
+        {name} name assign attr 
+        {-> New inputattr.name(attr)} |
+        {type} T.type assign inputtype 
+        {-> New inputattr.type(inputtype)} |
+        {attribute} attribute
+        {-> New inputattr.attribute(attribute)};
 
     inputtype =
-        {text}  text |
-        {radio} radio;
+        {text}  text 
+        {-> New inputtype.text(text)}|
+        {radio} radio
+        {-> New inputtype.radio(radio)};
 
     attribute =
-        {attr}  attr | 
-        {assign} [left_attr]:attr assign [right_attr]:attr;
+        {attr}  attr 
+        {-> New attribute.attr(attr)}| 
+        {assign} [left_attr]:attr assign [right_attr]:attr
+        {-> New attribute.assign(left_attr, right_attr)};
 
     attr = 
-        {id}  identifier | 
-        {str} stringconst;
+        {id}  identifier 
+        {-> New attr.id(identifier)}| 
+        {str} stringconst
+        {-> New attr.str(stringconst)};
 
     schema =
-        T.schema identifier l_brace field* r_brace;
+        T.schema identifier l_brace field* r_brace
+        {-> New schema(identifier, [field])};
 
     field =
-        simpletype identifier semicolon;
+        simpletype identifier semicolon
+        {-> New field(simpletype, identifier)};
 
     variable =
-        P.type identifiers semicolon;
+        [ptype]:P.type identifiers semicolon
+        {-> New variable(ptype,identifiers)};
 
-    identifiers =
+    identifiers {-> exp*} =
         {one}  identifier | 
         {many} identifiers comma identifier;
 
-    simpletype =
-        {int}    int | 
-        {bool}   bool |
-        {string} string |
-        {void}   void;
+    simpletype {-> type} =
+        {int}    int
+        {-> New type.int(int)} | 
+        {bool}   bool 
+        {-> New type.bool(bool)}|
+        {string} string 
+        {-> New type.string(string)}|
+        {void}   void
+        {-> New type.void(void)};
 
     type =
-        {simple} simpletype |
-        {tuple}  tuple identifier;
+        {simple} simpletype 
+        {-> simpletype.type}|
+        {tuple}  tuple identifier
+        {-> New type.tuple(identifier)};
 
     function =
         P.type identifier l_par arguments? r_par compoundstm;
@@ -284,3 +323,119 @@ Productions
 
     fieldvalue =
         identifier assign exp;
+
+Abstract Syntax Tree
+
+    service = 
+        [htmls]:P.html+ [schemas]:P.schema* [variables]:variable* [functions]:P.function* [sessions]:P.session+;
+    
+    variable = 
+        P.type [identifiers]:identifier+;
+
+    html = 
+        identifier [htmlbodies]:htmlbody*;
+
+    htmlbody = 
+        {tag_start} identifier attribute* |
+        {tag_end} identifier |
+        {hole} identifier |
+        {whatever} whatever |
+        {meta} meta | 
+        {input} [inputattrs]:inputattr+ |
+        {select} [select_tag]:select inputattr+ htmlbody* select;
+
+    inputattr = 
+        {name} attr |
+        {type} inputtype |
+        {attribute} attribute;
+
+    inputtype = 
+        {text} text |
+        {radio} radio;
+
+    attribute = 
+        {attr} attr | 
+        {assign} [left]:attr [right]:attr;
+
+    attr = 
+        {id} identifier | 
+        {str} stringconst;
+
+    session = 
+        identifier stm;
+
+    schema = 
+        identifier [fields]:field*;
+
+    type =
+        {int} int |
+        {bool} bool |
+        {string} string |
+        {void} void|
+        {tuple} identifier;
+
+    function = 
+        {simple} P.type identifier [arguments]:argument* stm;
+
+    argument =
+        P.type identifier;
+
+    stm =
+        {no} |
+        {show} document receive? |
+        {exit} document |
+        {return} |
+        {retexp} exp |
+        {if} exp stm |
+        {ifelse} exp [then_stm]:stm [else_stm]:stm | 
+        {while} exp stm |
+        {comp} variable* stm* | 
+        {exp} exp;
+
+    field = 
+        P.type identifier;
+
+    document = 
+        {id} identifier | 
+        {plug} identifier [plugs]:P.plug+;
+
+    plug = 
+        identifier exp;
+
+    exp =
+        {assign} lvalue exp |
+        {or} [left]:exp [right]:exp |
+        {and} [left]:exp [right]:exp |
+        {eq} [left]:exp [right]:exp |
+        {neq} [left]:exp [right]:exp |
+        {lt} [left]:exp [right]:exp |
+        {gt} [left]:exp [right]:exp |
+        {lteq} [left]:exp [right]:exp |
+        {gteq} [left]:exp [right]:exp |
+        {plus} [left]:exp [right]:exp |
+        {minus} [left]:exp [right]:exp |
+        {mult} [left]:exp [right]:exp |
+        {div} [left]:exp [right]:exp |
+        {mod} [left]:exp [right]:exp |
+        {join} [left]:exp [right]:exp |
+        {keep} exp identifier |
+        {remove} exp identifier |
+        {keep_many} exp [fields]:identifier+ |
+        {remove_many} exp [fields]:identifier+ |
+        {not} exp |
+        {neg} exp |
+        {lvalue} lvalue |
+        {call} identifier [args]:exp+ |
+        {int} intconst |
+        {id} identifier |
+        {true} true |
+        {false} false |
+        {string} stringconst |
+        {tuple} tuple [field_decls]:exp+ |
+        {paren} exp |
+        {input} exp |
+        {receive} [values]:exp+;
+
+    lvalue =
+        {simple}    identifier | 
+        {qualified} [left]:identifier [right]:identifier;   
