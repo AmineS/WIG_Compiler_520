@@ -1,115 +1,146 @@
 Package wig;
 
+/************************************
+* Helpers
+**************************************/
 Helpers
-    any = [0x0 .. 0xfffff];
-    
 
-    tab     = 9; 
-    cr      = 13; 
-    lf      = 10;
-    digit   = ['0'..'9'];
-    lowercase = ['a'..'z'];
-    uppercase = ['A'..'Z']; 
-    letter  = lowercase | uppercase;
-    idletter = letter | '_';
-    idchar  = letter | '_' | digit;    
-    double_quote = '"';
-    eol = lf|cr|cr lf;
-    any_str = [any - [cr + lf]];
-    whatever_block = [[any-'<'] - '>']*;
-    without_cr_lf = [any - [lf+cr]];
-    without_star = [any-'*'];
-    without_star_backslash = [without_star -'/'];    
-    notdash = [any - '-'];
-    notmeta_stm = [notdash -'>'];
-    meta_start = '<!--';
-    meta_end = '-->';
-    meta_stm = meta_start notdash* '-'+ (notmeta_stm notdash* '-'+)* meta_end;
+any = [0..0xffff];
+letter = [['a'..'z'] + ['A'..'Z']];
+digit = ['0'..'9'];
+letter_or_digit = letter | digit;
+letter_or_digit_or_us = letter_or_digit | '_';
+letter_or_us = letter | '_';
+tab = 9;
+cr = 13;
+lf = 10;
+no_dash = [any - '-'];
+no_meta_stm = [no_dash -'>'];
+no_quote = [any-'"'];
+no_star = [any-'*'];
+no_star_backslash = [no_star -'/'];
+no_cr_lf = [any - [lf+cr]];
+eol = lf|cr|cr lf;
+escapequote = '\"';
+meta_start = '<!--';
+meta_end = '-->';
+meta_stmt = meta_start no_dash* '-'+ (no_meta_stm no_dash* '-'+)* meta_end;
+string_const = '"' (no_quote* escapequote* no_quote*)* '"';
+inline_comment = '//' no_cr_lf* eol;
+block_comment = '/*' no_star* '*'+(no_star_backslash no_star* '*' +)* '/';
+wig_comment = inline_comment|block_comment;
+whatever_stm = [[any-'<']-'>']*; //anything without < and >
 
-
+/************************************
+* States
+**************************************/
 States
-    wig_scope, html_scope, html_tags_scope, whatever_scope;
 
+wig_scope,html_scope,whatever_scope,html_tag_scope;
+
+/************************************
+* Tokens
+**************************************/
 Tokens
-    {wig_scope} service = 'service';
-    {wig_scope} const = 'const';
-    {wig_scope} html = 'html';
-    {wig_scope} schema = 'schema';
-    {wig_scope} session = 'session';
-    {wig_scope} show = 'show';
-    {wig_scope} exit = 'exit';
-    {wig_scope} return = 'return';
-    {wig_scope} if = 'if';
-    {wig_scope} else = 'else';
-    {wig_scope} while = 'while';
-    {wig_scope} plug = 'plug';
-    {wig_scope} receive = 'receive';
-    {wig_scope} int = 'int';
-    {wig_scope} bool = 'bool';
-    {wig_scope} string = 'string';
-    {wig_scope} void = 'void';
-    {wig_scope} tuple = 'tuple';
-    {wig_scope} true = 'true';
-    {wig_scope} false = 'false';
-    {wig_scope} l_brace = '{';
-    {wig_scope} r_brace = '}';
-    {wig_scope, html_scope, html_tags_scope} assign = '=';
-    {wig_scope, html_scope->wig_scope} semicolon = ';';
-    {wig_scope, whatever_scope->html_scope, html_scope} lt = '<';
-    {wig_scope, html_scope->whatever_scope, html_tags_scope->whatever_scope} gt = '>';   
-    {wig_scope} l_par = '(';
-    {wig_scope} r_par = ')';
-    {wig_scope} l_bracket = '[';
-    {wig_scope} r_bracket = ']';
-    {wig_scope} comma = ',';
-    {wig_scope} keep = '\+';
-    {wig_scope} remove = '\-';
-    {wig_scope} join = '<<';
-    {wig_scope} eq = '==';
-    {wig_scope} neq = '!=';
-    {wig_scope} lteq = '<=';
-    {wig_scope} gteq = '>=';
-    {wig_scope} not = '!';
-    {wig_scope} minus = '-';
-    {wig_scope} plus = '+';
-    {wig_scope} mult = '*';
-    {wig_scope} div = '/';
-    {wig_scope} mod = '%';
-    {wig_scope} and = '&&';
-    {wig_scope} or = '||';
-    {wig_scope} dot = '.';
-    {wig_scope} comment = '//' without_cr_lf* eol | 
-                '/*' without_star* '*'+(without_star_backslash without_star* '*' +)* '/';
+
+/*********************
+* Wig Keywords
+*********************/
+{wig_scope} service = 'service';
+{wig_scope} const = 'const';
+{wig_scope} html = 'html';
+{wig_scope->html_scope,html_scope} html_tag_start = '<html>';
+{wig_scope} schema = 'schema';
+{wig_scope} session = 'session';
+{wig_scope} show = 'show';
+{wig_scope} exit = 'exit';
+{wig_scope} return = 'return';
+{wig_scope} if = 'if';
+{wig_scope} else = 'else';
+{wig_scope} while = 'while';
+{wig_scope} plug = 'plug';
+{wig_scope} receive = 'receive';
+{wig_scope} int = 'int';
+{wig_scope} bool = 'bool';
+{wig_scope} string = 'string';
+{wig_scope} void = 'void';
+{wig_scope} tuple = 'tuple';
+{wig_scope} true = 'true';
+{wig_scope} false = 'false';
 
 
-    {wig_scope->html_scope, html_scope} html_tag_start = '<html>';
-    {html_scope->wig_scope, whatever_scope->html_scope, wig_scope} html_tag_end = '</html>';
-    {html_scope} select = 'select';
-    {html_scope} neg_intconst = '-' [digit-'0'] digit*;
-    {html_scope,html_tags_scope,wig_scope} pos_intconst = '0' | [digit-'0'] digit*;
+/*********************
+* HTML Keywords
+*********************/
+{html_scope->wig_scope,whatever_scope->html_scope,wig_scope} html_tag_end = '</html>';
+{html_scope->html_tag_scope} input = 'input';
+{html_scope,html_tag_scope,wig_scope} pos_intconst = '0' | [digit-'0'] digit*;
+{html_scope} neg_intconst = '-' [digit-'0'] digit*;
+{html_scope} select = 'select'; 
 
-    {html_scope->html_tags_scope} input = 'input';    
-    {html_tags_scope} type = 'type';
-    {html_tags_scope} name = 'name';
-    {html_tags_scope} text = 'text';
-    {html_tags_scope} radio = 'radio';
+/*********************
+* HTML Tags (Input) Keywords
+*********************/
+{html_tag_scope} type = 'type';
+{html_tag_scope} name = 'name';
+{html_tag_scope} text = 'text';
+{html_tag_scope} radio = 'radio';
 
-    {whatever_scope->html_scope, html_scope} lt_slash = '</';
-    {whatever_scope->html_scope, html_scope} lt_bracket = '<[';
-    {html_scope->whatever_scope} gt_bracket = ']>';
+/*********************
+* Symbols & Operators
+*********************/
+{wig_scope} l_brace = '{';
+{wig_scope} r_brace = '}';
+{wig_scope,html_scope,html_tag_scope} assign = '=';
+{wig_scope, html_scope->wig_scope} semicolon = ';';
+{wig_scope,whatever_scope->html_scope,html_scope} lt = '<';
+{wig_scope,html_scope->whatever_scope,html_tag_scope->whatever_scope} gt = '>';
+{whatever_scope->html_scope,html_scope} lt_slash = '</';
+{whatever_scope->html_scope,html_scope} lt_bracket = '<[';
+{html_scope->whatever_scope} gt_bracket = ']>';
+{wig_scope} comment=wig_comment;
+{wig_scope} l_par = '(';
+{wig_scope} r_par = ')';
+{wig_scope} l_bracket = '[';
+{wig_scope} r_bracket = ']';
+{wig_scope} comma = ',';
+{wig_scope} keep = '\+';
+{wig_scope} remove = '\-';
+{wig_scope} join = '<<';
+{wig_scope} eq = '==';
+{wig_scope} neq = '!=';
+{wig_scope} lteq = '<=';
+{wig_scope} gteq = '>=';
+{wig_scope} not = '!';
+{wig_scope} minus = '-';
+{wig_scope} plus = '+';
+{wig_scope} mult = '*';
+{wig_scope} div = '/';
+{wig_scope} mod = '%';
+{wig_scope} and = '&&';
+{wig_scope} or = '||';
+{wig_scope} dot = '.';
 
-    {wig_scope, html_scope, html_tags_scope} identifier = idletter idchar*;
-    {wig_scope} intconst = '0'| [digit-'0'] digit*;
-    {wig_scope, html_tags_scope, html_scope} stringconst = double_quote any_str* double_quote;
-    {wig_scope, html_scope, html_tags_scope} eol = cr | lf | cr lf;
-    {wig_scope, html_scope, html_tags_scope} blank = (eol | ' ' | tab)*;
+/*********************
+* Others
+*********************/
+{wig_scope,html_scope,html_tag_scope} eol = eol;
+{wig_scope,html_scope,html_tag_scope} blank = (tab|' '|eol)*;
+{wig_scope,html_scope,html_tag_scope} identifier = letter_or_us (letter_or_us|digit)*; // usual identifiers
+{wig_scope, html_tag_scope, html_scope} stringconst = string_const ; // usual string constants
+{html_scope} meta = meta_stmt; // any string of the form <!-- ... -->
+{whatever_scope} whatever = whatever_stm; // any string not containing < or >
 
-    {html_scope} meta= meta_stm;
-    {html_scope} whatever = whatever_block;   
+/*********************
+* Ignored Tokens *
+*********************/
+Ignored Tokens
+blank, comment, eol;
 
-IgnoredTokens
-    blank, eol;
 
+/************************************
+* Productions
+**************************************/
 Productions
 
     service = T.service l_brace P.html+ P.schema* variable* function* P.session+ r_brace
@@ -368,7 +399,7 @@ Productions
     base_exp{->exp} =
       {lvalue} lvalue 
         {-> New exp.lvalue(lvalue)}
-    | {call} identifier l_par exps? r_par
+    | {cany} identifier l_par exps? r_par
         {-> New exp.call(identifier, [exps.exp])}
     | {int} P.intconst 
         {-> New exp.int(intconst)}
@@ -404,6 +435,9 @@ Productions
     fieldvalue = identifier assign exp 
         {-> New fieldvalue(identifier, exp)};
 
+/************************************
+* Abstract Syntax Tree
+**************************************/
 Abstract Syntax Tree
 
     service = P.html+ P.schema* variable* function* P.session+;
