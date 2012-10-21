@@ -52,6 +52,15 @@ public class PrettyPrinter extends DepthFirstAdapter
             variable.apply(this);
         }
         
+        for(PFunction function : node.getFunction())
+        {
+            function.apply(this);
+        }
+        
+        for(PSession session : node.getSession())
+        {
+            session.apply(this);
+        }
         
         puts("\n}");
         --tabCount;
@@ -71,7 +80,7 @@ public class PrettyPrinter extends DepthFirstAdapter
         
         node.getIdentifier().apply(this);
         
-        puts("= <html>");
+        puts("= <html> ");
         
         for(PAttribute attribute : node.getAttribute())
         {
@@ -81,15 +90,46 @@ public class PrettyPrinter extends DepthFirstAdapter
     
       public void caseATagEndHtmlbody(ATagEndHtmlbody node)
       {
-          puts("</html>;\n");
+          puts(" </html>;\n");
       }
       
       
-//    public void caseAHoleHtmlbody(AHoleHtmlbody node);
-//    public void caseAWhateverHtmlbody(AWhateverHtmlbody node);
-//    public void caseAMetaHtmlbody(AMetaHtmlbody node);
-//    public void caseAInputHtmlbody(AInputHtmlbody node);
-//    public void caseASelectHtmlbody(ASelectHtmlbody node);
+      public void caseAHoleHtmlbody(AHoleHtmlbody node)
+      {
+          node.getIdentifier().apply(this);
+      }
+      
+      public void caseAWhateverHtmlbody(AWhateverHtmlbody node)
+      {
+          node.getWhatever().apply(this);
+      }
+      
+      public void caseAMetaHtmlbody(AMetaHtmlbody node)
+      {
+          puts("<!--");
+          
+          node.getMeta().apply(this);
+          
+          puts("-->");
+      }
+      
+      public void caseAInputHtmlbody(AInputHtmlbody node)
+      {
+          node.getInput().apply(this);
+          
+          for(PInputattr inputAttr : node.getInputattr())
+          {
+              inputAttr.apply(this);
+          }
+          
+          puts("/>");
+      }
+      
+      public void caseASelectHtmlbody(ASelectHtmlbody node)
+      {
+          node.getSelectTag().apply(this);
+      }
+      
 //    public void caseANameInputattr(ANameInputattr node);
 //    public void caseATypeInputattr(ATypeInputattr node);
 //    public void caseAAttributeInputattr(AAttributeInputattr node);
