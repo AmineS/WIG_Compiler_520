@@ -19,23 +19,29 @@ public class PrettyPrinter extends DepthFirstAdapter
     
     private void puts(String s)
     {
-//        printTab();
         System.out.print(s);
         System.out.flush();
     }
     
-    private void printTab()
+/*    private void printTab()
     {
         for(int i=0; i<tabCount; ++i)
         {
-            puts("\t");
+            System.out.print("    ");
         }
     }
+    private void incrementTabCount()
+    {
+        ++tabCount;
+    }
     
+    private void decrementTabCount()
+    {
+        --tabCount;
+    }*/
     public void caseAService(AService node)
     {
         puts("Service \n{\n");
-        ++tabCount;
         
         for(PHtml html : node.getHtml())
         {
@@ -63,7 +69,6 @@ public class PrettyPrinter extends DepthFirstAdapter
         }
         
         puts("\n}");
-        --tabCount;
     }
     
     public void caseAHtml(AHtml node)
