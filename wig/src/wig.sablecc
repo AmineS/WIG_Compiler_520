@@ -399,7 +399,7 @@ Productions
     base_exp{->exp} =
       {lvalue} lvalue 
         {-> New exp.lvalue(lvalue)}
-    | {cany} identifier l_par exps? r_par
+    | {call} identifier l_par exps? r_par
         {-> New exp.call(identifier, [exps.exp])}
     | {int} P.intconst 
         {-> New exp.int(intconst)}
