@@ -36,7 +36,7 @@ whatever_stm = [[any-'<']-'>']*; //anything without < and >
 **************************************/
 States
 
-wig_scope,html_scope,whatever_scope,html_tag_scope;
+wig_scope,html_scope,whatever_scope,html_tag_scope, hole_scope;
 
 /************************************
 * Tokens
@@ -96,8 +96,8 @@ Tokens
 {wig_scope,whatever_scope->html_scope,html_scope} lt = '<';
 {wig_scope,html_scope->whatever_scope,html_tag_scope->whatever_scope} gt = '>';
 {whatever_scope->html_scope,html_scope} lt_slash = '</';
-{whatever_scope->html_scope,html_scope} lt_bracket = '<[';
-{html_scope->whatever_scope} gt_bracket = ']>';
+{whatever_scope->hole_scope, html_scope} lt_bracket = '<[';
+{hole_scope->whatever_scope, html_scope} gt_bracket = ']>';
 {wig_scope} comment=wig_comment;
 {wig_scope} l_par = '(';
 {wig_scope} r_par = ')';
