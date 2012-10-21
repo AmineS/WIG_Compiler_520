@@ -19,26 +19,16 @@ Helpers
 
 
 States
-	wig_scope, html_scope, html_comment_scope, holes_scope, html_tags, wig_comment_scope;
+    wig_scope, html_scope, wig_comment_scope, html_comment_scope, holes_scope, html_tags_scope;
 
 Tokens
-    eol = cr | lf | cr lf;
+    {wig_scope, html_scope, wig_comment_scope, html_comment_scope} eol = cr | lf | cr lf;
 
-    blank = ' ' | tab;
+    {wig_scope, html_scope, wig_comment_scope, html_comment_scope, html_tags_scope} blank = ' ' | tab;
 
     {wig_scope} service = 'service';
     {wig_scope} const = 'const';
     {wig_scope} html = 'html';
-
-    {html_scope} html_tag_start = '<html>';
-    {html_scope} html_tag_end = '</html>';
-    {html_tags} input = 'input';
-    {html_tags} select = 'select';
-    {html_tags} type = 'type';
-    {html_tags} name = 'name';
-    {html_tags} text = 'text';
-    {html_tags} radio = 'radio';
-
     {wig_scope} schema = 'schema';
     {wig_scope} session = 'session';
     {wig_scope} show = 'show';
@@ -58,20 +48,12 @@ Tokens
     {wig_scope} false = 'false';
     {wig_scope} l_brace = '{';
     {wig_scope} r_brace = '}';
-
-    assign = '=';
-
+    {wig_scope} assign = '=';
     {wig_scope} semicolon = ';';
     {wig_scope} lt = '<';
     {wig_scope} gt = '>';
-
-    {html_scope} lt_slash = '</';
-
-    {holes_scope} lt_bracket = '<[';
-    {holes_scope} gt_bracket = ']>';
-
-    l_par = '(';
-    r_par = ')';
+    {wig_scope} l_par = '(';
+    {wig_scope} r_par = ')';
     {wig_scope} l_bracket = '[';
     {wig_scope} r_bracket = ']';
     {wig_scope} comma = ',';
@@ -92,350 +74,464 @@ Tokens
     {wig_scope} or = '||';
     {wig_scope} dot = '.';
 
-    identifier = idletter idchar*;
+    {html_tags_scope} input = 'input';
+    {html_tags_scope} select = 'select';
+    {html_tags_scope} type = 'type';
+    {html_tags_scope} name = 'name';
+    {html_tags_scope} text = 'text';
+    {html_tags_scope} radio = 'radio';
 
-    intconst = '0'| [digit-'0'] digit*;
+    {html_scope} lt_slash = '</';
 
-    stringconst = double_quote any_str* double_quote;
+    {html_scope} neg_intconst = '-' [digit-'0'] digit*;
+
+    {wig_scope, holes_scope} identifier = idletter idchar*;
+
+    {wig_scope} intconst = '0'| [digit-'0'] digit*;
+
+    {wig_scope} stringconst = double_quote any_str* double_quote;
+
+    {html_scope->html_comment_scope} html_comment_start = '<!--';
+    {html_comment_scope->html_scope} html_comment_end = '-->';
+
+    {html_scope->html_tags_scope} html_tags_start = '<';
+    {html_tags_scope->html_scope} html_tags_end = '>';
  
-	{html_scope->html_comment_scope, html_comment_scope} html_comment_start = '<!--';
- 	{html_scope, html_comment_scope->html_scope} html_comment_end = '-->';
+    {html_scope->holes_scope} lt_bracket = '<[';
+    {holes_scope->html_scope} gt_bracket = ']>';
+
+    {wig_scope->html_scope} html_tag_start = '<html>';
+    {html_scope->wig_scope} html_tag_end = '</html>';
+
 
     {html_comment_scope} meta = '<!--' any* '-->';
-	
+    
+    {wig_scope->wig_comment_scope} wig_comment_start = '/*';
+    {wig_comment_scope->wig_scope} wig_comment_end = '*/';
+
     {html_scope} whatever = [any - ['>' + '<']]*;
+
+    {html_scope,html_tags_scope,wig_scope} pos_intconst = '0' | [digit-'0'] digit*;
+    
 
 IgnoredTokens
     blank, eol;
 
 Productions
-    service =
-        T.service l_brace [p_html]:P.html+ [schemas]:P.schema* [vars]:variable* [funcs]:function* [sessions]:P.session+ r_brace
-        {-> New service([p_html], [schemas], [vars], [funcs], [sessions])};
 
-    html = 
-        const T.html identifier assign html_tag_start [html_bodies]:htmlbody* html_tag_end semicolon
-        {-> New html(identifier, [html_bodies])};
+    service = T.service l_brace P.html+ P.schema* variable* function* P.session+ r_brace
+        {-> New service([html], [schema], [variable], [function], [session])};
 
-    htmlbody =
-        {tag_start} lt identifier attribute* gt
-        {-> New htmlbody.tag_start(identifier, [attribute])} |
-        {tag_end}   lt_slash identifier gt
-        {-> New htmlbody.tag_end(identifier)} |
-        {hole} lt_bracket identifier gt_bracket
-        {-> New htmlbody.hole(identifier)} |
-        {whatever}  whatever 
-        {-> New htmlbody.whatever(whatever)}|
-        {meta} meta 
-        {-> New htmlbody.meta(meta)}|
-        {input} lt T.input inputattr+ gt
-        {-> New htmlbody.input([inputattr])} |
-        {select} lt [select_tag]:select inputattr+ [first_gt]:gt htmlbody* lt_slash select [second_gt]:gt
-        {-> New htmlbody.select(select_tag, [inputattr], [htmlbody], select)};
+    html = const T.html identifier assign html_tag_start htmlbody* html_tag_end semicolon
+        {-> New html(identifier, [htmlbody])};
 
-    inputattr =
-        {name} name assign attr 
-        {-> New inputattr.name(attr)} |
-        {type} T.type assign inputtype 
-        {-> New inputattr.type(inputtype)} |
-        {attribute} attribute
-        {-> New inputattr.attribute(attribute)};
+    htmlbody{->htmlbody} = 
+      {tag_start} lt identifier attribute* gt
+        {->New htmlbody.tag_start(identifier, [attribute])}
+    | {tag_end} lt_slash identifier gt
+        {->New htmlbody.tag_end(identifier)}
+    | {hole} lt_bracket identifier gt_bracket
+        {->New htmlbody.hole(identifier)}
+    | {whatever} whatever 
+        {->New htmlbody.whatever(whatever)}
+    | {meta} meta 
+        {->New htmlbody.meta(meta)}
+    | {input} lt T.input inputattr+ gt
+        {->New htmlbody.input(T.input, [inputattr])}
+    | {select} lt [select_tag]:select inputattr+ [first_gt]:gt htmlbody* lt_slash select [second_gt]:gt
+        {->New htmlbody.select(select_tag, [inputattr], first_gt, [htmlbody])};
 
-    inputtype =
-        {text}  text 
-        {-> New inputtype.text(text)}|
-        {radio} radio
-        {-> New inputtype.radio(radio)};
+    inputattr{->inputattr} = 
+      {name} name assign attr 
+        {->New inputattr.name(name, attr.attr)}
+    | {type} T.type assign inputtype 
+        {->New inputattr.type(T.type, inputtype)}
+    | {attribute} attribute 
+        {->New inputattr.attribute(attribute)};
 
-    attribute =
-        {attr}  attr 
-        {-> New attribute.attr(attr)}| 
-        {assign} [left_attr]:attr assign [right_attr]:attr
-        {-> New attribute.assign(left_attr, right_attr)};
+    inputtype{->inputtype} =
+      {texttype} text 
+        {->New inputtype.texttype(text)}
+    | {radiotype} radio 
+        {->New inputtype.radiotype(radio)}
+    | {strtype} stringconst 
+        {->New inputtype.strtype(stringconst)};
 
-    attr = 
-        {id}  identifier 
-        {-> New attr.id(identifier)}| 
-        {str} stringconst
-        {-> New attr.str(stringconst)};
+    attribute {->attribute} =
+      {attr} attr 
+        {->New attribute.attr(attr.attr)}
+    | {assign} [left_attr]:attr assign [right_attr]:attr
+        {->New attribute.assign(left_attr.attr, right_attr.attr)};
 
-    schema =
-        T.schema identifier l_brace field* r_brace
-        {-> New schema(identifier, [field])};
+    attr{->attr} =
+      {id} identifier 
+        {->New attr.id(identifier)}
+    | {str} stringconst 
+        {->New attr.str(stringconst)}
+    | {iconst} P.intconst 
+        {->New attr.iconst(intconst)};
 
-    field =
-        simpletype identifier semicolon
-        {-> New field(simpletype, identifier)};
+    intconst{->P.intconst} =
+      {negint} neg_intconst 
+        {->New intconst.negint(neg_intconst)}
+    | {posint} pos_intconst 
+        {->New intconst.posint(pos_intconst)};
 
-    variable =
-        [ptype]:P.type identifiers semicolon
-        {-> New variable(ptype,identifiers)};
+    schema = T.schema identifier l_brace field* r_brace
+        {->New schema( identifier, [field])};
 
-    identifiers {-> exp*} =
-        {one}  identifier | 
-        {many} identifiers comma identifier;
+    field{->field} = simpletype identifier semicolon 
+        {-> New field(simpletype.type, identifier)};
 
-    simpletype {-> type} =
-        {int}    int
-        {-> New type.int(int)} | 
-        {bool}   bool 
-        {-> New type.bool(bool)}|
-        {string} string 
-        {-> New type.string(string)}|
-        {void}   void
-        {-> New type.void(void)};
+    variable{->variable} = P.type identifiers semicolon
+        {->New variable(P.type, [identifiers.identifier])};
 
-    type =
-        {simple} simpletype 
-        {-> simpletype.type}|
-        {tuple}  tuple identifier
-        {-> New type.tuple(identifier)};
+    identifiers{->identifier*} =
+      {one} identifier
+        {->[identifier]}
+    | {many} identifiers comma identifier
+        {-> [identifiers.identifier, identifier]};
 
-    function =
-        P.type identifier l_par arguments? r_par compoundstm;
+    simpletype{->P.type} =
+      {int} int 
+        {->New type.int(int)}
+    | {bool} bool 
+        {->New type.bool(bool)}
+    | {string} string 
+        {->New type.string(string)}
+    | {void} void 
+        {->New type.void(void)};
 
-    arguments =
-        {one}  argument |
-        {many} arguments comma argument;
+    type{->P.type} =
+      {simple} simpletype
+        {->simpletype.type}
+    | {tuple} tuple identifier
+        {->New type.tuple(identifier)};
 
-    argument =
-        P.type identifier;
+    function{->function} = P.type identifier l_par arguments? r_par compoundstm
+        {->New function(P.type, identifier, [arguments.argument], compoundstm)};
 
-    session =
-        T.session identifier l_par r_par compoundstm;
+    arguments{->argument*} =
+      {one} argument 
+        {->[argument]}
+    | {many} arguments comma argument 
+        {-> [arguments.argument, argument]};
 
-    stm =
-        {no}     semicolon |
-        {show}   show document P.receive? semicolon |
-        {exit}   exit document semicolon |
-        {return} return semicolon |
-        {retexp} return exp semicolon |
-        {if}     if l_par exp r_par stm |
-        {ifelse} if l_par exp r_par [then_stm]:stm_no_short_if else [else_stm]:stm |
-        {while}  while l_par exp r_par stm |
-        {comp}   compoundstm |
-        {exp}    exp semicolon;
+    argument{->argument} = P.type identifier 
+        {->New argument(P.type, identifier)};
 
-    stm_no_short_if =
-        {no}     semicolon |
-        {show}   show document P.receive? semicolon |
-        {exit}   exit document semicolon |
-        {return} return semicolon |
-        {retexp} return exp semicolon |
-        {ifelse} if l_par exp r_par [then_stm]:stm_no_short_if else [else_stm]:stm_no_short_if |
-        {while}  while l_par exp r_par stm_no_short_if |
-        {comp}   compoundstm |
-        {exp}    exp semicolon;
+    session = T.session identifier l_par r_par compoundstm
+        {->New session(identifier, compoundstm)};
+
+    stm{->stm?} =
+      {empty} semicolon 
+        {->New stm.empty()}
+    | {show} show document P.receive? semicolon
+        {-> New stm.show(document, P.receive)}
+    | {exit} exit document semicolon 
+        {-> New stm.exit(document)}
+    | {return} return semicolon 
+        {-> New stm.return()}
+    | {returnexp} return exp semicolon 
+        {-> New stm.returnexp(exp)}
+    | {if} if l_par exp r_par stm 
+        {-> New stm.if(exp, stm)}
+    | {ifelse} if l_par exp r_par [then_stm]:stm_no_short_if else [else_stm]:stm
+        {-> New stm.ifelse(exp, then_stm.stm, else_stm)}
+    | {while} while l_par exp r_par stm 
+        {-> New stm.while(exp, stm)}
+    | {comp} compoundstm 
+        {-> New stm.comp(compoundstm)}
+    | {exp} exp semicolon 
+        {-> New stm.exp(exp)};
+
+    stm_no_short_if{->stm} =
+      {empty} semicolon 
+        {->New stm.empty() }
+    | {show} show document P.receive? semicolon
+        {->New stm.show(document, P.receive) }
+    | {exit} exit document semicolon 
+        {-> New stm.exit(document)}
+    | {return} return semicolon 
+        {-> New stm.return()}
+    | {returnexp} return exp semicolon 
+        {-> New stm.returnexp(exp)}
+    | {ifelse} if l_par exp r_par [then_stm]:stm_no_short_if else [else_stm]:stm_no_short_if
+        {-> New stm.ifelse(exp, then_stm.stm, else_stm.stm)}
+    | {while} while l_par exp r_par stm_no_short_if
+        {-> New stm.while(exp, stm_no_short_if.stm)}
+    | {comp} compoundstm 
+        {-> New stm.comp(compoundstm)}
+    | {exp} exp semicolon 
+        {-> New stm.exp(exp)};
 
     document =
-        {id}   identifier |
-        {plug} T.plug identifier l_bracket plugs r_bracket;
+      {id} identifier 
+        {-> New document.id(identifier)}
+    | {plug} T.plug identifier l_bracket plugs r_bracket
+        {-> New document.plug(identifier, [plugs.plug])};
 
-    receive =
-       T.receive l_bracket inputs  r_bracket;
+    receive = T.receive l_bracket inputs r_bracket
+        {-> New receive([inputs.input])};
 
-    compoundstm =
-        l_brace variable* stm* r_brace;
+    compoundstm = l_brace variable* stm* r_brace
+        {-> New compoundstm([variable], [stm])};
 
-    plugs =
-        {one}  P.plug | 
-        {many} P.plugs comma P.plug;
+    plugs{->P.plug*} =
+      {one} P.plug 
+        {->[P.plug]}
+    | {many} P.plugs comma P.plug 
+        {-> [plugs.plug, P.plug]};
 
-    plug =
-        identifier assign exp;
+    plug = identifier assign exp 
+        {-> New plug(identifier, exp.exp)};
 
-    inputs =
-        {one} P.input |
-        {many} P.inputs comma P.input;
+    inputs{->P.input*} =
+      {one} P.input 
+        {-> [P.input]}
+    | {many} P.inputs comma P.input 
+        {-> [inputs.input, input]};
 
-    input =
-        lvalue assign identifier;
+    input = lvalue assign identifier 
+        {-> New input(lvalue, identifier)};
 
-    exp =
-        {assign}  lvalue assign or_exp |
-        {default} or_exp;
+    exp{->exp} =
+      {assign} lvalue assign [right]:or_exp
+        {-> New exp.assign(lvalue, right.exp)}
+    | {default} [left]:or_exp 
+        {-> left.exp};
 
-    or_exp =
-        {or}      [left]:or_exp or [right]:and_exp |
-        {default} and_exp;
+    or_exp{->exp} =
+      {or} [left]:or_exp or [right]:and_exp 
+        {-> New exp.or(left.exp, right.exp)}
+    | {default} [left]:and_exp 
+        {-> left.exp};
 
-    and_exp =
-        {and}     [left]:and_exp and [right]:cmp_exp |
-        {default} cmp_exp;
+    and_exp{->exp} =
+      {and} [left]:and_exp and [right]:cmp_exp
+        {-> New exp.and(left.exp, right.exp)}
+    | {default} [left]:cmp_exp 
+        {-> left.exp};
 
-    cmp_exp =
-        {eq}      [left]:add_exp eq [right]:add_exp |
-        {neq}     [left]:add_exp neq [right]:add_exp |
-        {lt}      [left]:add_exp lt [right]:add_exp |
-        {gt}      [left]:add_exp gt [right]:add_exp |
-        {lteq}    [left]:add_exp lteq [right]:add_exp |
-        {gteq}    [left]:add_exp gteq [right]:add_exp |
-        {default} add_exp;
+    cmp_exp{->exp} =
+      {eq} [left]:add_exp eq [right]:add_exp
+        {-> New exp.eq(left.exp, right.exp)}
+    | {neq} [left]:add_exp neq [right]:add_exp
+        {-> New exp.neq(left.exp, right.exp)}
+    | {lt} [left]:add_exp lt [right]:add_exp
+        {-> New exp.lt(left.exp, right.exp)}
+    | {gt} [left]:add_exp gt [right]:add_exp
+        {-> New exp.gt(left.exp, right.exp)}
+    | {lteq} [left]:add_exp lteq [right]:add_exp
+        {-> New exp.lteq(left.exp, right.exp)}
+    | {gteq} [left]:add_exp gteq [right]:add_exp
+        {-> New exp.gteq(left.exp, right.exp)}
+    | {default} [left]:add_exp {-> left.exp};
 
-    add_exp =
-        {plus}    [left]:add_exp plus [right]:mult_exp |
-        {minus}   [left]:add_exp minus [right]:mult_exp |
-        {default} mult_exp;
+    add_exp{->exp} =
+      {plus} [left]:add_exp plus [right]:mult_exp
+        {-> New exp.plus(left.exp, right.exp)}
+    | {minus} [left]:add_exp minus [right]:mult_exp
+        {-> New exp.minus(left.exp, right.exp)}
+    | {default} [left]:mult_exp 
+        {-> left.exp};
 
-    mult_exp =
-        {mult}    [left]:mult_exp mult [right]:join_exp |
-        {div}     [left]:mult_exp div [right]:join_exp |
-        {mod}     [left]:mult_exp mod [right]:join_exp |
-        {default} join_exp;
+    mult_exp{->exp} =
+      {mult} [left]:mult_exp mult [right]:join_exp
+        {-> New exp.mult(left.exp, right.exp)}
+    | {div} [left]:mult_exp div [right]:join_exp
+        {-> New exp.div(left.exp, right.exp)}
+    | {mod} [left]:mult_exp mod [right]:join_exp
+        {-> New exp.mod(left.exp, right.exp)}
+    | {default} [left]:join_exp 
+        {-> left.exp};
 
-    join_exp = 
-        {join}    [left]:tuple_exp join [right]:join_exp |
-        {default} tuple_exp;
-        
-    tuple_exp =
-        {keep}        tuple_exp keep identifier |
-        {remove}      tuple_exp remove identifier |
-        {keep_many}   tuple_exp keep l_par identifiers r_par |
-        {remove_many} tuple_exp remove l_par identifiers r_par |
-        {default}     unary_exp;
+    join_exp{->exp} =
+      {join} [left]:tuple_exp join [right]:join_exp
+        {-> New exp.join(left.exp, right.exp)}
+    | {default} [left]:tuple_exp 
+        {-> left.exp};
 
-    unary_exp =
-        {not}     not base_exp |
-        {neg}     minus base_exp |
-        {default} base_exp;
+    tuple_exp{->exp} =
+      {keep} [left]:tuple_exp keep identifier
+        {-> New exp.keep(left.exp, identifier)}
+    | {remove} [left]:tuple_exp remove identifier
+        {-> New exp.remove(left.exp, identifier)}
+    | {keep_many} [left]:tuple_exp keep l_par identifiers r_par
+        {-> New exp.keep_many(left.exp, [identifiers.identifier])}
+    | {remove_many} [left]:tuple_exp remove l_par identifiers r_par
+        {-> New exp.remove_many(left.exp, [identifiers.identifier])}
+    | {default} [left]:unary_exp
+        {-> left.exp};
 
-    base_exp =
-        {lvalue} lvalue |
-        {call}   identifier l_par exps? r_par |
-        {int}    intconst |
-        {true}   true |
-        {false}  false |
-        {string} stringconst |
-        {tuple}  tuple l_brace fieldvalues? r_brace |
-        {paren}  l_par exp r_par;
+    unary_exp{->exp} =
+      {not} not [left]:base_exp 
+        {-> New exp.not(left.exp)}
+    | {neg} minus [left]:base_exp 
+        {-> New exp.neg(left.exp)}
+    | {default} [left]:base_exp 
+        {-> left.exp};
 
-    exps =
-        {one}  exp |
-        {many} exps comma exp;
+    base_exp{->exp} =
+      {lvalue} lvalue 
+        {-> New exp.lvalue(lvalue)}
+    | {call} identifier l_par exps? r_par
+        {-> New exp.call(identifier, [exps.exp])}
+    | {int} P.intconst 
+        {-> New exp.int(intconst)}
+    | {true} true 
+        {-> New exp.true(true)}
+    | {false} false 
+        {-> New exp.false(false)}
+    | {string} stringconst 
+        {-> New exp.string(stringconst)}
+    | {tuple} tuple l_brace fieldvalues? r_brace
+        {-> New exp.tuple([fieldvalues.fieldvalue])}
+    | {paren} l_par exp r_par
+        {-> exp.exp};
+
+    exps{->exp*} =
+      {one} exp 
+        {-> [exp]}
+    | {many} exps comma exp 
+        {-> [exps.exp, exp]};
 
     lvalue =
-        {simple}    identifier | 
-        {qualified} [left]:identifier dot [right]:identifier;
+      {simple} identifier 
+        {-> New lvalue.simple(identifier)}
+    | {qualified} [left]:identifier dot [right]:identifier
+        {-> New lvalue.qualified(left, right)};
 
-    fieldvalues =
-        {one}  fieldvalue | 
-        {many} fieldvalues comma fieldvalue;
+    fieldvalues{->fieldvalue*} =
+      {one} fieldvalue 
+        {-> [fieldvalue]}
+    | {many} fieldvalues comma fieldvalue
+        {-> [fieldvalues.fieldvalue, fieldvalue]};
 
-    fieldvalue =
-        identifier assign exp;
+    fieldvalue = identifier assign exp 
+        {-> New fieldvalue(identifier, exp)};
+
 
 Abstract Syntax Tree
 
-    service = 
-        [htmls]:P.html+ [schemas]:P.schema* [variables]:variable* [functions]:P.function* [sessions]:P.session+;
+    service = P.html+ P.schema* variable* function* P.session+;
+
+    html = identifier htmlbody*;
     
-    variable = 
-        P.type [identifiers]:identifier+;
-
-    html = 
-        identifier [htmlbodies]:htmlbody*;
-
     htmlbody = 
-        {tag_start} identifier attribute* |
-        {tag_end} identifier |
-        {hole} identifier |
-        {whatever} whatever |
-        {meta} meta | 
-        {input} [inputattrs]:inputattr+ |
-        {select} [select_tag]:select inputattr+ htmlbody* select;
+          {tag_start} identifier attribute*
+        | {tag_end} identifier
+        | {hole} identifier
+        | {whatever} whatever
+        | {meta} meta
+        | {input} T.input inputattr+
+        | {select} [select_tag]:select inputattr+ [first_gt]:gt htmlbody*;
 
     inputattr = 
-        {name} attr |
-        {type} inputtype |
-        {attribute} attribute;
+          {name} name attr
+        | {type} T.type inputtype
+        | {attribute} attribute
+        ;
 
     inputtype = 
-        {text} text |
-        {radio} radio;
+          {texttype} text
+        | {radiotype} radio
+        | {strtype} stringconst;
 
     attribute = 
-        {attr} attr | 
-        {assign} [left]:attr [right]:attr;
+          {attr} attr
+        | {assign} [left_attr]:attr [right_attr]:attr;
 
     attr = 
-        {id} identifier | 
-        {str} stringconst;
+          {id} identifier
+        | {str} stringconst
+        | {iconst} P.intconst;
 
-    session = 
-        identifier stm;
+    intconst = 
+         {negint} neg_intconst
+        |{posint} pos_intconst;
 
-    schema = 
-        identifier [fields]:field*;
+    schema = identifier field*;
+    field = P.type identifier;
+    variable = P.type identifier+;
+    identifiers = identifier*;
 
-    type =
-        {int} int |
-        {bool} bool |
-        {string} string |
-        {void} void|
-        {tuple} identifier;
+    type = 
+          {int} int
+        | {bool} bool
+        | {string} string
+        | {void} void
+        | {simple} P.type
+        | {tuple} identifier;
 
-    function = 
-        {simple} P.type identifier [arguments]:argument* stm;
+    function = P.type identifier argument* compoundstm;
+    arguments = argument*;
+    argument = P.type identifier;
+    session = identifier compoundstm;
 
-    argument =
-        P.type identifier;
-
-    stm =
-        {no} |
-        {show} document receive? |
-        {exit} document |
-        {return} |
-        {retexp} exp |
-        {if} exp stm |
-        {ifelse} exp [then_stm]:stm [else_stm]:stm | 
-        {while} exp stm |
-        {comp} variable* stm* | 
-        {exp} exp;
-
-    field = 
-        P.type identifier;
+    stm = 
+          {empty}
+        | {show} document P.receive?
+        | {exit} document
+        | {return}
+        | {returnexp} exp
+        | {if} exp stm
+        | {ifelse} exp [then_stm]:stm [else_stm]:stm
+        | {while} exp stm
+        | {comp} compoundstm
+        | {exp} exp;
 
     document = 
-        {id} identifier | 
-        {plug} identifier [plugs]:P.plug+;
+          {id} identifier
+        | {plug} identifier P.plug*;
 
-    plug = 
-        identifier exp;
+    receive = P.input*;
 
-    exp =
-        {assign} lvalue exp |
-        {or} [left]:exp [right]:exp |
-        {and} [left]:exp [right]:exp |
-        {eq} [left]:exp [right]:exp |
-        {neq} [left]:exp [right]:exp |
-        {lt} [left]:exp [right]:exp |
-        {gt} [left]:exp [right]:exp |
-        {lteq} [left]:exp [right]:exp |
-        {gteq} [left]:exp [right]:exp |
-        {plus} [left]:exp [right]:exp |
-        {minus} [left]:exp [right]:exp |
-        {mult} [left]:exp [right]:exp |
-        {div} [left]:exp [right]:exp |
-        {mod} [left]:exp [right]:exp |
-        {join} [left]:exp [right]:exp |
-        {keep} exp identifier |
-        {remove} exp identifier |
-        {keep_many} exp [fields]:identifier+ |
-        {remove_many} exp [fields]:identifier+ |
-        {not} exp |
-        {neg} exp |
-        {lvalue} lvalue |
-        {call} identifier [args]:exp+ |
-        {int} intconst |
-        {id} identifier |
-        {true} true |
-        {false} false |
-        {string} stringconst |
-        {tuple} tuple [field_decls]:exp+ |
-        {paren} exp |
-        {input} exp |
-        {receive} [values]:exp+;
+    compoundstm = variable* stm*;
 
-    lvalue =
-        {simple}    identifier | 
-        {qualified} [left]:identifier [right]:identifier;   
+    plugs = P.plug*;
+    plug = identifier exp;
+
+    inputs = P.input*;
+    input = lvalue identifier;
+
+    exp = 
+          {assign} lvalue [right]:exp
+        | {or} [left]:exp [right]:exp
+        | {and} [left]:exp [right]:exp
+        | {eq} [left]:exp [right]:exp
+        | {neq} [left]:exp [right]:exp
+        | {lt} [left]:exp [right]:exp
+        | {gt} [left]:exp [right]:exp
+        | {lteq} [left]:exp [right]:exp
+        | {gteq} [left]:exp [right]:exp
+        | {plus} [left]:exp [right]:exp
+        | {minus} [left]:exp [right]:exp
+        | {mult} [left]:exp [right]:exp
+        | {div} [left]:exp [right]:exp
+        | {mod} [left]:exp [right]:exp
+        | {join} [left]:exp [right]:exp
+        | {keep} [left]:exp identifier
+        | {remove} [left]:exp identifier
+        | {keep_many} [left]:exp identifier+
+        | {remove_many} [left]:exp identifier+
+        | {not} [left]:exp
+        | {neg} [left]:exp
+        | {default} [left]:exp
+        | {lvalue} lvalue
+        | {call} identifier exp*
+        | {int} P.intconst
+        | {true} true
+        | {false} false
+        | {string} stringconst
+        | {tuple} fieldvalue*
+        | {paren} exp;
+
+    exps = exp*;
+
+    lvalue = 
+          {simple} identifier 
+        | {qualified} [left]:identifier [right]:identifier;
+    
+    fieldvalues = fieldvalue*;
+    fieldvalue = identifier exp;
