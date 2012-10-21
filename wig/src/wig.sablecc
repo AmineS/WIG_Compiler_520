@@ -72,6 +72,7 @@ Tokens
 /*********************
 * HTML Keywords
 *********************/
+{html_scope} meta = meta_stmt; // any string of the form <!-- ... -->
 {html_scope->wig_scope,whatever_scope->html_scope,wig_scope} html_tag_end = '</html>';
 {html_scope->html_tag_scope} input = 'input';
 {html_scope,html_tag_scope,wig_scope} pos_intconst = '0' | [digit-'0'] digit*;
@@ -98,7 +99,7 @@ Tokens
 {whatever_scope->html_scope,html_scope} lt_slash = '</';
 {whatever_scope->hole_scope, html_scope} lt_bracket = '<[';
 {hole_scope->whatever_scope, html_scope} gt_bracket = ']>';
-{wig_scope} comment=wig_comment;
+{wig_scope} comment = wig_comment;
 {wig_scope} l_par = '(';
 {wig_scope} r_par = ')';
 {wig_scope} l_bracket = '[';
@@ -128,7 +129,7 @@ Tokens
 {wig_scope,html_scope,html_tag_scope} blank = (tab|' '|eol)*;
 {wig_scope,html_scope,html_tag_scope, hole_scope} identifier = letter_or_us (letter_or_us|digit)*; // usual identifiers
 {wig_scope, html_tag_scope, html_scope} stringconst = string_const ; // usual string constants
-{html_scope} meta = meta_stmt; // any string of the form <!-- ... -->
+
 {whatever_scope} whatever = whatever_stm; // any string not containing < or >
 
 /*********************

@@ -42,8 +42,8 @@ public class PrettyPrinter extends DepthFirstAdapter
     
     public void caseAService(AService node)
     {
-        puts("Service \n{\n");
-        
+        puts("service{\n");
+                
         for(PHtml html : node.getHtml())
         {
             html.apply(this);
@@ -74,29 +74,35 @@ public class PrettyPrinter extends DepthFirstAdapter
     
     public void caseAHtml(AHtml node)
     {
+        puts("const html ");        
+        node.getIdentifier().apply(this);
+        puts(" = ");
+        puts("<html>");
         for(PHtmlbody htmlbody : node.getHtmlbody())
         {
             htmlbody.apply(this);
         }
+        puts("</html>\n");
     }
     
     public void caseATagStartHtmlbody(ATagStartHtmlbody node)
     {
-        puts("const html");
-        
+        puts("<");
         node.getIdentifier().apply(this);
-        
-        puts("= <html> ");
-        
+        if (node.getAttribute().size()!=0)
+            puts(" ");
         for(PAttribute attribute : node.getAttribute())
         {
             attribute.apply(this);
         }
+        puts(">");
     }
     
       public void caseATagEndHtmlbody(ATagEndHtmlbody node)
       {
-          puts(" </html>;\n");
+          puts("</");
+          node.getIdentifier().apply(this);
+          puts(">");
       }
       
       
@@ -114,9 +120,7 @@ public class PrettyPrinter extends DepthFirstAdapter
       
       public void caseAMetaHtmlbody(AMetaHtmlbody node)
       {
-          puts("<!--");          
           node.getMeta().apply(this);          
-          puts("-->");
       }
       
       public void caseAInputHtmlbody(AInputHtmlbody node)
@@ -325,18 +329,19 @@ public class PrettyPrinter extends DepthFirstAdapter
       {
           puts("if(");
           node.getExp().apply(this);
-          puts(")");
+          puts(")\n{\n");
           node.getStm().apply(this);
+          puts("\n}");
       }
       
       public void caseAIfelseStm(AIfelseStm node)
       {
           puts("if(");
           node.getExp().apply(this);
-          puts(")\n\t");
+          puts(")\n");
           node.getThenStm().apply(this);
           puts("\n");
-          puts("else\n\t");
+          puts("else\n");
           node.getElseStm().apply(this);         
           puts("\n");
       }
@@ -345,8 +350,10 @@ public class PrettyPrinter extends DepthFirstAdapter
       {
           puts("while(");
           node.getExp().apply(this);
-          puts(")\n\t");
+          puts(")\n");
+          puts("{\n");
           node.getExp().apply(this);
+          puts("\n}");
           puts("\n");
       }
       
@@ -421,7 +428,7 @@ public class PrettyPrinter extends DepthFirstAdapter
           Iterator<PStm> stm_iter = stm_list.iterator();
           Iterator<PVariable> var_iter = var_list.iterator();          
           
-          puts("{");
+          puts("{\n");
           while(var_iter.hasNext())
           {
               var_iter.next().apply(this);
@@ -1269,16 +1276,16 @@ public class PrettyPrinter extends DepthFirstAdapter
            
       public void caseASession(ASession node)
       {
-          puts("session" );
+          puts("session " );
           if(node.getIdentifier() != null)
           {
               node.getIdentifier().apply(this);
           }
-          puts("()\n{\n");
+          puts("(){\n");
           if(node.getCompoundstm() != null)
           {
               node.getCompoundstm().apply(this);
           }
-          puts("\n}\n");
+          puts("\n}");
       }
 }
