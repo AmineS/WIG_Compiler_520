@@ -102,7 +102,7 @@ Tokens
     {wig_scope} intconst = '0'| [digit-'0'] digit*;
     {wig_scope, html_tags_scope, html_scope} stringconst = double_quote any_str* double_quote;
     {wig_scope, html_scope, html_tags_scope} eol = cr | lf | cr lf;
-    {wig_scope, html_scope, html_tags_scope} blank = ' ' | tab;
+    {wig_scope, html_scope, html_tags_scope} blank = (eol | ' ' | tab)*;
 
     {html_scope} meta= meta_stm;
     {html_scope} whatever = whatever_block;   
