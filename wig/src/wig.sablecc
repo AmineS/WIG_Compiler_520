@@ -14,18 +14,23 @@ Helpers
     idletter = letter | '_';
     idchar  = letter | '_' | digit;    
     double_quote = '"';
-
+    eol = lf|cr|cr lf;
     any_str = [any - [cr + lf]];
+    whatever_block = [[any-'<'] - '>']*;
+    without_cr_lf = [any - [lf+cr]];
+    without_star = [any-'*'];
+    without_star_backslash = [without_star -'/'];    
+    notdash = [any - '-'];
+    notmeta_stm = [notdash -'>'];
+    meta_start = '<!--';
+    meta_end = '-->';
+    meta_stm = meta_start notdash* '-'+ (notmeta_stm notdash* '-'+)* meta_end;
 
 
 States
-    wig_scope, html_scope, wig_comment_scope, html_comment_scope, holes_scope, html_tags_scope;
+    wig_scope, html_scope, html_tags_scope, whatever_scope;
 
 Tokens
-    {wig_scope, html_scope, wig_comment_scope, html_comment_scope} eol = cr | lf | cr lf;
-
-    {wig_scope, html_scope, wig_comment_scope, html_comment_scope, html_tags_scope} blank = ' ' | tab;
-
     {wig_scope} service = 'service';
     {wig_scope} const = 'const';
     {wig_scope} html = 'html';
@@ -48,10 +53,10 @@ Tokens
     {wig_scope} false = 'false';
     {wig_scope} l_brace = '{';
     {wig_scope} r_brace = '}';
-    {wig_scope} assign = '=';
-    {wig_scope} semicolon = ';';
-    {wig_scope} lt = '<';
-    {wig_scope} gt = '>';
+    {wig_scope, html_scope, html_tags_scope} assign = '=';
+    {wig_scope, html_scope->wig_scope} semicolon = ';';
+    {wig_scope, whatever_scope->html_scope, html_scope} lt = '<';
+    {wig_scope, html_scope->whatever_scope, html_tags_scope->whatever_scope} gt = '>';   
     {wig_scope} l_par = '(';
     {wig_scope} r_par = ')';
     {wig_scope} l_bracket = '[';
@@ -73,46 +78,34 @@ Tokens
     {wig_scope} and = '&&';
     {wig_scope} or = '||';
     {wig_scope} dot = '.';
+    {wig_scope} comment = '//' without_cr_lf* eol | 
+                '/*' without_star* '*'+(without_star_backslash without_star* '*' +)* '/';
 
-    {html_tags_scope} input = 'input';
-    {html_tags_scope} select = 'select';
+
+    {wig_scope->html_scope, html_scope} html_tag_start = '<html>';
+    {html_scope->wig_scope, whatever_scope->html_scope, wig_scope} html_tag_end = '</html>';
+    {html_scope} select = 'select';
+    {html_scope} neg_intconst = '-' [digit-'0'] digit*;
+    {html_scope,html_tags_scope,wig_scope} pos_intconst = '0' | [digit-'0'] digit*;
+
+    {html_scope->html_tags_scope} input = 'input';    
     {html_tags_scope} type = 'type';
     {html_tags_scope} name = 'name';
     {html_tags_scope} text = 'text';
     {html_tags_scope} radio = 'radio';
 
-    {html_scope} lt_slash = '</';
+    {whatever_scope->html_scope, html_scope} lt_slash = '</';
+    {whatever_scope->html_scope, html_scope} lt_bracket = '<[';
+    {html_scope->whatever_scope} gt_bracket = ']>';
 
-    {html_scope} neg_intconst = '-' [digit-'0'] digit*;
-
-    {wig_scope, holes_scope} identifier = idletter idchar*;
-
+    {wig_scope, html_scope, html_tags_scope} identifier = idletter idchar*;
     {wig_scope} intconst = '0'| [digit-'0'] digit*;
+    {wig_scope, html_tags_scope, html_scope} stringconst = double_quote any_str* double_quote;
+    {wig_scope, html_scope, html_tags_scope} eol = cr | lf | cr lf;
+    {wig_scope, html_scope, html_tags_scope} blank = ' ' | tab;
 
-    {wig_scope} stringconst = double_quote any_str* double_quote;
-
-    {html_scope->html_comment_scope} html_comment_start = '<!--';
-    {html_comment_scope->html_scope} html_comment_end = '-->';
-
-
-    {html_scope->html_tags_scope} html_tags_start = '<';
-    {html_tags_scope->html_scope} html_tags_end = '>';
- 
-    {html_scope->holes_scope} lt_bracket = '<[';
-    {holes_scope->html_scope} gt_bracket = ']>';
-
-    {wig_scope->html_scope} html_tag_start = '<html>';
-    {html_scope->wig_scope} html_tag_end = '</html>';
-
-    {html_comment_scope} meta = '<!--' any* '-->';
-	
-    {wig_scope->wig_comment_scope} wig_comment_start = '/*';
-    {wig_comment_scope->wig_scope} wig_comment_end = '*/';
-
-    {html_scope} whatever = [any - ['>' + '<']]*;
-
-    {html_scope,html_tags_scope,wig_scope} pos_intconst = '0' | [digit-'0'] digit*;
-    
+    {html_scope} meta= meta_stm;
+    {html_scope} whatever = whatever_block;   
 
 IgnoredTokens
     blank, eol;
