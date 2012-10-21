@@ -11,6 +11,7 @@ import wig.lexer.Lexer;
 import wig.node.Start;
 import wig.parser.Parser;
 import wig.prettyprinter.PrettyPrinter;
+import wig.weeder.Weeder;
 
 public class Compiler
 {
@@ -18,7 +19,7 @@ public class Compiler
     {
         try
         {
-            File inputFile = new File("simple_example.wig");
+            File inputFile = new File("complete_example.wig");
             FileReader inputReader = new FileReader(inputFile);
             
             Parser p = 
@@ -28,7 +29,8 @@ public class Compiler
                  
             Start tree = p.parse();
             
-            PrettyPrinter.print(tree);
+            Weeder.weed(tree);
+            //PrettyPrinter.print(tree);
             
         }
         catch(Exception e)

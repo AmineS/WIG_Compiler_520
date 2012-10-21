@@ -1,0 +1,162 @@
+service {
+
+  const html Welcome = <html> <body>
+    <h1>Welcome to PetsOvernight on-line store</h1>
+    Delivering Little Bundles of Love, in a box, directly to your door.<br><br>
+    Forget about flowers. Send a real live present that shows how much you love someone.<br>
+    Everyone loves kittens! A grieving widow can be consoled by a new puppy in her life!<br>
+    For the man who has everything, what about a white rhino for the living room?<br>
+    Or a miniature Pekinese fighting bitch?<br>
+    If it's got a central nervous system, we've got it ready to go in a box to your house.
+  </body> </html>;
+
+  const html Welcome = <html> <body>
+    <h1>PetsOvernight</h1>
+    Delivering Little Bundles of Love, in a box, directly to your door.<br>
+    <hr>
+    <[msg]><br>
+    Order form:<br>
+    <table>
+      <tr>
+        <td align="center">Items</td>
+        <td align="center">In-Stock</td>
+        <td align="center">Order</td>
+      </tr>
+      <tr>
+        <td><[itemName1]></td>
+        <td><[itemQty1]></td>
+        <td><input name="itemAmt1" type="text" size="5" value="0"></td>
+      </tr>
+      <tr>
+        <td><[itemName2]></td>
+        <td><[itemQty2]></td>
+        <td><input name="itemAmt2" type="text" size="5" value="0"></td>
+      </tr>
+      <tr>
+        <td><[itemName3]></td>
+        <td><[itemQty3]></td>
+        <td><input name="itemAmt3" type="text" size="5" value="0"></td>
+      </tr>
+    </table>
+    <br>
+    <hr>
+    <br>
+    <input name="quit" type="radio" value="Y"> Leave this site without a purchase
+  </body> </html>;
+
+
+  const html AddItems = <html> <body>
+    <h1>PetsOvernight</h1>
+    Delivering Little Bundles of Love, in a box, directly to your door.<br>
+    <hr>
+    Form to add some pets into stock:<br>
+    <table>
+      <tr>
+        <td align="center">Items</td>
+        <td align="center">In-Stock</td>
+        <td align="center">Add</td>
+      </tr>
+      <tr>
+        <td><[itemName1]></td>
+        <td><[itemQty1]></td>
+        <td><input name="itemAmt1" type="text" size="5" value="0"></td>
+      </tr>
+      <tr>
+        <td><[itemName2]></td>
+        <td><[itemQty2]></td>
+        <td><input name="itemAmt2" type="text" size="5" value="0"></td>
+      </tr>
+      <tr>
+        <td><[itemName3]></td>
+        <td><[itemQty3]></td>
+        <td><input name="itemAmt3" type="text" size="5" value="0"></td>
+      </tr>
+    </table>
+    <br>
+    <hr>
+    <br>
+    <input name="quit" type="radio" value="Y"> Leave this site without a adding new pets
+  </body> </html>;
+
+  const html ThankYou = <html> <body>
+    Your order received. Some pets will be shipped tonight<br>
+    Thank you for choosing PetsOvernight<br>
+    Good-bye.
+  </body> </html>;
+
+  const html ByeBye = <html> <body>
+    Thanks for visiting PetsOvernight<br>
+    Good-bye.
+  </body> </html>;
+
+  string itemName1, itemName2, itemName3;
+  string itemName1;
+  int itemQty1, itemQty2, itemQty3;
+  
+  session Init() {
+    itemName1 = "Bengals Kittens";
+    itemQty1 = 54;
+    itemName2 = "Chinese Shar Pei";
+    itemQty2 = 71;
+    itemName3 = "Pot-bellied Pig";
+    itemQty3 = 25;
+    exit ByeBye;
+  }
+
+  
+  session Add() {
+
+    string quit;
+    int itemAmt1, itemAmt2, itemAmt3;
+    itemAmt1 = 0;
+    itemAmt2 = 0;
+    itemAmt3 = 0;
+    show plug AddItems[itemName1=itemName1, itemQty1=itemQty1, itemName2=itemName2, itemQty2=itemQty2, itemName3=itemName3, itemQty3=itemQty3]
+         receive[itemAmt1=itemAmt1, itemAmt2=itemAmt2, itemAmt3=itemAmt3, quit=quit];
+    if (quit!="Y") {
+        itemQty1 = itemQty1 + itemAmt1;
+        itemQty2 = itemQty2 + itemAmt2;
+        itemQty3 = itemQty3 + itemAmt3;
+    }
+    exit ByeBye;
+  }
+
+  
+  session Shop() {
+
+    bool success;
+    string msg, quit;
+    int itemAmt1, itemAmt2, itemAmt3;
+    itemAmt1 = 0;
+    itemAmt2 = 0;
+    itemAmt3 = 0;
+    success = false;
+    msg = "";
+
+    show Welcome;
+
+    while (success==false) {
+      show plug Items[msg=msg, itemName1=itemName1, itemQty1=itemQty1, itemName2=itemName2, itemQty2=itemQty2, itemName3=itemName3, itemQty3=itemQty3]
+           receive[itemAmt1=itemAmt1, itemAmt2=itemAmt2, itemAmt3=itemAmt3, quit=quit];
+      if (quit=="Y") {
+        success=true;
+      } else {
+        if (itemAmt1<=itemQty1 && itemAmt2<=itemQty2 && itemAmt3<=itemQty3) {
+          itemQty1 = itemQty1 - itemAmt1;
+          itemQty2 = itemQty2 - itemAmt2;
+          itemQty3 = itemQty3 - itemAmt3;
+          success = true;
+        } else {
+          msg = "<font color=#AA0000>We are out of stock of one or more items</font>";
+        }
+      }
+    }
+    
+    if (quit=="Y") {
+      exit ByeBye;
+    } else {
+      exit ThankYou;
+    }
+  }
+
+}
