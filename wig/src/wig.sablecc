@@ -36,7 +36,7 @@ whatever_stm = [[any-'<']-'>']*; //anything without < and >
 **************************************/
 States
 
-wig_scope,html_scope,whatever_scope,html_tag_scope;
+wig_scope,html_scope,whatever_scope,html_tag_scope, hole_scope;
 
 /************************************
 * Tokens
@@ -72,6 +72,7 @@ Tokens
 /*********************
 * HTML Keywords
 *********************/
+{html_scope} meta = meta_stmt; // any string of the form <!-- ... -->
 {html_scope->wig_scope,whatever_scope->html_scope,wig_scope} html_tag_end = '</html>';
 {html_scope->html_tag_scope} input = 'input';
 {html_scope,html_tag_scope,wig_scope} pos_intconst = '0' | [digit-'0'] digit*;
@@ -96,9 +97,9 @@ Tokens
 {wig_scope,whatever_scope->html_scope,html_scope} lt = '<';
 {wig_scope,html_scope->whatever_scope,html_tag_scope->whatever_scope} gt = '>';
 {whatever_scope->html_scope,html_scope} lt_slash = '</';
-{whatever_scope->html_scope,html_scope} lt_bracket = '<[';
-{html_scope->whatever_scope} gt_bracket = ']>';
-{wig_scope} comment=wig_comment;
+{whatever_scope->hole_scope, html_scope} lt_bracket = '<[';
+{hole_scope->whatever_scope, html_scope} gt_bracket = ']>';
+{wig_scope} comment = wig_comment;
 {wig_scope} l_par = '(';
 {wig_scope} r_par = ')';
 {wig_scope} l_bracket = '[';
@@ -126,9 +127,9 @@ Tokens
 *********************/
 {wig_scope,html_scope,html_tag_scope} eol = eol;
 {wig_scope,html_scope,html_tag_scope} blank = (tab|' '|eol)*;
-{wig_scope,html_scope,html_tag_scope} identifier = letter_or_us (letter_or_us|digit)*; // usual identifiers
+{wig_scope,html_scope,html_tag_scope, hole_scope} identifier = letter_or_us (letter_or_us|digit)*; // usual identifiers
 {wig_scope, html_tag_scope, html_scope} stringconst = string_const ; // usual string constants
-{html_scope} meta = meta_stmt; // any string of the form <!-- ... -->
+
 {whatever_scope} whatever = whatever_stm; // any string not containing < or >
 
 /*********************
@@ -399,7 +400,7 @@ Productions
     base_exp{->exp} =
       {lvalue} lvalue 
         {-> New exp.lvalue(lvalue)}
-    | {cany} identifier l_par exps? r_par
+    | {call} identifier l_par exps? r_par
         {-> New exp.call(identifier, [exps.exp])}
     | {int} P.intconst 
         {-> New exp.int(intconst)}

@@ -10,8 +10,5 @@
 grammar: wig.sablecc
 	sablecc wig.sablecc
 
-#check:	
-#	./check
-
-#clean:	
-#	rm -rf wig/*.class wig/lexer/ wig/parser/ wig/node/ wig/analysis/ result
+clean:	
+	rm -rf wig/*.class wig/lexer/ wig/parser/ wig/node/ wig/analysis/ 
