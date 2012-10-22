@@ -30,7 +30,7 @@ public class Compiler
             Start tree = p.parse();
             
             Weeder.weed(tree);
-            PrettyPrinter.print(tree);
+            //PrettyPrinter.print(tree);
             
         }
         catch(Exception e)

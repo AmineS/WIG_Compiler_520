@@ -41,7 +41,7 @@ service {
     <br>
     <hr>
     <br>
-    <input name="quit" type="radio" value="Y"> Leave this site without a purchase
+    <input name="Amine" type="radio" value="Y"> Leave this site without a purchase
   </body> </html>;
 
 
