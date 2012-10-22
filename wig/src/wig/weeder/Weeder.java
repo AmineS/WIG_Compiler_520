@@ -17,6 +17,7 @@ public class Weeder extends DepthFirstAdapter
     private Set<String> fSchemasNames = new HashSet<String>();
     private Set<String> fFunctionNames = new HashSet<String>(); // Function names
     private Set<String> fCurrentLocalVariableNames = new HashSet<String>();
+    private Set<String> fInputFieldsNames =  new HashSet<String>();
 
     public static void weed(Node node)
     {
@@ -152,12 +153,15 @@ public class Weeder extends DepthFirstAdapter
     public void caseAInput(AInput node)
     {
         String leftValueName = node.getLvalue().toString().trim();
+        String rightValueName = node.getIdentifier().getText();
         if(!fCurrentLocalVariableNames.contains(leftValueName) && !fHtmlsTuplesGlobalVariablesNames.contains(leftValueName))
         {
-            System.out.println("Error: Variable " + leftValueName + " is not defined in global and local scope" + " at line " + node.getIdentifier().getLine() );
+            System.out.println("Error: Variable " + leftValueName + " is not defined in global and local scope" + " at line " + node.getIdentifier().getLine());
         }
-        // Need to check that the value received actually exists as an input field
-        
+        if(!fInputFieldsNames.contains(rightValueName))
+        {
+            System.out.println("Error: Variable " + rightValueName + " is not a defined input field" + " at line " + node.getIdentifier().getLine());
+        }
         node.getLvalue().apply(this);
         node.getIdentifier().apply(this);
     }
@@ -198,11 +202,54 @@ public class Weeder extends DepthFirstAdapter
     
     // Weeder
     public void caseAInputHtmlbody(AInputHtmlbody node)
-    {          
-        for(PInputattr inputAttr : node.getInputattr())
+    {
+        int nameCounter = 0;
+        int typeCounter = 0;
+        for(PInputattr inputattr : node.getInputattr())
         {
-            inputAttr.apply(this);
-        }          
+            if (inputattr instanceof ANameInputattr)
+            {
+                ANameInputattr nameInputattr = (ANameInputattr) inputattr;
+                nameCounter++;
+                if(nameCounter > 1)
+                {
+                    System.out.println("Error: Input field must have one name attribute at line: " + nameInputattr.getName().getLine());
+                }
+                fInputFieldsNames.add(nameInputattr.getAttr().toString().trim());
+            }
+            else if(inputattr instanceof ATypeInputattr)
+            {
+                ATypeInputattr typeInputattr = (ATypeInputattr) inputattr;
+                typeCounter++;
+                if(typeCounter > 1)
+                {
+                    System.out.println("Error: Input field must have one type attribute at line: " + typeInputattr.getType().getLine());
+                }
+            }
+        }
+        
+        if(nameCounter == 0)
+        {
+            System.out.println("Error: Input field must have a name attribute at line: " + node.getInput().getLine());
+        }
+        if(typeCounter == 0)
+        {
+            System.out.println("Error: Input field must have a type attribute at line: " + node.getInput().getLine());
+        }
+    }
+    
+    public void caseAFunction(AFunction node)
+    {
+        boolean hasReturnType = false;
+        if(node.getType() instanceof AIntType || node.getType() instanceof ABoolType || node.getType() instanceof AStringType || node.getType() instanceof ATupleType)
+        {
+            hasReturnType = true;
+        }
+        ACompoundstm compoundStatement = (ACompoundstm) node.getCompoundstm();
+        if(hasReturnType && (compoundStatement.getStm().size() == 0 || !(compoundStatement.getStm().getLast() instanceof AReturnexpStm)))
+        {
+            System.out.println("Error non void function " + node.getIdentifier().getText().trim() + " does not have a return statement at line " + node.getIdentifier().getLine());
+        }
     }
     
     public void caseATupleExp(ATupleExp node)
@@ -625,7 +672,6 @@ public class Weeder extends DepthFirstAdapter
       
       public void caseAReceive(AReceive node)
       {
-          
           LinkedList<PInput> input_list;
           Iterator<PInput> iter;
           int input_list_size, counter;
@@ -644,6 +690,8 @@ public class Weeder extends DepthFirstAdapter
                  System.out.println(",");
           }
           System.out.println("]");
+
+          
       }
       
       public void caseACompoundstm(ACompoundstm node)
@@ -1411,37 +1459,6 @@ public class Weeder extends DepthFirstAdapter
           }
       }
       
-      public void caseAFunction(AFunction node)
-      {
-          if(node.getType() != null)
-          {
-              node.getType().apply(this);
-          }
-          System.out.println(" ");
-          
-          if(node.getIdentifier() != null)
-          {
-              node.getIdentifier().apply(this);
-          }
-          System.out.println("(");
-          
-          List<PArgument> arguments = node.getArgument();
-          if(arguments != null)
-          {          
-              for(PArgument argument : arguments)
-              {
-                  argument.apply(this);
-                  System.out.println(" ");
-              }
-          }          
-          System.out.println(")\n{\n");
-          
-          if(node.getCompoundstm() != null)
-          {
-              node.getCompoundstm().apply(this);
-          }
-          System.out.println("\n}\n");
-      }
             
       public void caseAArguments(AArguments node)
       {
@@ -1468,5 +1485,7 @@ public class Weeder extends DepthFirstAdapter
               node.getIdentifier().apply(this);
           }
       }
+      
+      
            
 }

@@ -25,7 +25,7 @@ service {
       <tr>
         <td><[itemName1]></td>
         <td><[itemQty1]></td>
-        <td><input name="itemAmt1444" type="text" size="5" value="0"></td>
+        <td><input name="itemAmt1444" name="itemAmt1444" type="text"  type="text" size="5" value="0"></td>
       </tr>
       <tr>
         <td><[itemName2]></td>
@@ -41,7 +41,7 @@ service {
     <br>
     <hr>
     <br>
-    <input name="Amine" type="radio" value="Y"> Leave this site without a purchase
+    <input name="quit" type="radio" value="Y"> Leave this site without a purchase
   </body> </html>;
 
 
@@ -75,7 +75,7 @@ service {
     <br>
     <hr>
     <br>
-    <input name="quit" type="radio" value="Y"> Leave this site without a adding new pets
+    <input name="quit2" type="radio" value="Y"> Leave this site without a adding new pets
   </body> </html>;
 
   const html ThankYou = <html> <body>
@@ -103,6 +103,9 @@ service {
   int itemQty1, itemQty2, itemQty3;
   
 
+  int hello()
+  {
+  }
   
   session Init() {
     itemName1 = "Bengals Kittens";
@@ -113,7 +116,6 @@ service {
     itemQty3 = 25;
     exit ByeBye;
   }
-
   
   session Add() {
 
@@ -148,7 +150,7 @@ service {
 
     while (success==false) {
       show plug Items[msg=msg, itemName1=itemName1, itemQty1=itemQty1, itemName2=itemName2, itemQty2=itemQty2, itemName3=itemName3, itemQty3=itemQty3]
-           receive[itemAmt1=itemAmt1, itemAmt2=itemAmt2, itemAmt3=itemAmt3, quit=quit];
+           receive[itemAmt1=itemAmt7878, itemAmt2=itemAmt2, itemAmt3=itemAmt3, quit=quit];
       if (quit=="Y") {
         success=true;
       } else {
