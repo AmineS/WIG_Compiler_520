@@ -17,9 +17,12 @@ public class Weeder extends DepthFirstAdapter
     private Set<String> fSchemasNames = new HashSet<String>();
     private Set<String> fFunctionNames = new HashSet<String>(); // Function names
     private Set<String> fCurrentLocalVariableNames = new HashSet<String>();
-    private Set<String> fInputFieldsNames =  new HashSet<String>();
+    //private Set<String> fInputFieldsNames =  new HashSet<String>();
     private Set<String> fHoleVariables = new HashSet<String>();
+    private Set<String> fInputVariables = new HashSet<String>();
 
+    
+    
     public static void weed(Node node)
     {
         node.apply(new Weeder());
@@ -160,24 +163,26 @@ public class Weeder extends DepthFirstAdapter
         fCurrentLocalVariableNames.clear();
     }
     
-    // Weeder
     public void caseAInput(AInput node)
     {
         String leftValueName = node.getLvalue().toString().trim();
-        String rightValueName = node.getIdentifier().getText();
+        
+        // check if variable name already exists
         if(!fCurrentLocalVariableNames.contains(leftValueName) && !fHtmlsTuplesGlobalVariablesNames.contains(leftValueName))
         {
             System.out.println("Error: Variable " + leftValueName + " is not defined in global and local scope" + " at line " + node.getIdentifier().getLine());
         }
-        if(!fInputFieldsNames.contains(rightValueName))
+        
+        // check whether, in a receive construct, the identifier of an input corresponds to an inputattribute 
+        if (!fInputVariables.contains(node.getIdentifier().toString()))
         {
-            System.out.println("Error: Variable " + rightValueName + " is not a defined input field" + " at line " + node.getIdentifier().getLine());
+            System.out.println("Error: The input attribute '" + node.getIdentifier().getText() + "' you are trying to receive from at line no. " + node.getIdentifier().getLine() + " does not exist.");
         }
+        
         node.getLvalue().apply(this);
         node.getIdentifier().apply(this);
     }
     
-    // Weeder
     public void caseASession(ASession node)
     {
         String sessionName = node.getIdentifier().toString().trim();
@@ -218,10 +223,13 @@ public class Weeder extends DepthFirstAdapter
     
     public void caseAInputHtmlbody(AInputHtmlbody node)
     {
+        /*
         int nameCounter = 0;
         int typeCounter = 0;
+        node.getInput().apply(this); 
         for(PInputattr inputattr : node.getInputattr())
         {
+            inputattr.apply(this);
             if(inputattr instanceof ANameInputattr)
             {
                 ANameInputattr nameInputattr = (ANameInputattr) inputattr;
@@ -230,7 +238,7 @@ public class Weeder extends DepthFirstAdapter
                 {
                     System.out.println("Error: Input field must have one name attribute at line: " + nameInputattr.getName().getLine());
                 }
-                fInputFieldsNames.add(nameInputattr.getAttr().toString().trim());
+                //fInputFieldsNames.add(nameInputattr.getAttr().toString().trim());
             }
             else if(inputattr instanceof ATypeInputattr)
             {
@@ -249,11 +257,17 @@ public class Weeder extends DepthFirstAdapter
         if(typeCounter == 0)
         {
             System.out.println("Error: Input field must have a type attribute at line: " + node.getInput().getLine());
-        }
+        }*/
+        for(PInputattr inputAttr : node.getInputattr())
+        {
+            inputAttr.apply(this);
+        } 
+        
+        
     }
     
     public void caseASelectHtmlbody(ASelectHtmlbody node)
-    {
+    {   /*
         int nameCounter = 0;
         for(PInputattr inputattr : node.getInputattr())
         {
@@ -266,7 +280,7 @@ public class Weeder extends DepthFirstAdapter
                 {
                     System.out.println("Error: Select field must have one name attribute at line: " + node.getSelectTag().getLine());
                 }
-                fInputFieldsNames.add(assignAttribute.getRightAttr().toString().trim().toString().trim());
+                //fInputFieldsNames.add(assignAttribute.getRightAttr().toString().trim().toString().trim());
             }
             else if(assignAttribute.getLeftAttr().toString().trim().equals("type"))
             {
@@ -278,7 +292,7 @@ public class Weeder extends DepthFirstAdapter
         {
             System.out.println("Error: Select field must have one name attribute at line: " + node.getSelectTag().getLine());
         }
-        
+        */
         for(PInputattr attr : node.getInputattr())
         {
             attr.apply(this);
@@ -411,11 +425,22 @@ public class Weeder extends DepthFirstAdapter
       
       public void caseANameInputattr(ANameInputattr node)
       {
+          
+          if (fInputVariables.contains(node.getAttr().toString().replace("\"", "")))
+          {
+              System.out.println("Error: Attribute '" + node.getAttr().toString().replace("\"", "") + "' in input tag at line " + node.getName().getLine() + " for " + node.getName().getText() + " already exists!");
+          }
+          else
+          {
+              fInputVariables.add(node.getAttr().toString().replace("\"", ""));
+          }
+          
           if(node.getAttr() != null)
           {
               node.getAttr().apply(this);              
           }
-      }      
+      }
+     
       @Override
       public void caseATypeInputattr(ATypeInputattr node)
       {
@@ -874,278 +899,6 @@ public class Weeder extends DepthFirstAdapter
       {
           node.getIdentifier().apply(this);
           node.getExp().apply(this);
-      }
-      
-      public void caseTService(TService node)
-      {
-      }
-      
-      public void caseTConst(TConst node)
-      {
-      }
-
-      public void caseTHtml(THtml node)
-      {
-      }
-      
-      public void caseTHtmlTagStart(THtmlTagStart node)
-      {
-      }
-      
-      public void caseTSchema(TSchema node)
-      {
-      }
-      
-      public void caseTSession(TSession node)
-      {
-      }
-      
-      public void caseTShow(TShow node)
-      {
-      }
-      
-      public void caseTExit(TExit node)
-      {
-      }
-      
-      public void caseTReturn(TReturn node)
-      {
-      }
-      
-      public void caseTIf(TIf node)
-      {
-      }
-      
-      public void caseTElse(TElse node)
-      {
-      }
-      
-      public void caseTWhile(TWhile node)
-      {
-      }
-      
-      public void caseTPlug(TPlug node)
-      {
-      }
-      
-      public void caseTReceive(TReceive node)
-      {
-      }
-      
-      public void caseTInt(TInt node)
-      {
-      }
-      
-      public void caseTBool(TBool node)
-      {
-      }
-      
-      public void caseTString(TString node)
-      {
-      }
-      
-      public void caseTVoid(TVoid node)
-      {
-      }
-      
-      public void caseTTuple(TTuple node)
-      {
-      }
-      
-      public void caseTTrue(TTrue node)
-      {
-      }
-      
-      public void caseTFalse(TFalse node)
-      {
-      }
-      
-      public void caseTHtmlTagEnd(THtmlTagEnd node)
-      {
-      }
-      
-      public void caseTInput(TInput node)
-      {
-      }
-      
-      public void caseTPosIntconst(TPosIntconst node)
-      {
-      }
-      
-      public void caseTNegIntconst(TNegIntconst node)
-      {
-      }
-      
-      public void caseTSelect(TSelect node)
-      {
-      }
-      
-      public void caseTType(TType node)
-      {
-      }
-      
-      public void caseTName(TName node)
-      {
-      }
-      
-      public void caseTText(TText node)
-      {
-      }
-      
-      public void caseTRadio(TRadio node)
-      {
-      }
-      
-      public void caseTLBrace(TLBrace node)
-      {
-      }
-      
-      public void caseTRBrace(TRBrace node)
-      {
-      }
-      
-      public void caseTAssign(TAssign node)
-      {
-      }
-      
-      public void caseTSemicolon(TSemicolon node)
-      {
-      }
-      
-      public void caseTLt(TLt node)
-      {
-      }
-      
-      public void caseTGt(TGt node)
-      {
-      }
-      
-      public void caseTLtSlash(TLtSlash node)
-      {
-      }
-      
-      public void caseTLtBracket(TLtBracket node)
-      {
-      }
-      
-      public void caseTGtBracket(TGtBracket node)
-      {
-      }
-      
-      public void caseTComment(TComment node)
-      {
-      }
-      
-      public void caseTLPar(TLPar node)
-      {
-      }
-      
-      public void caseTRPar(TRPar node)
-      {
-      }
-      
-      public void caseTLBracket(TLBracket node)
-      {
-      }
-      
-      public void caseTRBracket(TRBracket node)
-      {
-      }
-      
-      public void caseTComma(TComma node)
-      {
-      }
-      
-      public void caseTKeep(TKeep node)
-      {
-      }
-      
-      public void caseTRemove(TRemove node)
-      {
-      }
-      
-      public void caseTJoin(TJoin node)
-      {
-      }
-      
-      public void caseTEq(TEq node)
-      {
-      }
-      
-      public void caseTNeq(TNeq node)
-      {
-      }
-      
-      public void caseTLteq(TLteq node)
-      {
-      }
-      
-      public void caseTGteq(TGteq node)
-      {
-      }
-      
-      public void caseTNot(TNot node)
-      {
-      }
-      
-      public void caseTMinus(TMinus node)
-      {
-      }
-      
-      public void caseTPlus(TPlus node)
-      {
-      }
-      
-      public void caseTMult(TMult node)
-      {
-      }
-      
-      public void caseTDiv(TDiv node)
-      {
-      }
-     
-      public void caseTMod(TMod node)
-      {
-      }      
-      
-      public void caseTAnd(TAnd node)
-      {
-      }
-      
-      public void caseTOr(TOr node)
-      {
-      }
-           
-      public void caseTDot(TDot node)
-      {
-      }
-      
-      public void caseTEol(TEol node)
-      {
-      }
-      
-      public void caseTBlank(TBlank node)
-      {
-      }
-      
-      public void caseTIdentifier(TIdentifier node)
-      {
-      }
-      
-      public void caseTStringconst(TStringconst node)
-      {
-      }
-      
-      public void caseTMeta(TMeta node)
-      {
-      }
-      
-      public void caseTWhatever(TWhatever node)
-      {
-      }
-      
-      public void caseEOF(EOF node)
-      {
       }
 
       public void caseAField(AField node)
