@@ -12,9 +12,9 @@ import wig.analysis.*;
 
 public class Weeder extends DepthFirstAdapter
 {
-    private Set<String> fGlobalVariablesDeclared = new HashSet<String>(); // HTML, Variables(tuple, string, int ....)
-    private Set<String> fHtmlsSchemasGlobalVariablesNames = new HashSet<String>(); // HTML const names + Schema names + Variable names 
+    private Set<String> fHtmlsTuplesGlobalVariablesNames = new HashSet<String>(); // HTML const names + Tuple names + Variable names 
     private Set<String> fSessionNames = new HashSet<String>(); //Session names
+    private Set<String> fSchemasNames = new HashSet<String>();
     private Set<String> fFunctionNames = new HashSet<String>(); // Function names
     private Set<String> fCurrentLocalVariableNames = new HashSet<String>();
 
@@ -26,27 +26,42 @@ public class Weeder extends DepthFirstAdapter
     public void caseAHtml(AHtml node)
     {
         String name = node.getIdentifier().getText();
-        if(fHtmlsSchemasGlobalVariablesNames.contains(name))
+        if(fHtmlsTuplesGlobalVariablesNames.contains(name))
         {
             System.out.println("Error: Duplicate variable: " + node.getIdentifier().getText() + " at line " + node.getIdentifier().getLine());
         }
         else
         {
-            fHtmlsSchemasGlobalVariablesNames.add(name);
+            fHtmlsTuplesGlobalVariablesNames.add(name);
         }
     }
     
     public void caseASchema(ASchema node)
     {
         String name = node.getIdentifier().getText();
-        if(fHtmlsSchemasGlobalVariablesNames.contains(name))
+        if(fSchemasNames.contains(name))
         {
-            System.out.println("Error: Duplicate variable: " + node.getIdentifier().getText() + " at line " + node.getIdentifier().getLine());
+            System.out.println("Error: Duplicate schema: " + node.getIdentifier().getText() + " at line " + node.getIdentifier().getLine());
         }
         else
         {
-            fHtmlsSchemasGlobalVariablesNames.add(name);
-        } 
+            fSchemasNames.add(name);
+        }
+        Set<String> fieldsNames = new HashSet<String>();
+        for(PField field : node.getField())
+        {
+            AField fieldImpl = (AField) field;
+            String memberName = fieldImpl.getIdentifier().toString().trim();
+            if(!fieldsNames.contains(memberName))
+            {
+                fieldsNames.add(memberName);
+            }
+            else
+            {
+                System.out.println("Error: Duplicate member " + memberName + " in Schema " + name + " declared at line " + node.getIdentifier().getLine()); 
+            }
+        }
+        
     }
     
     public void caseAVariable(AVariable node)
@@ -55,13 +70,13 @@ public class Weeder extends DepthFirstAdapter
         {
             for(TIdentifier identifier : node.getIdentifier())
             {
-                if(fHtmlsSchemasGlobalVariablesNames.contains(identifier.getText()))
+                if(fHtmlsTuplesGlobalVariablesNames.contains(identifier.getText()))
                 {
                     System.out.println("Error: Duplicate variable: " + identifier.getText() + " at line " + identifier.getLine());
                 }
                 else
                 {
-                    fHtmlsSchemasGlobalVariablesNames.add(identifier.getText());
+                    fHtmlsTuplesGlobalVariablesNames.add(identifier.getText());
                 }
             }
         }
@@ -69,11 +84,11 @@ public class Weeder extends DepthFirstAdapter
         {
             for(TIdentifier identifier : node.getIdentifier())
             {
-                if(fCurrentLocalVariableNames.contains(identifier.getText()) && !fHtmlsSchemasGlobalVariablesNames.contains(identifier.getText()))
+                if(fCurrentLocalVariableNames.contains(identifier.getText()) && !fHtmlsTuplesGlobalVariablesNames.contains(identifier.getText()))
                 {
                     System.out.println("Error: Duplicate local variable: " + identifier.getText() + " at line " + identifier.getLine());
                 }
-                else if(fHtmlsSchemasGlobalVariablesNames.contains(identifier.getText()))
+                else if(fHtmlsTuplesGlobalVariablesNames.contains(identifier.getText()))
                 {
                     System.out.println("Error: Duplicate global variable: " + identifier.getText() + " at line " + identifier.getLine());
                 }
@@ -94,16 +109,48 @@ public class Weeder extends DepthFirstAdapter
     {
         fCurrentLocalVariableNames.clear();
     }
-        
+    
     public void caseAInput(AInput node)
     {
         String leftValueName = node.getLvalue().toString().trim();
-        if(!fCurrentLocalVariableNames.contains(leftValueName) && !fHtmlsSchemasGlobalVariablesNames.contains(leftValueName))
+        if(!fCurrentLocalVariableNames.contains(leftValueName) && !fHtmlsTuplesGlobalVariablesNames.contains(leftValueName))
         {
             System.out.println("Error: Variable " + leftValueName + " is not defined in global and local scope" + " at line " + node.getIdentifier().getLine() );
         }
         // Need to check that the value received actually exists as an input field
     }
-
-        
+    
+    public void caseASession(ASession node)
+    {
+        String sessionName = node.getIdentifier().toString().trim();
+        if(fSessionNames.contains(sessionName))
+        {
+            System.out.println("Error: Duplicate Session " + sessionName + " at line " + node.getIdentifier().getLine());
+        }
+        else
+        {
+            fSessionNames.add(sessionName);
+        }
+    }
+    
+    public void caseATupleExp(ATupleExp node)
+    {   
+        System.out.println("tuple {");
+        Iterator<PFieldvalue> iter = node.getFieldvalue().iterator();
+        while(iter.hasNext())
+        {
+            iter.next().apply(this);
+        }
+        System.out.println("}");
+    }
+    
+    public void caseATupleType(ATupleType node)
+    {
+        String schema = node.toString().trim();
+        if(!fSchemasNames.contains(schema))
+        {
+            System.out.println("Error: Schema " + schema + " is not defined");
+        }
+    }
+   
 }

@@ -88,10 +88,21 @@ service {
     Thanks for visiting PetsOvernight<br>
     Good-bye.
   </body> </html>;
+  
+
+    schema player
+     {
+		int score;
+		string score;
+	}
+	
+	tuple player43 hi;
 
   string itemName1, itemName2, itemName3;
   string itemName1;
   int itemQty1, itemQty2, itemQty3;
+  
+
   
   session Init() {
     itemName1 = "Bengals Kittens";

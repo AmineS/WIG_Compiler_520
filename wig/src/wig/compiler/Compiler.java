@@ -29,7 +29,7 @@ public class Compiler
                  
             Start tree = p.parse();
             
-//            Weeder.weed(tree);
+            Weeder.weed(tree);
             PrettyPrinter.print(tree);
             
         }
