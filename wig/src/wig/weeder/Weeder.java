@@ -97,14 +97,12 @@ public class Weeder extends DepthFirstAdapter
         
     public void caseAInput(AInput node)
     {
-        String leftValueName = node.getLvalue().toString();
+        String leftValueName = node.getLvalue().toString().trim();
         if(!fCurrentLocalVariableNames.contains(leftValueName) && !fHtmlsSchemasGlobalVariablesNames.contains(leftValueName))
         {
             System.out.println("Error: Variable " + leftValueName + " is not defined in global and local scope" + " at line " + node.getIdentifier().getLine() );
         }
-        TIdentifier i = node.getIdentifier();
-        System.out.println(i.toString());
-
+        // Need to check that the value received actually exists as an input field
     }
 
         
