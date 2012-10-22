@@ -70,6 +70,11 @@ public class Weeder extends DepthFirstAdapter
                 System.out.println("Error: Duplicate member " + memberName + " in Schema " + name + " declared at line " + node.getIdentifier().getLine()); 
             }
         }
+        
+        if(fieldsNames.isEmpty())
+        {
+            System.out.println("Error: Definition for schema " + name + " cannot be empty at line :" + node.getIdentifier().getLine()); 
+        }
        
         if(node.getIdentifier() != null)
         {
@@ -121,6 +126,11 @@ public class Weeder extends DepthFirstAdapter
                     fCurrentLocalVariableNames.add(identifier.getText());
                 }
             }
+        }
+        
+        if(node.getType().toString().trim().equals("void"))
+        {
+            System.out.println("Error: Variable cannot be of type void at line " + node.getIdentifier().getFirst().getLine());
         }
         
         if(node.getType() != null)
@@ -180,6 +190,12 @@ public class Weeder extends DepthFirstAdapter
             fSessionNames.add(sessionName);
         }
         
+        ACompoundstm compoundStatement = (ACompoundstm) node.getCompoundstm();
+        if((compoundStatement.getStm().isEmpty() || !(compoundStatement.getStm().getLast() instanceof AExitStm)))
+        {
+            System.out.println("Error Session " + node.getIdentifier().getText().trim() + " does not have a exit statement at line " + node.getIdentifier().getLine());
+        }
+        
         if(node.getIdentifier() != null)
         {
             node.getIdentifier().apply(this);
@@ -208,7 +224,7 @@ public class Weeder extends DepthFirstAdapter
         int typeCounter = 0;
         for(PInputattr inputattr : node.getInputattr())
         {
-            if (inputattr instanceof ANameInputattr)
+            if(inputattr instanceof ANameInputattr)
             {
                 ANameInputattr nameInputattr = (ANameInputattr) inputattr;
                 nameCounter++;
@@ -228,7 +244,6 @@ public class Weeder extends DepthFirstAdapter
                 }
             }
         }
-        
         if(nameCounter == 0)
         {
             System.out.println("Error: Input field must have a name attribute at line: " + node.getInput().getLine());
@@ -239,6 +254,46 @@ public class Weeder extends DepthFirstAdapter
         }
     }
     
+    public void caseASelectHtmlbody(ASelectHtmlbody node)
+    {
+        int nameCounter = 0;
+        for(PInputattr inputattr : node.getInputattr())
+        {
+            AAttributeInputattr inputattr2 = (AAttributeInputattr) inputattr;
+            AAssignAttribute assignAttribute = (AAssignAttribute) inputattr2.getAttribute();
+            if(assignAttribute.getLeftAttr().toString().trim().equals("name"))
+            {
+                nameCounter++;
+                if(nameCounter > 1)
+                {
+                    System.out.println("Error: Select field must have one name attribute at line: " + node.getSelectTag().getLine());
+                }
+                fInputFieldsNames.add(assignAttribute.getRightAttr().toString().trim().toString().trim());
+            }
+            else if(assignAttribute.getLeftAttr().toString().trim().equals("type"))
+            {
+                System.out.println("Error: Select field must have no type attribute at line: " + node.getSelectTag().getLine());
+            }
+        }
+        
+        if(nameCounter == 0)
+        {
+            System.out.println("Error: Select field must have one name attribute at line: " + node.getSelectTag().getLine());
+        }
+        
+        for(PInputattr attr : node.getInputattr())
+        {
+            attr.apply(this);
+        }
+        
+        for(PHtmlbody htmlBody : node.getHtmlbody())
+        {
+            htmlBody.apply(this);
+        }
+        
+        node.getSelectTag().apply(this);
+    }
+    
     public void caseAFunction(AFunction node)
     {
         boolean hasReturnType = false;
@@ -247,7 +302,7 @@ public class Weeder extends DepthFirstAdapter
             hasReturnType = true;
         }
         ACompoundstm compoundStatement = (ACompoundstm) node.getCompoundstm();
-        if(hasReturnType && (compoundStatement.getStm().size() == 0 || !(compoundStatement.getStm().getLast() instanceof AReturnexpStm)))
+        if(hasReturnType && (compoundStatement.getStm().isEmpty() || !(compoundStatement.getStm().getLast() instanceof AReturnexpStm)))
         {
             System.out.println("Error non void function " + node.getIdentifier().getText().trim() + " does not have a return statement at line " + node.getIdentifier().getLine());
         }
@@ -362,7 +417,7 @@ public class Weeder extends DepthFirstAdapter
             System.out.println("<");
         }
         node.getIdentifier().apply(this);
-        if (node.getAttribute().size()!=0)
+        if (!node.getAttribute().isEmpty())
             System.out.println(" ");
         for(PAttribute attribute : node.getAttribute())
         {
@@ -411,26 +466,6 @@ public class Weeder extends DepthFirstAdapter
           node.getMeta().apply(this);          
       }
       
-      public void caseASelectHtmlbody(ASelectHtmlbody node)
-      {
-          System.out.println("\n");
-          System.out.println("<");
-          node.getSelectTag().apply(this);                        
-          for(PInputattr attr : node.getInputattr())
-          {
-              attr.apply(this);
-          }
-          System.out.println(">");   
-          
-          for(PHtmlbody htmlBody : node.getHtmlbody())
-          {
-              htmlBody.apply(this);
-          }
-          
-          System.out.println("</");
-          node.getSelectTag().apply(this);
-          System.out.println(">");
-      }
       
       public void caseANameInputattr(ANameInputattr node)
       {

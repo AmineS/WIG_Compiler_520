@@ -89,6 +89,18 @@ service {
     Good-bye.
   </body> </html>;
   
+  					
+  const html selectStmt1 = <html><body><select type="test" size="1">
+						<option>red</option><option>orange</option><option>yellow</option><option>green</option><option>blue</option><option>violet</option>
+					</select></body></html>;
+					
+  const html selectStmt2 = <html><body><select name="islot11"   name="islot12" size="1">
+						<option>red</option><option>orange</option><option>yellow</option><option>green</option><option>blue</option><option>violet</option>
+					</select></body></html>;
+					
+  const html selectStmt3 = <html><body><select name="islot113" size="1">
+	<option>red</option><option>orange</option><option>yellow</option><option>green</option><option>blue</option><option>violet</option>
+	</select></body></html>;
 
     schema player
      {
@@ -96,11 +108,16 @@ service {
 		string score;
 	}
 	
+	schema player2
+     {
+	}
+	
 	tuple player43 hi;
 
   string itemName1, itemName2, itemName3;
   string itemName1;
   int itemQty1, itemQty2, itemQty3;
+  void testVar;
   
 
   int hello()
@@ -131,7 +148,6 @@ service {
         itemQty2 = itemQty2 + itemAmt2;
         itemQty3 = itemQty3 + itemAmt3;
     }
-    exit ByeBye;
   }
 
   
@@ -164,12 +180,7 @@ service {
         }
       }
     }
-    
-    if (quit=="Y") {
-      exit ByeBye;
-    } else {
-      exit ThankYou;
-    }
+	exit ThankYou;
   }
 
 }
