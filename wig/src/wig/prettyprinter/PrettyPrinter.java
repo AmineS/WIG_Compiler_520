@@ -11,6 +11,7 @@ import wig.analysis.*;
 public class PrettyPrinter extends DepthFirstAdapter
 {
     private int tabCount = 0;
+    private int oldCount = 0;
     
     public static void print(Node node)
     {
@@ -23,7 +24,13 @@ public class PrettyPrinter extends DepthFirstAdapter
         System.out.flush();
     }
     
-/*    private void printTab()
+    private void putsTab(String s)
+    {
+        printTab();
+        System.out.print(s);
+        System.out.flush();
+    }
+    private void printTab()
     {
         for(int i=0; i<tabCount; ++i)
         {
@@ -38,12 +45,24 @@ public class PrettyPrinter extends DepthFirstAdapter
     private void decrementTabCount()
     {
         --tabCount;
-    }*/    
+    }    
+    
+    private void resetTabs()
+    {
+        oldCount = tabCount;
+        tabCount = 0; 
+    }
+    
+    private void restoreTabs()
+    {
+        tabCount = oldCount;
+    }
     
     public void caseAService(AService node)
     {
-        puts("service{\n");
-                
+        puts("service\n{\n");
+        incrementTabCount();
+        
         for(PHtml html : node.getHtml())
         {
             html.apply(this);
@@ -69,25 +88,52 @@ public class PrettyPrinter extends DepthFirstAdapter
             session.apply(this);
         }
         
-        puts("\n}");
+        puts("}");
+        decrementTabCount();
     }
     
     public void caseAHtml(AHtml node)
     {
-        puts("const html ");        
+        putsTab("const html ");        
         node.getIdentifier().apply(this);
         puts(" = ");
         puts("<html>");
+        incrementTabCount();
         for(PHtmlbody htmlbody : node.getHtmlbody())
         {
             htmlbody.apply(this);
         }
-        puts("</html>\n");
+        decrementTabCount();
+        puts("\n");
+        putsTab("</html>\n\n");
     }
     
     public void caseATagStartHtmlbody(ATagStartHtmlbody node)
-    {
-        puts("<");
+    {              
+        String id = node.getIdentifier().getText();
+        if(id.equals("br"))
+        {
+            puts("\n");
+            incrementTabCount();
+            putsTab("");
+            puts("<");
+            decrementTabCount();
+        }
+        else if (id.equals("body"))
+        {
+            puts("\n");
+            putsTab("<");
+            incrementTabCount();
+        }
+        else if(id.equals("td"))
+        {
+            putsTab("<");
+            resetTabs();
+        }
+        else
+        {
+            putsTab("<");
+        }
         node.getIdentifier().apply(this);
         if (node.getAttribute().size()!=0)
             puts(" ");
@@ -100,7 +146,28 @@ public class PrettyPrinter extends DepthFirstAdapter
     
       public void caseATagEndHtmlbody(ATagEndHtmlbody node)
       {
-          puts("</");
+          
+          String id = node.getIdentifier().getText();
+          
+          if(id.equals("body"))
+          {
+              decrementTabCount();
+              puts("\n");
+              putsTab("</");
+          }
+          else if(id.equals("td"))
+          {
+              puts("</");
+              restoreTabs();
+          }
+          else if(id.equals("table") || id.equals("tr") || id.equals("p"))
+          {
+              putsTab("</");
+          }
+          else
+          {
+              puts("</");              
+          }
           node.getIdentifier().apply(this);
           puts(">");
       }
@@ -108,14 +175,17 @@ public class PrettyPrinter extends DepthFirstAdapter
       
       public void caseAHoleHtmlbody(AHoleHtmlbody node)
       {
-          puts(" <[");
+          puts("<[");
           node.getIdentifier().apply(this);
           puts("]>");
       }
       
       public void caseAWhateverHtmlbody(AWhateverHtmlbody node)
       {
-          node.getWhatever().apply(this);
+          if(node.getWhatever() != null)
+          {
+              node.getWhatever().apply(this);
+          }
       }
       
       public void caseAMetaHtmlbody(AMetaHtmlbody node)
@@ -125,7 +195,7 @@ public class PrettyPrinter extends DepthFirstAdapter
       
       public void caseAInputHtmlbody(AInputHtmlbody node)
       {          
-          puts("<");
+          putsTab("<");
           node.getInput().apply(this);          
           for(PInputattr inputAttr : node.getInputattr())
           {
@@ -136,7 +206,8 @@ public class PrettyPrinter extends DepthFirstAdapter
       
       public void caseASelectHtmlbody(ASelectHtmlbody node)
       {
-          puts("<");
+          puts("\n");
+          putsTab("<");
           node.getSelectTag().apply(this);                        
           for(PInputattr attr : node.getInputattr())
           {
@@ -275,86 +346,135 @@ public class PrettyPrinter extends DepthFirstAdapter
             
       public void caseASchema(ASchema node)
       {
-          puts("schema \n{\n");
+          putsTab("schema ");
           if(node.getIdentifier() != null)
           {
               node.getIdentifier().apply(this);
-          }
-          
+              puts("\n");
+          }          
+          putsTab("{\n");
+          incrementTabCount();
+         
           List<PField> fields= node.getField();
           
           if(fields != null)
           {
               for(PField field : fields)
               {
+                  putsTab("");
                   field.apply(this);
               }
           }
-          puts("}\n");
+          decrementTabCount();
+          putsTab("}\n");
       }
    
       public void caseAEmptyStm(AEmptyStm node)
       {
-          puts(";");
+          puts(";\n");
       }
       
       public void caseAShowStm(AShowStm node)
       {
-          puts("show ");
-          node.getDocument().apply(this);
-          node.getReceive().apply(this);
-          puts(";");
+          putsTab("show ");
+          if(node.getDocument() != null)
+          {
+              node.getDocument().apply(this);
+          }
+          if(node.getReceive() != null)
+          {
+              node.getReceive().apply(this);
+          }
+          puts(";\n");
       }
       
       public void caseAExitStm(AExitStm node)
       {
-          puts("exit ");
+          putsTab("exit ");
           node.getDocument().apply(this);
-          puts(";");
+          puts(";\n");
       }
       
       public void caseAReturnStm(AReturnStm node)
       {
-          puts("return;");
+          puts("return;\n");
       }
       
       public void caseAReturnexpStm(AReturnexpStm node)
       {
-          puts("return ");
+          putsTab("return ");
           node.getExp().apply(this);
-          puts(";");
+          puts("\n;");
       }
       
       public void caseAIfStm(AIfStm node)
       {
-          puts("if(");
+          puts("\n");
+          putsTab("if(");
           node.getExp().apply(this);
-          puts(")\n{\n");
+          puts(")\n");
+          if(!(node.getStm() instanceof ACompStm))
+          {
+              putsTab("{");
+              puts("\n");
+          }
+          incrementTabCount();
           node.getStm().apply(this);
-          puts("\n}");
+          if(!(node.getStm() instanceof ACompStm))
+          {
+              putsTab("}");
+              puts("\n");
+          }
+          decrementTabCount();
       }
       
       public void caseAIfelseStm(AIfelseStm node)
       {
-          puts("if(");
+          puts("\n");
+          putsTab("if(");
           node.getExp().apply(this);
           puts(")\n");
+          if(!(node.getThenStm() instanceof ACompStm))
+          {
+              putsTab("{");
+              puts("\n");
+          }
           node.getThenStm().apply(this);
-          puts("\n");
-          puts("else\n");
-          node.getElseStm().apply(this);         
-          puts("\n");
+          if(!(node.getThenStm() instanceof ACompStm))
+          {
+              putsTab("}");
+          }
+          putsTab("else\n");
+          if(!(node.getElseStm() instanceof ACompStm))
+          {
+              putsTab("{");
+              puts("\n");
+          }
+          node.getElseStm().apply(this);
+          if(!(node.getElseStm() instanceof ACompStm))
+          {
+              putsTab("}");
+              puts("\n");
+          }
       }
       
       public void caseAWhileStm(AWhileStm node)
       {
-          puts("while(");
+          puts("\n");
+          putsTab("while(");
           node.getExp().apply(this);
           puts(")\n");
-          puts("{\n");
-          node.getExp().apply(this);
-          puts("\n}");
-          puts("\n");
+          if(!(node.getStm() instanceof ACompStm))
+          {
+              putsTab("{");
+              puts("\n");
+          }
+          node.getStm().apply(this);
+          if(!(node.getStm() instanceof ACompStm))
+          {
+              putsTab("}");
+              puts("\n");
+          }
       }
       
       public void caseACompStm(ACompStm node)
@@ -364,7 +484,9 @@ public class PrettyPrinter extends DepthFirstAdapter
       
       public void caseAExpStm(AExpStm node)
       {
+          putsTab("");
           node.getExp().apply(this);
+          puts(";\n");
       }
       
       public void caseAIdDocument(AIdDocument node)
@@ -380,7 +502,7 @@ public class PrettyPrinter extends DepthFirstAdapter
 
           puts("plug ");
           node.getIdentifier().apply(this);
-          puts(" [");
+          puts("[");
           
           plug_list = node.getPlug();
           iter = plug_list.iterator();
@@ -393,7 +515,7 @@ public class PrettyPrinter extends DepthFirstAdapter
              if(counter!=plug_list_size-1)
                  puts(",");
           }
-          puts("]");     
+          puts("] ");     
 
       }
       
@@ -403,8 +525,7 @@ public class PrettyPrinter extends DepthFirstAdapter
           LinkedList<PInput> input_list;
           Iterator<PInput> iter;
           int input_list_size, counter;
- 
-          puts("receive ");
+          puts("receive");
           
           input_list = node.getInput();
           iter = input_list.iterator();
@@ -428,19 +549,20 @@ public class PrettyPrinter extends DepthFirstAdapter
           Iterator<PStm> stm_iter = stm_list.iterator();
           Iterator<PVariable> var_iter = var_list.iterator();          
           
-          puts("{\n");
+          putsTab("{\n");
+          incrementTabCount();
           while(var_iter.hasNext())
           {
               var_iter.next().apply(this);
-              puts("\n");
           }
           
           while(stm_iter.hasNext())
           {
               stm_iter.next().apply(this);
-              puts("\n");
           }
-          puts("}");
+          decrementTabCount();
+          putsTab("}\n");
+          
       }
 
       
@@ -1100,6 +1222,7 @@ public class PrettyPrinter extends DepthFirstAdapter
       
       public void caseTStringconst(TStringconst node)
       {
+          
           puts(node.getText());
       }
       
@@ -1110,7 +1233,20 @@ public class PrettyPrinter extends DepthFirstAdapter
       
       public void caseTWhatever(TWhatever node)
       {
-          puts(node.getText());
+          String text = node.getText();          
+          if(text.matches("[\\s\\t]*[\n][\\s\\t]*"))
+          {
+              puts(text);
+          }
+          else if(text.charAt(0) == '\n')
+          {
+              puts("\n");
+              putsTab(text.substring(1));
+          }
+          else
+          {
+              puts(text);
+          }
       }
       
       public void caseEOF(EOF node)
@@ -1137,6 +1273,7 @@ public class PrettyPrinter extends DepthFirstAdapter
             
       public void caseAVariable(AVariable node)
       {
+          putsTab("");
           if(node.getType() != null)
           {
               node.getType().apply(this);
@@ -1276,16 +1413,16 @@ public class PrettyPrinter extends DepthFirstAdapter
            
       public void caseASession(ASession node)
       {
-          puts("session " );
+          puts("\n");
+          putsTab("session " );
           if(node.getIdentifier() != null)
           {
               node.getIdentifier().apply(this);
           }
-          puts("(){\n");
+          puts("()\n");
           if(node.getCompoundstm() != null)
           {
               node.getCompoundstm().apply(this);
           }
-          puts("\n}");
       }
 }

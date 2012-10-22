@@ -1,0 +1,83 @@
+service {
+
+  const html ShowSchema1 = <html> <body>
+    <[message]> b: <[b]>  i: <[i]>  s: <[s]>  </body> </html>;
+
+  const html ShowSchema2 = <html> <body>
+   <[message]>  b: <[b]>  i: <[i]>  </body> </html>;
+
+  const html ShowSchema3 = <html> <body>
+   <[message]>  b: <[b]>  s: <[s]>  </body> </html>;
+
+  const html PrintString = <html> <body>
+   <[message]>  </body> </html>;
+
+  const html Done = <html> <body> Done! </body> </html>;
+
+  schema Scm1 {
+    bool b;
+    int i;
+    string s;
+  }
+
+  schema Scm2 {
+    bool b;
+    int i;
+  }
+
+  schema Scm3 {
+    bool b;
+    string s;
+  }
+
+  session test1() {   
+    tuple Scm1 t1;
+    tuple Scm2 t2, t3;
+    /* create a tuple of type Scm1  and show it */
+    t1 = tuple { b=true, i=87,  s="foo" };
+    show plug ShowSchema1[message = "t1 is: ", b = t1.b, i = t1.i,   s=t1.s];
+
+    /* create a new tuple t2,  keeping fields b and i, and show it */
+    t2 = (t1 \+ (b, i));    /* keep b and i */
+    show plug ShowSchema2[message = "t2 is: ", b  = t2.b, i=t2.i];
+
+    /* create a new tuple t3, throwing away field s, and show it */
+    t3 = (t1 \- s);    /* throw away s */
+    show plug ShowSchema2[message = "t3 is: ", b = t3.b, i=t3.i];
+
+    /* here: t2 and t3 should be equal, can your compiler check? */
+    exit Done;
+  }
+
+  session test2() {   
+    tuple  Scm1 g1;
+    tuple  Scm2 g2;
+    tuple  Scm3 g3; 
+
+    /* create an show g2 */
+    g2 = tuple { b=true, i=87 };
+    show plug ShowSchema2[message = "g2 is: ", b = g2.b, i = g2.i]; 
+
+    /* create and show g3 */
+    g3 = tuple { b=false, s="foo" };
+    show plug ShowSchema3[message = "g3 is: ", b=g3.b,  s = g3.s]; 
+
+   /* combine g2 and g3.   g2 and g3 must agree on the types of
+       attributes they have in common.    g1 will contain the union
+       of g2 and g3's attributes.  g3's attributes are taken
+       whenever there is a common attribute.  */
+   g1 = g2 << g3;   /* g1 should be equal to tuple { b=false,i=87,s="foo" } */ 
+   show plug ShowSchema1[message = "g1 is: ",b = g1.b, i = g1.i, s=g1.s];
+   exit Done;
+  }
+
+/* -----------------------------------------------------------
+    Other things to check.
+           - tuples as globals
+           - tuples as return values and parameters to functions
+           - nested operations like (t1 << t2)  \- f
+                                    t1 << t2 << t3
+           - equality of tuples
+   --------------------------------------------------------------
+*/
+}
