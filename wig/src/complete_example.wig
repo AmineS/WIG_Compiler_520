@@ -25,7 +25,7 @@ service {
       <tr>
         <td><[itemName1]></td>
         <td><[itemQty1]></td>
-        <td><input name="itemAmt1" type="text" size="5" value="0"></td>
+        <td><input name="itemAmt1444" type="text" size="5" value="0"></td>
       </tr>
       <tr>
         <td><[itemName2]></td>
@@ -112,7 +112,7 @@ service {
     itemAmt2 = 0;
     itemAmt3 = 0;
     show plug AddItems[itemName1=itemName1, itemQty1=itemQty1, itemName2=itemName2, itemQty2=itemQty2, itemName3=itemName3, itemQty3=itemQty3]
-         receive[itemAmt1=itemAmt1, itemAmt2=itemAmt2, itemAmt3=itemAmt3, quit=quit];
+         receive[itemAmt3e3e3=itemAmt, itemAmt2=itemAmt2, itemAmt3=itemAmt3, quit=quit];
     if (quit!="Y") {
         itemQty1 = itemQty1 + itemAmt1;
         itemQty2 = itemQty2 + itemAmt2;

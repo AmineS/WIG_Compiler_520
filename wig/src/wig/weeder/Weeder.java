@@ -51,7 +51,7 @@ public class Weeder extends DepthFirstAdapter
     
     public void caseAVariable(AVariable node)
     {
-        if(node.parent().getClass().equals(AService.class) )
+        if(node.parent().getClass().equals(AService.class))
         {
             for(TIdentifier identifier : node.getIdentifier())
             {
@@ -65,12 +65,47 @@ public class Weeder extends DepthFirstAdapter
                 }
             }
         }
-        outAVariable(node);
+        else
+        {
+            for(TIdentifier identifier : node.getIdentifier())
+            {
+                if(fCurrentLocalVariableNames.contains(identifier.getText()) && !fHtmlsSchemasGlobalVariablesNames.contains(identifier.getText()))
+                {
+                    System.out.println("Error: Duplicate local variable: " + identifier.getText() + " at line " + identifier.getLine());
+                }
+                else if(fHtmlsSchemasGlobalVariablesNames.contains(identifier.getText()))
+                {
+                    System.out.println("Error: Duplicate global variable: " + identifier.getText() + " at line " + identifier.getLine());
+                }
+                else
+                {
+                    fCurrentLocalVariableNames.add(identifier.getText());
+                }
+            }
+        }
     }
     
-    public void outAVariable(AVariable node)
+    public void outAFunction(AVariable node)
     {
-        System.out.println("Hello");
+        fCurrentLocalVariableNames.clear();
     }
+    
+    public void outASession(ASession node)
+    {
+        fCurrentLocalVariableNames.clear();
+    }
+        
+    public void caseAInput(AInput node)
+    {
+        String leftValueName = node.getLvalue().toString();
+        if(!fCurrentLocalVariableNames.contains(leftValueName) && !fHtmlsSchemasGlobalVariablesNames.contains(leftValueName))
+        {
+            System.out.println("Error: Variable " + leftValueName + " is not defined in global and local scope" + " at line " + node.getIdentifier().getLine() );
+        }
+        TIdentifier i = node.getIdentifier();
+        System.out.println(i.toString());
+
+    }
+
         
 }
