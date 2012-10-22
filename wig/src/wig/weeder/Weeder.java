@@ -18,6 +18,7 @@ public class Weeder extends DepthFirstAdapter
     private Set<String> fFunctionNames = new HashSet<String>(); // Function names
     private Set<String> fCurrentLocalVariableNames = new HashSet<String>();
     private Set<String> fInputFieldsNames =  new HashSet<String>();
+    private Set<String> fHoleVariables = new HashSet<String>();
 
     public static void weed(Node node)
     {
@@ -252,6 +253,44 @@ public class Weeder extends DepthFirstAdapter
         }
     }
     
+    public void caseAPlug(APlug node)
+    {
+        // check if plugging to non-existing hole variable
+        if (fHoleVariables.contains(node.getIdentifier().getText()))
+        {
+            return;
+        }
+        else
+        {
+            System.out.println("Error: Trying to plug to non-existing hole variable '" + node.getIdentifier().getText() + "' at line " + node.getIdentifier().getLine());
+        }
+    }
+    
+    public void caseAHoleHtmlbody(AHoleHtmlbody node)
+    {
+        // check if 2 or more hole variables have the same name
+        if (fHoleVariables.contains(node.getIdentifier().getText()))
+        {
+            System.out.println("Error: Duplicate hole variable: " + node.getIdentifier().getText() + " at line " + node.getIdentifier().getLine());
+        }
+        else
+        {        
+            fHoleVariables.add(node.getIdentifier().getText());
+        }
+    }
+    
+    public void caseADivExp(ADivExp node)
+    {
+        // report error if division by zero
+        if (node.getRight().toString().matches("[^0]*[0][^0]*"))
+        {
+            
+            System.out.println("Error: Attempting division by zero: " + node.getLeft().toString().trim() + "/" + node.getRight());
+        }
+        node.getLeft().apply(this);
+        node.getRight().apply(this);
+    }
+    
     public void caseATupleExp(ATupleExp node)
     {   
         System.out.println("tuple {");
@@ -357,14 +396,6 @@ public class Weeder extends DepthFirstAdapter
           }
           node.getIdentifier().apply(this);
           System.out.println(">");
-      }
-      
-      
-      public void caseAHoleHtmlbody(AHoleHtmlbody node)
-      {
-          System.out.println("<[");
-          node.getIdentifier().apply(this);
-          System.out.println("]>");
       }
       
       public void caseAWhateverHtmlbody(AWhateverHtmlbody node)
@@ -736,14 +767,7 @@ public class Weeder extends DepthFirstAdapter
                  System.out.println(",");
           }
       }
-      
-      public void caseAPlug(APlug node)
-      {
-          node.getIdentifier().apply(this);
-          System.out.println("=");
-          node.getExp().apply(this);
-      }
-      
+
       public void caseAInputs(AInputs node)
       {
           LinkedList<PInput> input_list;
@@ -846,13 +870,6 @@ public class Weeder extends DepthFirstAdapter
       {
           node.getLeft().apply(this);
           System.out.println("*");
-          node.getRight().apply(this);
-      }
-
-      public void caseADivExp(ADivExp node)
-      {
-          node.getLeft().apply(this);
-          System.out.println("/");
           node.getRight().apply(this);
       }
       
