@@ -30,19 +30,6 @@ public class Compiler
     {             
         try
         {
-            File inputFile = new File("complete_example.wig");
-            FileReader inputReader = new FileReader(inputFile);
-            
-            Parser p = 
-                    new Parser (
-                      new Lexer (
-                         new PushbackReader(inputReader, 1024)));
-                 
-            Start tree = p.parse();
-            
-            Weeder.weed(tree);
-            PrettyPrinter.print(tree);
-
             // generate command line argument reader
             compilerOptions = CompilerOptionsFactory.getOptions();
             cliParser = new PosixParser();
