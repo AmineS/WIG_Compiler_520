@@ -1,0 +1,75 @@
+Milestone Report: Wig Scanner and Parser 
+---------------------------------------------------------------------------
+Wig Command Line Interface
+
+The wig command line is built on the apache commons cli library (http://commons.apache.org/cli/). The available options thus far are as follows: 
+-help		prints the help contents (overrides all other arguments)
+-dw		disables weeding 
+-pp		pretty prints files
+
+Files are specified as any tokens without -- or -. Any number of files can be compiled using this interface. Right now, the compiler can only weed and pretty print. It does so for every file. See weeder section for when a weeder detects errors. 
+
+---------------------------------------------------------------------------
+WIG Scanner:
+ 
+Writing the grammar was the most challenging part of this milestone.
+
+Here is how we proceeded: 
+
+We identified different states to prevent ‘keyword stealing’. The states are:
+
+1. WIG Scope: all the keywords that are used in wig programs e.g.: service, session, show and so on. 
+
+ 2. HTML Scope: Html scope is anything part of the html language, such as ‘<b>’, ‘<body>’ or meta tags (‘<!-- this is an html comment -->’).
+
+ 3. Whatever Scope: This is any character excluding ‘<’ and ‘>’.
+
+ 4. HTML Tag Scope: Html tag scope is for the input tag and it can contain names like ‘type’, ‘name’ or ‘text’ among others, each of which have an attribute.
+
+ 5. Hole Scope: Plugs use hole variables. The hole variables are in html code in between those 2 tags: ‘<[‘ and ‘]>’. 
+
+---------------------------------------------------------------------------
+WIG parser:
+
+Construction of WIG abstract syntax trees - The 2 main nodes in the AST are the ones for expressions and statements. A lot of the productions were regrouped under expressions ( as ‘exp’) and statement (as ‘stm’). Care was taken not to create unnecessary nodes of different types to avoid absurdly large ASTs. 
+
+---------------------------------------------------------------------------
+WIG weeder:
+
+A lot of cases were accounted for in the weeder, however note that it is not possible to account for all cases - we implemented the most important ones.
+
+Here are the cases:
+
+1. HTML, Schema, Variable, Function and Sessions must not have naming conflicts. We check for global and local variables’ conflicts.
+2. Fields within schemas must have different names.
+3. The identifier following a tuple declaration must be a valid schema.
+4. Division by zero must be reported.
+5. Non-void functions must always have a return statement.
+6. A session must always end with an exit statement.
+7. Variables cannot be declared with type void.
+8. Plugs and Holes conflicts: Hole variables need to have unique names and the identifier part of a plug must correspond to an existing hole.  
+9. Select Tags should have a name and an attribute and no type.
+10. Receive constructs names’ should exist in input tags. Input Tags cannot have same attribute names more than once.
+11. Input tags must have one name and one type.
+
+---------------------------------------------------------------------------
+WIG pretty printer
+
+The pretty printer simply implements a depth first adapter extension that outputs the values for all possible cases. The relevant information and variables for that specific node are printed and the printer is applied using switchable to all the children. The depth-first recursion thus prints everything in order of the AST and all the values truncated from the CST are hard-coded. 
+
+The tabbing is done by keep track of the code blocks that are created. Each code block is initiated by either a ‘{‘, ‘<html>, or ‘<body>’ identifier. They are closed via ‘}‘, ‘</html>, or ‘</body>’ identifiers. Upon each block opening, the tabcount is increased, upon closing it is decreased. The begining of each line for each significant case (such as session) is printed with the current number of tabs. 
+
+The only exceptions are holes in new lines. A hole in a new line simply starts at the beginning of the line. 
+
+Since tds contain certain elements that would normally be considered new line in the html scope, upon entering td with ‘<td>’ tabcount is set to zero and restorted upon exit ‘</td>’. 
+
+New lines are generated at the end of each line. Some keywords such as “session”, “if” and “while” have a new line appended before to create readable segments of code. 
+---------------------------------------------------------------------------
+Testing
+‘complete_example.wig, as its name implies, has most wig features and is used to test.
+
+The pretty printer and weeder are both tested on the complete example.
+
+The weeder is supposed to give a list of errors when run on the complete example. It is supposed to signal no error on the other micro benchmarks ‘simple_example.wig’ and ‘wall.wig’. 
+
+---------------------------------------------------------------------------
