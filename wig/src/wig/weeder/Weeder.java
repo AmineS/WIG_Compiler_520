@@ -14,7 +14,8 @@ public class Weeder extends DepthFirstAdapter
     private Set<String> fCurrentLocalVariableNames = new HashSet<String>();
     private Set<String> fHoleVariables = new HashSet<String>();
     private Set<String> fInputVariables = new HashSet<String>();
-
+    private static boolean fErrorPresent = false;
+    
     /**
      * Weeder
      * @param node
@@ -22,6 +23,10 @@ public class Weeder extends DepthFirstAdapter
     public static void weed(Node node)
     {
         node.apply(new Weeder());
+        if (fErrorPresent)
+        {
+            System.exit(0);
+        }
     }
 
     /**
@@ -33,6 +38,7 @@ public class Weeder extends DepthFirstAdapter
         if(fHtmlsTuplesGlobalVariablesNames.contains(name))
         {
             System.out.println("Error: Duplicate variable: " + node.getIdentifier().getText() + " at line " + node.getIdentifier().getLine());
+            fErrorPresent = true;
         }
         else
         {
@@ -57,6 +63,7 @@ public class Weeder extends DepthFirstAdapter
         if(fSchemasNames.contains(name))
         {
             System.out.println("Error: Duplicate schema: " + node.getIdentifier().getText() + " at line " + node.getIdentifier().getLine());
+            fErrorPresent = true;
         }
         else
         {
@@ -75,12 +82,14 @@ public class Weeder extends DepthFirstAdapter
             else
             {
                 System.out.println("Error: Duplicate member " + memberName + " in Schema " + name + " declared at line " + node.getIdentifier().getLine()); 
+                fErrorPresent = true;
             }
         }
         
         if(fieldsNames.isEmpty())
         {
             System.out.println("Error: Definition for schema " + name + " cannot be empty at line :" + node.getIdentifier().getLine()); 
+            fErrorPresent = true;
         }
        
         if(node.getIdentifier() != null)
@@ -113,6 +122,7 @@ public class Weeder extends DepthFirstAdapter
                 if(fHtmlsTuplesGlobalVariablesNames.contains(identifier.getText()))
                 {
                     System.out.println("Error: Duplicate variable: " + identifier.getText() + " at line " + identifier.getLine());
+                    fErrorPresent = true;
                 }
                 else
                 {
@@ -127,10 +137,12 @@ public class Weeder extends DepthFirstAdapter
                 if(fCurrentLocalVariableNames.contains(identifier.getText()) && !fHtmlsTuplesGlobalVariablesNames.contains(identifier.getText()))
                 {
                     System.out.println("Error: Duplicate local variable: " + identifier.getText() + " at line " + identifier.getLine());
+                    fErrorPresent = true;
                 }
                 else if(fHtmlsTuplesGlobalVariablesNames.contains(identifier.getText()))
                 {
                     System.out.println("Error: Duplicate global variable: " + identifier.getText() + " at line " + identifier.getLine());
+                    fErrorPresent = true;
                 }
                 else
                 {
@@ -142,6 +154,7 @@ public class Weeder extends DepthFirstAdapter
         if(node.getType().toString().trim().equals("void"))
         {
             System.out.println("Error: Variable cannot be of type void at line " + node.getIdentifier().getFirst().getLine());
+            fErrorPresent = true;
         }
         
         if(node.getType() != null)
@@ -187,12 +200,14 @@ public class Weeder extends DepthFirstAdapter
         if(!fCurrentLocalVariableNames.contains(leftValueName) && !fHtmlsTuplesGlobalVariablesNames.contains(leftValueName))
         {
             System.out.println("Error: Variable " + leftValueName + " is not defined in global and local scope" + " at line " + node.getIdentifier().getLine());
+            fErrorPresent = true;
         }
         
         // check whether, in a receive construct, the identifier of an input corresponds to an inputattribute 
         if (!fInputVariables.contains(node.getIdentifier().toString()))
         {
             System.out.println("Error: The input attribute '" + node.getIdentifier().getText() + "' you are trying to receive from at line no. " + node.getIdentifier().getLine() + " does not exist.");
+            fErrorPresent = true;
         }
         
         node.getLvalue().apply(this);
@@ -208,6 +223,7 @@ public class Weeder extends DepthFirstAdapter
         if(fSessionNames.contains(sessionName))
         {
             System.out.println("Error: Duplicate Session " + sessionName + " at line " + node.getIdentifier().getLine());
+            fErrorPresent = true;
         }
         else
         {
@@ -218,6 +234,7 @@ public class Weeder extends DepthFirstAdapter
         if((compoundStatement.getStm().isEmpty() || !(compoundStatement.getStm().getLast() instanceof AExitStm)))
         {
             System.out.println("Error Session " + node.getIdentifier().getText().trim() + " does not have a exit statement at line " + node.getIdentifier().getLine());
+            fErrorPresent = true;
         }
         
         if(node.getIdentifier() != null)
@@ -240,6 +257,7 @@ public class Weeder extends DepthFirstAdapter
         if(!fSchemasNames.contains(schema))
         {
             System.out.println("Error: Schema " + schema + " is not defined");
+            fErrorPresent = true;
         }
     }
     
@@ -280,6 +298,7 @@ public class Weeder extends DepthFirstAdapter
         if(hasReturnType && (compoundStatement.getStm().isEmpty() || !(compoundStatement.getStm().getLast() instanceof AReturnexpStm)))
         {
             System.out.println("Error non void function " + node.getIdentifier().getText().trim() + " does not have a return statement at line " + node.getIdentifier().getLine());
+            fErrorPresent = true;
         }
     }
     
@@ -296,6 +315,7 @@ public class Weeder extends DepthFirstAdapter
         else
         {
             System.out.println("Error: Trying to plug to non-existing hole variable '" + node.getIdentifier().getText() + "' at line " + node.getIdentifier().getLine());
+            fErrorPresent = true;
         }
     }
     
@@ -308,6 +328,7 @@ public class Weeder extends DepthFirstAdapter
         if (fHoleVariables.contains(node.getIdentifier().getText()))
         {
             System.out.println("Error: Duplicate hole variable: " + node.getIdentifier().getText() + " at line " + node.getIdentifier().getLine());
+            fErrorPresent = true;
         }
         else
         {        
@@ -323,8 +344,8 @@ public class Weeder extends DepthFirstAdapter
         // report error if division by zero
         if (node.getRight().toString().matches("[^0]*[0][^0]*"))
         {
-            
             System.out.println("Error: Attempting division by zero: " + node.getLeft().toString().trim() + "/" + node.getRight());
+            fErrorPresent = true;
         }
         node.getLeft().apply(this);
         node.getRight().apply(this);
@@ -402,6 +423,7 @@ public class Weeder extends DepthFirstAdapter
           if (fInputVariables.contains(node.getAttr().toString().replace("\"", "")))
           {
               System.out.println("Error: Attribute '" + node.getAttr().toString().replace("\"", "") + "' in input tag at line " + node.getName().getLine() + " for " + node.getName().getText() + " already exists!");
+              fErrorPresent = true;
           }
           else
           {
@@ -499,8 +521,7 @@ public class Weeder extends DepthFirstAdapter
               node.getIntconst().apply(this);
           }
       }
-      
-      
+            
       public void caseANegintIntconst(ANegintIntconst node)
       {
           if(node.getNegIntconst() != null)
