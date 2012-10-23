@@ -4,7 +4,7 @@
 
 # to compile the code
 wig: clean grammar
-	javac wig/lexer/*.java wig/parser/*.java wig/node/*.java wig/analysis/*.java 
+	javac wig/lexer/*.java wig/parser/*.java wig/node/*.java wig/analysis/*.java wig/commons/cli/*.java
 
 # to generate the compiler code
 grammar: wig.sablecc

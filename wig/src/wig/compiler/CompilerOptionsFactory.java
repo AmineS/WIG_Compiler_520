@@ -1,6 +1,6 @@
 package wig.compiler;
 
-import org.apache.commons.cli.*;
+import wig.commons.cli.*;
 
 public class CompilerOptionsFactory
 {

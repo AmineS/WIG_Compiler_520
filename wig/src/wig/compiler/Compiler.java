@@ -18,7 +18,7 @@ import wig.prettyprinter.PrettyPrinter;
 import wig.weeder.Weeder;
 import wig.prettyprinter.*;
 
-import org.apache.commons.cli.*;
+import wig.commons.cli.*;
 
 public class Compiler
 {
