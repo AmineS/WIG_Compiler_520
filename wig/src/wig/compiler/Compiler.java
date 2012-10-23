@@ -53,8 +53,9 @@ public class Compiler
                 // compile each file
                 for(String file : files)
                 {
-                    System.out.println("Generating output: " + file);
+                    System.out.println("-------Generating output: " + file +"-------");
                     compileInput(getFileReader(file));
+                    System.out.println();
                 }
             }                      
         }
