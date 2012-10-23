@@ -10,10 +10,18 @@ wig: clean grammar
 grammar: wig.sablecc
 	sablecc wig.sablecc
 
-# check results
-check:	
-	./check
-
 # to clean
 clean:	
 	rm -rf wig/*.class wig/lexer/ wig/parser/ wig/node/ wig/analysis/ 
+
+# tests
+check: 
+	python check.py
+
+# test weeder
+weed:
+	python weed.py
+
+# test pretty printer
+pretty:
+	python pretty.py
