@@ -1,10 +1,10 @@
 # assumes sablecc script is on your PATH
 
-#.PHONY wig
+#.PHONY code
 
 # to compile the code
-wig: clean grammar
-	javac wig/lexer/*.java wig/parser/*.java wig/node/*.java wig/analysis/*.java wig/commons/cli/*.java
+code: clean grammar
+	javac wig/lexer/*.java wig/parser/*.java wig/node/*.java wig/analysis/*.java wig/compiler/*.java wig/weeder/*.java wig/commons/cli/*.java
 
 # to generate the compiler code
 grammar: wig.sablecc
@@ -12,7 +12,7 @@ grammar: wig.sablecc
 
 # to clean
 clean:	
-	rm -rf wig/*.class wig/lexer/ wig/parser/ wig/node/ wig/analysis/ 
+	rm -rf wig/*.class wig/lexer/ wig/parser/ wig/node/ wig/analysis/ wig/compiler/*.class wig/weeder/*.class
 
 # tests
 check: 

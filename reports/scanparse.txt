@@ -66,10 +66,20 @@ Since tds contain certain elements that would normally be considered new line in
 New lines are generated at the end of each line. Some keywords such as “session”, “if” and “while” have a new line appended before to create readable segments of code. 
 ---------------------------------------------------------------------------
 Testing
-‘complete_example.wig, as its name implies, has most wig features and is used to test.
+‘complete_example.wig, as its name implies, has most wig features and is used to test most of the WIG Compiler features.
 
 The pretty printer and weeder are both tested on the complete example.
 
-The weeder is supposed to give a list of errors when run on the complete example. It is supposed to signal no error on the other micro benchmarks ‘simple_example.wig’ and ‘wall.wig’. 
+Tests from Makefile:
+
+check: this will run on simple_example.wig, report no error, pretty print simple_example.wig and then run on wall.wig and the weeder will report an error and not pretty print.
+
+pretty: will pretty print complete_example.wig. This will show that the prettyprinter works properly.
+
+weed: will report all errors from complete_example.wig. This one shows that the weeder works properly and that all errors are properly reported.
 
 ---------------------------------------------------------------------------
+
+
+
+
