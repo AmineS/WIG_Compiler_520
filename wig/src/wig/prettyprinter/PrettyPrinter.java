@@ -10,6 +10,7 @@ import wig.analysis.*;
 
 public class PrettyPrinter extends DepthFirstAdapter
 {
+    /** Global variables for printing tabs */
     private int tabCount = 0;
     private int oldCount = 0;
     
@@ -30,6 +31,7 @@ public class PrettyPrinter extends DepthFirstAdapter
         System.out.print(s);
         System.out.flush();
     }
+    
     private void printTab()
     {
         for(int i=0; i<tabCount; ++i)

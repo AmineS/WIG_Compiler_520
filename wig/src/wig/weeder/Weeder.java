@@ -2,10 +2,6 @@ package wig.weeder;
 
 import java.util.*;
 
-import com.sun.xml.internal.ws.wsdl.writer.document.Service;
-
-import wig.parser.*;
-import wig.lexer.*;
 import wig.node.*;
 import wig.analysis.*;
 
@@ -15,19 +11,22 @@ public class Weeder extends DepthFirstAdapter
     private Set<String> fHtmlsTuplesGlobalVariablesNames = new HashSet<String>(); // HTML const names + Tuple names + Variable names 
     private Set<String> fSessionNames = new HashSet<String>(); //Session names
     private Set<String> fSchemasNames = new HashSet<String>();
-    private Set<String> fFunctionNames = new HashSet<String>(); // Function names
     private Set<String> fCurrentLocalVariableNames = new HashSet<String>();
-    //private Set<String> fInputFieldsNames =  new HashSet<String>();
     private Set<String> fHoleVariables = new HashSet<String>();
     private Set<String> fInputVariables = new HashSet<String>();
 
-    
-    
+    /**
+     * Weeder
+     * @param node
+     */
     public static void weed(Node node)
     {
         node.apply(new Weeder());
     }
-    
+
+    /**
+     * Make sure no html's have the same name
+     */
     public void caseAHtml(AHtml node)
     {
         String name = node.getIdentifier().getText();
@@ -46,7 +45,12 @@ public class Weeder extends DepthFirstAdapter
         }
     }
     
-    //Weeder
+    /**
+     * Make sure:
+     * no schema have the same name
+     * No memebers have the same name
+     * No schema definition is empty 
+     */
     public void caseASchema(ASchema node)
     {
         String name = node.getIdentifier().getText();
@@ -95,7 +99,11 @@ public class Weeder extends DepthFirstAdapter
         }
     }
     
-    //Weeder
+    /**
+     * Make sure:
+     * that global as well as local variables do not have conflicting names
+     * that variables are not declared with void type 
+     */
     public void caseAVariable(AVariable node)
     {
         if(node.parent().getClass().equals(AService.class))
@@ -151,18 +159,26 @@ public class Weeder extends DepthFirstAdapter
         } 
     }
     
-    // Weeder
+    /**
+     * Clear local variable names Set data structure when leaving a function 
+     * @param node - a variable node
+     */
     public void outAFunction(AVariable node)
     {
         fCurrentLocalVariableNames.clear();
     }
     
-    // Weeder
+    /**
+     * Clear local variables when leaving a session
+     */
     public void outASession(ASession node)
     {
         fCurrentLocalVariableNames.clear();
     }
     
+    /**
+     * Check there are no conflicts for input tags attributes and receive constructs
+     */
     public void caseAInput(AInput node)
     {
         String leftValueName = node.getLvalue().toString().trim();
@@ -183,6 +199,9 @@ public class Weeder extends DepthFirstAdapter
         node.getIdentifier().apply(this);
     }
     
+    /**
+     * Check for duplicate sessions and that session always has an exit statement
+     */
     public void caseASession(ASession node)
     {
         String sessionName = node.getIdentifier().toString().trim();
@@ -212,6 +231,9 @@ public class Weeder extends DepthFirstAdapter
 
     }
     
+    /**
+     * Check whether a schema being used by a tuple is defined
+     */
     public void caseATupleType(ATupleType node)
     {
         String schema = node.toString().trim();
@@ -223,76 +245,14 @@ public class Weeder extends DepthFirstAdapter
     
     public void caseAInputHtmlbody(AInputHtmlbody node)
     {
-        /*
-        int nameCounter = 0;
-        int typeCounter = 0;
-        node.getInput().apply(this); 
-        for(PInputattr inputattr : node.getInputattr())
-        {
-            inputattr.apply(this);
-            if(inputattr instanceof ANameInputattr)
-            {
-                ANameInputattr nameInputattr = (ANameInputattr) inputattr;
-                nameCounter++;
-                if(nameCounter > 1)
-                {
-                    System.out.println("Error: Input field must have one name attribute at line: " + nameInputattr.getName().getLine());
-                }
-                //fInputFieldsNames.add(nameInputattr.getAttr().toString().trim());
-            }
-            else if(inputattr instanceof ATypeInputattr)
-            {
-                ATypeInputattr typeInputattr = (ATypeInputattr) inputattr;
-                typeCounter++;
-                if(typeCounter > 1)
-                {
-                    System.out.println("Error: Input field must have one type attribute at line: " + typeInputattr.getType().getLine());
-                }
-            }
-        }
-        if(nameCounter == 0)
-        {
-            System.out.println("Error: Input field must have a name attribute at line: " + node.getInput().getLine());
-        }
-        if(typeCounter == 0)
-        {
-            System.out.println("Error: Input field must have a type attribute at line: " + node.getInput().getLine());
-        }*/
         for(PInputattr inputAttr : node.getInputattr())
         {
             inputAttr.apply(this);
         } 
-        
-        
     }
     
     public void caseASelectHtmlbody(ASelectHtmlbody node)
-    {   /*
-        int nameCounter = 0;
-        for(PInputattr inputattr : node.getInputattr())
-        {
-            AAttributeInputattr inputattr2 = (AAttributeInputattr) inputattr;
-            AAssignAttribute assignAttribute = (AAssignAttribute) inputattr2.getAttribute();
-            if(assignAttribute.getLeftAttr().toString().trim().equals("name"))
-            {
-                nameCounter++;
-                if(nameCounter > 1)
-                {
-                    System.out.println("Error: Select field must have one name attribute at line: " + node.getSelectTag().getLine());
-                }
-                //fInputFieldsNames.add(assignAttribute.getRightAttr().toString().trim().toString().trim());
-            }
-            else if(assignAttribute.getLeftAttr().toString().trim().equals("type"))
-            {
-                System.out.println("Error: Select field must have no type attribute at line: " + node.getSelectTag().getLine());
-            }
-        }
-        
-        if(nameCounter == 0)
-        {
-            System.out.println("Error: Select field must have one name attribute at line: " + node.getSelectTag().getLine());
-        }
-        */
+    {  
         for(PInputattr attr : node.getInputattr())
         {
             attr.apply(this);
@@ -302,10 +262,13 @@ public class Weeder extends DepthFirstAdapter
         {
             htmlBody.apply(this);
         }
-        
+  
         node.getSelectTag().apply(this);
     }
     
+    /**
+     * Check whether non-void functions have a return statement
+     */
     public void caseAFunction(AFunction node)
     {
         boolean hasReturnType = false;
@@ -320,9 +283,12 @@ public class Weeder extends DepthFirstAdapter
         }
     }
     
+    /**
+     * Ensure plugs always plug to existing hole variables
+     */
     public void caseAPlug(APlug node)
     {
-        // check if plugging to non-existing hole variable
+        // 
         if (fHoleVariables.contains(node.getIdentifier().getText()))
         {
             return;
@@ -333,6 +299,9 @@ public class Weeder extends DepthFirstAdapter
         }
     }
     
+    /**
+     * Check for conflicts between hole variable names
+     */
     public void caseAHoleHtmlbody(AHoleHtmlbody node)
     {
         // check if 2 or more hole variables have the same name
@@ -346,6 +315,9 @@ public class Weeder extends DepthFirstAdapter
         }
     }
     
+    /**
+     * Check for division by zero
+     */
     public void caseADivExp(ADivExp node)
     {
         // report error if division by zero
@@ -422,10 +394,11 @@ public class Weeder extends DepthFirstAdapter
           node.getMeta().apply(this);          
       }
       
-      
+      /**
+       * Check for conflicts in attribute nams in input tags 
+       */
       public void caseANameInputattr(ANameInputattr node)
       {
-          
           if (fInputVariables.contains(node.getAttr().toString().replace("\"", "")))
           {
               System.out.println("Error: Attribute '" + node.getAttr().toString().replace("\"", "") + "' in input tag at line " + node.getName().getLine() + " for " + node.getName().getText() + " already exists!");
