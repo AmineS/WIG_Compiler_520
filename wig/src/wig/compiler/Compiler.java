@@ -10,6 +10,7 @@ import wig.lexer.Lexer;
 import wig.node.Start;
 import wig.parser.Parser;
 import wig.weeder.Weeder;
+import wig.prettyprinter.*;
 
 public class Compiler
 {
@@ -28,7 +29,7 @@ public class Compiler
             Start tree = p.parse();
             
             Weeder.weed(tree);
-            //PrettyPrinter.print(tree);
+            PrettyPrinter.print(tree);
             
         }
         catch(Exception e)
