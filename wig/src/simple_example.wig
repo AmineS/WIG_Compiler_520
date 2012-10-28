@@ -21,17 +21,12 @@ service {
   int counter;
   int hello, hello3;
 	
-	int dumb1(int arg1, int arg1)
+	int dumb1(int arg1, int arg2)
 	{
-		int funcDumb;
 		int funcDumb;
 		return 1;
 	}
 	
-	int dumb1()
-	{
-		return 3;
-	}
 	/*
 	haahah
 	*/

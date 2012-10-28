@@ -1,6 +1,7 @@
 package wig.symboltable;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -44,7 +45,12 @@ public class SymbolAnalyzer extends DepthFirstAdapter
     public void analyze(Node node)
     {
         fSymbolTables.add(fServiceSymTable);
-        node.apply(new SymbolAnalyzer());
+        node.apply(this);
+    }
+    
+    public LinkedList<SymbolTable> getSymbolTables()
+    {
+        return fSymbolTables;
     }
     
     public void caseAService(AService node)
@@ -350,6 +356,8 @@ public class SymbolAnalyzer extends DepthFirstAdapter
     
     public void caseACompoundstm(ACompoundstm node)
     {
+        inACompoundStm(node);
+        
         LinkedList<PStm> stm_list = node.getStm();
         LinkedList<PVariable> var_list = node.getVariable();
         Iterator<PStm> stm_iter = stm_list.iterator();
@@ -364,7 +372,7 @@ public class SymbolAnalyzer extends DepthFirstAdapter
         {
             stm_iter.next().apply(this);
         }
-        
+        outACompoundStm(node);
     }
     
     public void outACompoundStm(ACompoundstm node)
