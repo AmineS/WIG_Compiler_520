@@ -20,8 +20,6 @@ public class Symbol
     private AHtml fHtml;
     private AInputHtmlbody fInput;
     private ASelectHtmlbody fSelect;
-    private AWhateverHtmlbody fWhatever;
-    private AMetaHtmlbody fMeta;
     private AHoleHtmlbody fHole;
     private ASchema fSchema;
     private AVariable fVariable;
@@ -32,7 +30,7 @@ public class Symbol
     
     private Symbol fNext;
     
-    public Symbol(){};
+    public Symbol(){}
     
     public String getName()
     {
@@ -57,16 +55,6 @@ public class Symbol
     public ASelectHtmlbody getSelect()
     {
         return fSelect;
-    }
-    
-    public AWhateverHtmlbody getWhatever()
-    {
-        return fWhatever;
-    }
-    
-    public AMetaHtmlbody getMeta()
-    {
-        return fMeta;
     }
     
     public AHoleHtmlbody getHole()
@@ -132,16 +120,6 @@ public class Symbol
     public void setSelect(ASelectHtmlbody select)
     {
        fSelect = select;
-    }
-    
-    public void setWhatever(AWhateverHtmlbody whatever)
-    {
-        fWhatever = whatever;
-    }
-    
-    public void setMeta(AMetaHtmlbody meta)
-    {
-        fMeta = meta;
     }
     
     public void setHole(AHoleHtmlbody hole)
