@@ -149,7 +149,7 @@ public class Weeder extends DepthFirstAdapter
     }
     
     // Weeder
-    public void outAFunction(AVariable node)
+    public void outAFunction(AFunction node)
     {
         fCurrentLocalVariableNames.clear();
     }
