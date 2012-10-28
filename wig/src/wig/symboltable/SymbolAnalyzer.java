@@ -153,9 +153,9 @@ public class SymbolAnalyzer extends DepthFirstAdapter
                 {
                     List<TIdentifier> tmpList = new ArrayList<TIdentifier>();
                     tmpList.add(new TIdentifier(name));
-                    AVariable globalVariable = new AVariable(type, tmpList);
+                    AVariable g_l_variable = new AVariable(type, tmpList);
                     Symbol sym = SymbolTable.putSymbol(fCurrentSymTable, name, SymbolKind.VARIABLE);
-                    sym.setVariable(globalVariable);
+                    sym.setVariable(g_l_variable);
                 }
             }
         }
@@ -290,16 +290,48 @@ public class SymbolAnalyzer extends DepthFirstAdapter
                 name = nameAttr.getName().toString().trim();
             }
         }
+        if(name != null)
+        {
+            if(fTraversal == SymbolAnalysisTraversal.COLLECT_IDENTIFIERS)
+            {
+                if(SymbolTable.getSymbol(fCurrentSymTable.getNext(), name) != null)
+                {
+                    puts("Error: Input name " + name + " already defined.");
+                }
+                else
+                {
+                    Symbol sym = SymbolTable.putSymbol(fCurrentSymTable, name, SymbolKind.INPUT_TAG);
+                    sym.setInput(node);
+                }
+            }
+        }
     }
     
     public void caseASelectHtmlbody(ASelectHtmlbody node)
     {
         LinkedList<PInputattr> attributes = node.getInputattr();
+        String name = null;
         for(PInputattr attribute : attributes)
         {
             if(attribute instanceof  ANameInputattr)
             {
-                
+                ANameInputattr nameAttr = (ANameInputattr) attribute;
+                name = nameAttr.getName().toString().trim();
+            }
+        }
+        if(name != null)
+        {
+            if(fTraversal == SymbolAnalysisTraversal.COLLECT_IDENTIFIERS)
+            {
+                if(SymbolTable.getSymbol(fCurrentSymTable.getNext(), name) != null)
+                {
+                    puts("Error: Input name " + name + " already defined.");
+                }
+                else
+                {
+                    Symbol sym = SymbolTable.putSymbol(fCurrentSymTable, name, SymbolKind.SELECT_TAG);
+                    sym.setSelect(node);
+                }
             }
         }
     }
