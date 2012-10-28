@@ -10,6 +10,7 @@ import wig.analysis.DepthFirstAdapter;
 import wig.node.AArgument;
 import wig.node.ACompStm;
 import wig.node.ACompoundstm;
+import wig.node.AField;
 import wig.node.AFunction;
 import wig.node.AHoleHtmlbody;
 import wig.node.AHtml;
@@ -23,6 +24,7 @@ import wig.node.AStrAttr;
 import wig.node.AVariable;
 import wig.node.Node;
 import wig.node.PArgument;
+import wig.node.PField;
 import wig.node.PFunction;
 import wig.node.PHtml;
 import wig.node.PHtmlbody;
@@ -94,22 +96,44 @@ public class SymbolCollector extends DepthFirstAdapter
         fCurrentSymTable = fCurrentSymTable.getNext();
     }
     
+    public void inASchema(ASchema node)
+    {
+        SymbolTable scopedSymbolTable = SymbolTable.scopeSymbolTable(fCurrentSymTable);
+        fSymbolTables.add(scopedSymbolTable);
+        fCurrentSymTable = scopedSymbolTable;
+    }
+    
     public void caseASchema(ASchema node)
     {
+        inASchema(node);
+        
         String name = node.getIdentifier().toString().trim();
         
         if(fTraversal == SymbolAnalysisTraversal.COLLECT_IDENTIFIERS)
         {
-            if(SymbolTable.getSymbol(fCurrentSymTable, name) != null)
+            if(SymbolTable.getSymbol(fCurrentSymTable.getNext(), name) != null)
             {
                 puts("Error: Schema name " + name + " already defined.");
             }
             else
             {
-                Symbol sym = SymbolTable.putSymbol(fCurrentSymTable, name, SymbolKind.SCHEMA);
+                Symbol sym = SymbolTable.putSymbol(fCurrentSymTable.getNext(), name, SymbolKind.SCHEMA);
                 sym.setSchema(node);
             }
         }
+        
+        List<PField> copy = new ArrayList<PField>(node.getField());
+        for(PField e : copy)
+        {
+            e.apply(this);
+        }
+        
+        outASchema(node);
+    }
+    
+    public void outASchema(ASchema node)
+    {
+        fCurrentSymTable = fCurrentSymTable.getNext();
     }
     
     public void caseAVariable(AVariable node)
@@ -357,6 +381,21 @@ public class SymbolCollector extends DepthFirstAdapter
         if(! (node.parent() instanceof AFunction))
         {
             fCurrentSymTable = fCurrentSymTable.getNext();
+        }
+    }
+    
+    
+    public void caseAField(AField node)
+    {
+        String name = node.getIdentifier().toString().trim();
+        if(SymbolTable.getSymbol(fCurrentSymTable, name) != null)
+        {
+            puts("Error: Field name " + name + " already defined.");
+        }
+        else
+        {
+            Symbol sym = SymbolTable.putSymbol(fCurrentSymTable, name, SymbolKind.SELECT_TAG);
+            sym.setField(node);
         }
     }
     

@@ -1,6 +1,7 @@
 package wig.symboltable;
 
 import wig.node.AArgument;
+import wig.node.AField;
 import wig.node.AFunction;
 import wig.node.AHoleHtmlbody;
 import wig.node.AHtml;
@@ -27,6 +28,7 @@ public class Symbol
     private AArgument fArgument;
     private ASession fSession;
     private AVariable fLocal;   
+    private AField fField;
     
     private Symbol fNext;
     
@@ -92,6 +94,11 @@ public class Symbol
         return fLocal;
     }
     
+    public AField getField()
+    {
+        return fField;
+    }
+    
     public Symbol getNext()
     {
         return fNext;
@@ -155,6 +162,11 @@ public class Symbol
     public void setLocal(AVariable local)
     {
          fLocal = local;
+    }
+    
+    public void setField(AField field)
+    {
+        fField = field;
     }
     
     public void setNext(Symbol next)
