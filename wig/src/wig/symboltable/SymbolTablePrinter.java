@@ -8,7 +8,7 @@ public class SymbolTablePrinter
 
     private LinkedList<SymbolTable> fSymTabList = new LinkedList<SymbolTable>();
     
-    public SymbolTablePrinter(SymbolAnalyzer sta)
+    public SymbolTablePrinter(SymbolCollector sta)
     {
         this.fSymTabList = sta.getSymbolTables();
     }
