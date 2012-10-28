@@ -1,6 +1,7 @@
 package wig.symboltable;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -9,6 +10,7 @@ import wig.analysis.DepthFirstAdapter;
 import wig.node.AArgument;
 import wig.node.ACompStm;
 import wig.node.ACompoundstm;
+import wig.node.AField;
 import wig.node.AFunction;
 import wig.node.AHoleHtmlbody;
 import wig.node.AHtml;
@@ -18,9 +20,11 @@ import wig.node.ASchema;
 import wig.node.ASelectHtmlbody;
 import wig.node.AService;
 import wig.node.ASession;
+import wig.node.AStrAttr;
 import wig.node.AVariable;
 import wig.node.Node;
 import wig.node.PArgument;
+import wig.node.PField;
 import wig.node.PFunction;
 import wig.node.PHtml;
 import wig.node.PHtmlbody;
@@ -47,35 +51,10 @@ public class SymbolCollector extends DepthFirstAdapter
         node.apply(this);
     }
     
-    public void caseAService(AService node)
+    public LinkedList<SymbolTable> getSymbolTables()
     {
-        
-        for(PHtml html : node.getHtml())
-        {
-            html.apply(this);
-        }
-        
-        for(PSchema schema : node.getSchema())
-        {
-            schema.apply(this);
-        }
-        
-        for(PVariable variable : node.getVariable())
-        {
-            variable.apply(this);
-        }
-        
-        for(PFunction function : node.getFunction())
-        {
-            function.apply(this);
-        }
-        
-        for(PSession session : node.getSession())
-        {
-            session.apply(this);
-        }
+        return fSymbolTables;
     }
-    
     
     public void inAHtml(AHtml node)
     {
@@ -90,12 +69,6 @@ public class SymbolCollector extends DepthFirstAdapter
         
         String name = node.getIdentifier().toString().trim();
         
-        List<PHtmlbody> copy = new ArrayList<PHtmlbody>(node.getHtmlbody());
-        for(PHtmlbody e : copy)
-        {
-            e.apply(this);
-        }
-        
         if(fTraversal == SymbolAnalysisTraversal.COLLECT_IDENTIFIERS)
         {
             if(SymbolTable.getSymbol(fCurrentSymTable.getNext(), name) != null)
@@ -109,6 +82,12 @@ public class SymbolCollector extends DepthFirstAdapter
             }
         }
         
+        List<PHtmlbody> copy = new ArrayList<PHtmlbody>(node.getHtmlbody());
+        for(PHtmlbody e : copy)
+        {
+            e.apply(this);
+        }
+        
         outAHtml(node);
     }
     
@@ -117,22 +96,44 @@ public class SymbolCollector extends DepthFirstAdapter
         fCurrentSymTable = fCurrentSymTable.getNext();
     }
     
+    public void inASchema(ASchema node)
+    {
+        SymbolTable scopedSymbolTable = SymbolTable.scopeSymbolTable(fCurrentSymTable);
+        fSymbolTables.add(scopedSymbolTable);
+        fCurrentSymTable = scopedSymbolTable;
+    }
+    
     public void caseASchema(ASchema node)
     {
+        inASchema(node);
+        
         String name = node.getIdentifier().toString().trim();
         
         if(fTraversal == SymbolAnalysisTraversal.COLLECT_IDENTIFIERS)
         {
-            if(SymbolTable.getSymbol(fCurrentSymTable, name) != null)
+            if(SymbolTable.getSymbol(fCurrentSymTable.getNext(), name) != null)
             {
                 puts("Error: Schema name " + name + " already defined.");
             }
             else
             {
-                Symbol sym = SymbolTable.putSymbol(fCurrentSymTable, name, SymbolKind.SCHEMA);
+                Symbol sym = SymbolTable.putSymbol(fCurrentSymTable.getNext(), name, SymbolKind.SCHEMA);
                 sym.setSchema(node);
             }
         }
+        
+        List<PField> copy = new ArrayList<PField>(node.getField());
+        for(PField e : copy)
+        {
+            e.apply(this);
+        }
+        
+        outASchema(node);
+    }
+    
+    public void outASchema(ASchema node)
+    {
+        fCurrentSymTable = fCurrentSymTable.getNext();
     }
     
     public void caseAVariable(AVariable node)
@@ -145,7 +146,7 @@ public class SymbolCollector extends DepthFirstAdapter
             for(TIdentifier variable : variables)
             {
                 name = variable.toString().trim();
-                if(SymbolTable.lookupHierarchy(fCurrentSymTable, name) != null)
+                if(SymbolTable.getSymbol(fCurrentSymTable, name) != null)
                 {
                     puts("Error: Variable name " + name + " already defined.");
                 }
@@ -172,17 +173,6 @@ public class SymbolCollector extends DepthFirstAdapter
     {
         inAFunction(node);
 
-        List<PArgument> copy = new ArrayList<PArgument>(node.getArgument());
-        for(PArgument e : copy)
-        {
-            e.apply(this);
-        }
-        
-        if(node.getCompoundstm() != null)
-        {
-            node.getCompoundstm().apply(this);
-        }
-        
         String name = node.getIdentifier().toString().trim();
         if(fTraversal == SymbolAnalysisTraversal.COLLECT_IDENTIFIERS)
         {
@@ -197,6 +187,17 @@ public class SymbolCollector extends DepthFirstAdapter
             }
         }
         
+        if(node.getCompoundstm() != null)
+        {
+            node.getCompoundstm().apply(this);
+        }
+        
+        List<PArgument> copy = new ArrayList<PArgument>(node.getArgument());
+        for(PArgument e : copy)
+        {
+            e.apply(this);
+        }
+                
         outAFunction(node);
     }
     
@@ -215,12 +216,7 @@ public class SymbolCollector extends DepthFirstAdapter
     public void caseASession(ASession node)
     {
         inASession(node);
-        
-        if(node.getCompoundstm() != null)
-        {
-            node.getCompoundstm().apply(this);
-        }
-        
+
         String name = node.getIdentifier().toString().trim();
         if(fTraversal == SymbolAnalysisTraversal.COLLECT_IDENTIFIERS)
         {
@@ -234,6 +230,12 @@ public class SymbolCollector extends DepthFirstAdapter
                 sym.setSession(node);
             }
         }
+        
+        if(node.getCompoundstm() != null)
+        {
+            node.getCompoundstm().apply(this);
+        }
+        
         
         outASession(node);
     }
@@ -250,7 +252,7 @@ public class SymbolCollector extends DepthFirstAdapter
         {
             if(SymbolTable.getSymbol(fCurrentSymTable, name) != null)
             {
-                puts("Error: Function name " + name + " already defined.");
+                puts("Error: Argument name " + name + " already defined.");
             }
             else
             {
@@ -287,14 +289,15 @@ public class SymbolCollector extends DepthFirstAdapter
             if(attribute instanceof  ANameInputattr)
             {
                 ANameInputattr nameAttr = (ANameInputattr) attribute;
-                name = nameAttr.getName().toString().trim();
+                AStrAttr strAttr = (AStrAttr) nameAttr.getAttr();
+                name = strAttr.getStringconst().getText().trim().replace("\"", "");
             }
         }
         if(name != null)
         {
             if(fTraversal == SymbolAnalysisTraversal.COLLECT_IDENTIFIERS)
             {
-                if(SymbolTable.getSymbol(fCurrentSymTable.getNext(), name) != null)
+                if(SymbolTable.getSymbol(fCurrentSymTable, name) != null)
                 {
                     puts("Error: Input name " + name + " already defined.");
                 }
@@ -323,7 +326,7 @@ public class SymbolCollector extends DepthFirstAdapter
         {
             if(fTraversal == SymbolAnalysisTraversal.COLLECT_IDENTIFIERS)
             {
-                if(SymbolTable.getSymbol(fCurrentSymTable.getNext(), name) != null)
+                if(SymbolTable.getSymbol(fCurrentSymTable, name) != null)
                 {
                     puts("Error: Input name " + name + " already defined.");
                 }
@@ -343,13 +346,18 @@ public class SymbolCollector extends DepthFirstAdapter
     
     public void inACompoundStm(ACompoundstm node)
     {
-        SymbolTable scopedSymbolTable = SymbolTable.scopeSymbolTable(fCurrentSymTable);
-        fSymbolTables.add(scopedSymbolTable);
-        fCurrentSymTable = scopedSymbolTable;
+        if(! (node.parent() instanceof AFunction || node.parent() instanceof ASession) )
+        {
+            SymbolTable scopedSymbolTable = SymbolTable.scopeSymbolTable(fCurrentSymTable);
+            fSymbolTables.add(scopedSymbolTable);
+            fCurrentSymTable = scopedSymbolTable;
+        }
     }
     
     public void caseACompoundstm(ACompoundstm node)
     {
+        inACompoundStm(node);
+        
         LinkedList<PStm> stm_list = node.getStm();
         LinkedList<PVariable> var_list = node.getVariable();
         Iterator<PStm> stm_iter = stm_list.iterator();
@@ -365,11 +373,30 @@ public class SymbolCollector extends DepthFirstAdapter
             stm_iter.next().apply(this);
         }
         
+        outACompoundStm(node);
     }
     
     public void outACompoundStm(ACompoundstm node)
     {
-        fCurrentSymTable = fCurrentSymTable.getNext();
+        if(! (node.parent() instanceof AFunction))
+        {
+            fCurrentSymTable = fCurrentSymTable.getNext();
+        }
+    }
+    
+    
+    public void caseAField(AField node)
+    {
+        String name = node.getIdentifier().toString().trim();
+        if(SymbolTable.getSymbol(fCurrentSymTable, name) != null)
+        {
+            puts("Error: Field name " + name + " already defined.");
+        }
+        else
+        {
+            Symbol sym = SymbolTable.putSymbol(fCurrentSymTable, name, SymbolKind.SELECT_TAG);
+            sym.setField(node);
+        }
     }
     
     

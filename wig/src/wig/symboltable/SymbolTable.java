@@ -13,6 +13,11 @@ public class SymbolTable
         fNext = null;
     }
     
+    public HashMap<String, Symbol> getTable()
+    {
+       return fTable; 
+    }
+    
     public SymbolTable getNext()
     {
         return fNext;

@@ -1,6 +1,7 @@
 package wig.compiler;
 
 import java.io.File;
+
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
@@ -19,8 +20,14 @@ import wig.node.Start;
 import wig.parser.Parser;
 import wig.parser.ParserException;
 import wig.prettyprinter.PrettyPrinter;
+
 import wig.symboltable.SymbolCollector;
+
 import wig.weeder.Weeder;
+
+import java.util.LinkedList;
+
+import wig.symboltable.SymbolTablePrinter;
 
 public class Compiler
 {
@@ -41,8 +48,16 @@ public class Compiler
                          new PushbackReader(inputReader, 1024)));
                  
             Start tree = p.parse();
+
             SymbolCollector symAnalyzer = new SymbolCollector();
+
             symAnalyzer.analyze(tree);
+            
+            System.out.println("LinkedList size: " + symAnalyzer.getSymbolTables().size());
+            
+            //SymbolTablePrinter stp = new SymbolTablePrinter(symAnalyzer);
+            //stp.printAll();
+           
             
 //            //Weeder.weed(tree);
 //            PrettyPrinter.print(tree);
@@ -62,7 +77,7 @@ public class Compiler
             compilerOptions = CompilerOptionsFactory.getOptions();
             cliParser = new PosixParser();
             commandLine = cliParser.parse(compilerOptions, args);
-            
+               /*
             String[] files = commandLine.getArgs();
                         
             if(commandLine.hasOption("help"))
@@ -85,7 +100,7 @@ public class Compiler
                     compileInput(getFileReader(file));
                     System.out.println();
                 }
-            }                      
+            }    */                  
         }
         catch(Exception e)
         {

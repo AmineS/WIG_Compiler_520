@@ -1,7 +1,8 @@
 
 service {
   const html Nikolaj =  <html> <body>
-  	 < meta here >
+         <input name="itemAmt4" type="text" size="5" value="0">
+     <input name="itemAmt3" type="text" size="5" value="0">
   <img src="http://www.brics.dk/~mis/babybath.jpg">
      <p>      <i>You are visitor number! <[no]></i>
   </body>  </html>;
@@ -21,17 +22,12 @@ service {
   int counter;
   int hello, hello3;
 	
-	int dumb1(int arg1, int arg1)
+	int dumb1(int arg1, int arg2)
 	{
-		int funcDumb;
 		int funcDumb;
 		return 1;
 	}
 	
-	int dumb1()
-	{
-		return 3;
-	}
 	/*
 	haahah
 	*/
@@ -47,6 +43,7 @@ service {
     
     while (counter>2)
     {
+    	counter = count +1;
     	counter = counter - 1;
     }
     
