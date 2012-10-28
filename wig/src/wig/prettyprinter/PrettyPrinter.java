@@ -10,6 +10,7 @@ import wig.analysis.*;
 
 public class PrettyPrinter extends DepthFirstAdapter
 {
+    /** Global variables for printing tabs */
     private int tabCount = 0;
     private int oldCount = 0;
     
@@ -30,6 +31,7 @@ public class PrettyPrinter extends DepthFirstAdapter
         System.out.print(s);
         System.out.flush();
     }
+    
     private void printTab()
     {
         for(int i=0; i<tabCount; ++i)
@@ -125,6 +127,13 @@ public class PrettyPrinter extends DepthFirstAdapter
             putsTab("<");
             incrementTabCount();
         }
+        else if(id.equals("option"))
+        {
+            puts("\n");
+            incrementTabCount();
+            putsTab("<");
+            decrementTabCount();
+        }
         else if(id.equals("td"))
         {
             putsTab("<");
@@ -169,7 +178,7 @@ public class PrettyPrinter extends DepthFirstAdapter
               puts("</");              
           }
           node.getIdentifier().apply(this);
-          puts(">");
+          puts(">");          
       }
       
       
@@ -220,29 +229,28 @@ public class PrettyPrinter extends DepthFirstAdapter
               htmlBody.apply(this);
           }
           
-          puts("</");
+          puts("\n");
+          putsTab("</");       
           node.getSelectTag().apply(this);
           puts(">");
       }
       
       public void caseANameInputattr(ANameInputattr node)
       {
-          puts(" name=\""); 
+          puts(" name="); 
           if(node.getAttr() != null)
           {
               node.getAttr().apply(this);              
           }
-          puts("\"");
       }      
       @Override
       public void caseATypeInputattr(ATypeInputattr node)
       {
-          puts(" type=\"");
+          puts(" type=");
           if(node.getInputtype() != null)
           {
               node.getInputtype().apply(this);
           }
-          puts("\"");
       }      
             
       public void caseAAttributeInputattr(AAttributeInputattr node)
@@ -287,6 +295,7 @@ public class PrettyPrinter extends DepthFirstAdapter
       
       public void caseAAssignAttribute(AAssignAttribute node)
       {
+          puts(" ");
           if(node.getLeftAttr() != null)
           {
               node.getLeftAttr().apply(this);
@@ -512,7 +521,7 @@ public class PrettyPrinter extends DepthFirstAdapter
           while(iter.hasNext())
           {
              iter.next().apply(this);
-             if(counter!=plug_list_size-1)
+             if(iter.hasNext())
                  puts(",");
           }
           puts("] ");     
@@ -520,8 +529,7 @@ public class PrettyPrinter extends DepthFirstAdapter
       }
       
       public void caseAReceive(AReceive node)
-      {
-          
+      {          
           LinkedList<PInput> input_list;
           Iterator<PInput> iter;
           int input_list_size, counter;
@@ -536,7 +544,7 @@ public class PrettyPrinter extends DepthFirstAdapter
           while(iter.hasNext())
           {
              iter.next().apply(this);
-             if(counter!=input_list_size-1)
+             if(iter.hasNext())
                  puts(",");
           }
           puts("]");
@@ -1279,7 +1287,7 @@ public class PrettyPrinter extends DepthFirstAdapter
               node.getType().apply(this);
           }
           
-          puts(" = ");
+          puts(" ");
           
           List<TIdentifier> ids = node.getIdentifier();          
           if(ids!=null)
@@ -1355,6 +1363,8 @@ public class PrettyPrinter extends DepthFirstAdapter
       
       public void caseAFunction(AFunction node)
       {
+          puts("\n");
+          putsTab("");
           if(node.getType() != null)
           {
               node.getType().apply(this);
@@ -1376,13 +1386,11 @@ public class PrettyPrinter extends DepthFirstAdapter
                   puts(" ");
               }
           }          
-          puts(")\n{\n");
-          
+          puts(")\n");
           if(node.getCompoundstm() != null)
           {
               node.getCompoundstm().apply(this);
           }
-          puts("\n}\n");
       }
             
       public void caseAArguments(AArguments node)
