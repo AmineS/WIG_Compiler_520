@@ -5,21 +5,22 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-
 import java.io.PushbackReader;
 import java.io.Reader;
 
+import wig.commons.cli.CommandLine;
+import wig.commons.cli.CommandLineParser;
+import wig.commons.cli.HelpFormatter;
+import wig.commons.cli.Options;
+import wig.commons.cli.PosixParser;
 import wig.lexer.Lexer;
 import wig.lexer.LexerException;
 import wig.node.Start;
 import wig.parser.Parser;
 import wig.parser.ParserException;
 import wig.prettyprinter.PrettyPrinter;
-import wig.symboltable.SymbolAnalyzer;
+import wig.symboltable.SymbolCollector;
 import wig.weeder.Weeder;
-import wig.prettyprinter.*;
-
-import wig.commons.cli.*;
 
 public class Compiler
 {
@@ -40,7 +41,7 @@ public class Compiler
                          new PushbackReader(inputReader, 1024)));
                  
             Start tree = p.parse();
-            SymbolAnalyzer symAnalyzer = new SymbolAnalyzer();
+            SymbolCollector symAnalyzer = new SymbolCollector();
             symAnalyzer.analyze(tree);
             
 //            //Weeder.weed(tree);

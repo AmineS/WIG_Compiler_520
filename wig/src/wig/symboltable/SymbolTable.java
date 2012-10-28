@@ -52,4 +52,19 @@ public class SymbolTable
     {
         return symTable.fTable.containsKey(name);
     }
+    
+    public static Symbol lookupHierarchy(SymbolTable current, String name) 
+    {               
+        Symbol symbol;               
+        
+        if(current == null) return null;        
+        
+        symbol = current.getSymbol(current, name);                
+        if(symbol == null && current.getNext() != null)
+        {
+            symbol = lookupHierarchy(current.getNext(), name);
+        }
+        
+        return symbol;
+    }    
 }

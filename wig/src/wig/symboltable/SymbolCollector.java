@@ -32,7 +32,7 @@ import wig.node.PType;
 import wig.node.PVariable;
 import wig.node.TIdentifier;
 
-public class SymbolAnalyzer extends DepthFirstAdapter
+public class SymbolCollector extends DepthFirstAdapter
 {
     
     private LinkedList<SymbolTable> fSymbolTables = new LinkedList<SymbolTable>();
@@ -44,7 +44,7 @@ public class SymbolAnalyzer extends DepthFirstAdapter
     public void analyze(Node node)
     {
         fSymbolTables.add(fServiceSymTable);
-        node.apply(new SymbolAnalyzer());
+        node.apply(new SymbolCollector());
     }
     
     public void caseAService(AService node)
@@ -145,7 +145,7 @@ public class SymbolAnalyzer extends DepthFirstAdapter
             for(TIdentifier variable : variables)
             {
                 name = variable.toString().trim();
-                if(SymbolTable.getSymbol(fCurrentSymTable, name) != null)
+                if(SymbolTable.lookupHierarchy(fCurrentSymTable, name) != null)
                 {
                     puts("Error: Variable name " + name + " already defined.");
                 }
