@@ -44,7 +44,7 @@ public class SymbolCollector extends DepthFirstAdapter
     public void analyze(Node node)
     {
         fSymbolTables.add(fServiceSymTable);
-        node.apply(new SymbolCollector());
+        node.apply(this);
     }
     
     public void caseAService(AService node)
@@ -377,5 +377,10 @@ public class SymbolCollector extends DepthFirstAdapter
     {
         System.out.print(s + "\n");
         System.out.flush();
+    }
+    
+    public SymbolTable getServiceTable()
+    {
+        return this.fServiceSymTable;
     }
 }
