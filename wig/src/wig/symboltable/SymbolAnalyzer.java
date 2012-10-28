@@ -12,12 +12,21 @@ import wig.node.ACompoundstm;
 import wig.node.AFunction;
 import wig.node.AHoleHtmlbody;
 import wig.node.AHtml;
+import wig.node.AInputHtmlbody;
+import wig.node.ANameInputattr;
 import wig.node.ASchema;
+import wig.node.ASelectHtmlbody;
+import wig.node.AService;
 import wig.node.ASession;
 import wig.node.AVariable;
 import wig.node.Node;
 import wig.node.PArgument;
+import wig.node.PFunction;
+import wig.node.PHtml;
 import wig.node.PHtmlbody;
+import wig.node.PInputattr;
+import wig.node.PSchema;
+import wig.node.PSession;
 import wig.node.PStm;
 import wig.node.PType;
 import wig.node.PVariable;
@@ -38,9 +47,47 @@ public class SymbolAnalyzer extends DepthFirstAdapter
         node.apply(new SymbolAnalyzer());
     }
     
+    public void caseAService(AService node)
+    {
+        
+        for(PHtml html : node.getHtml())
+        {
+            html.apply(this);
+        }
+        
+        for(PSchema schema : node.getSchema())
+        {
+            schema.apply(this);
+        }
+        
+        for(PVariable variable : node.getVariable())
+        {
+            variable.apply(this);
+        }
+        
+        for(PFunction function : node.getFunction())
+        {
+            function.apply(this);
+        }
+        
+        for(PSession session : node.getSession())
+        {
+            session.apply(this);
+        }
+    }
+    
+    
+    public void inAHtml(AHtml node)
+    {
+        SymbolTable scopedSymbolTable = SymbolTable.scopeSymbolTable(fCurrentSymTable);
+        fSymbolTables.add(scopedSymbolTable);
+        fCurrentSymTable = scopedSymbolTable;
+    }
     
     public void caseAHtml(AHtml node)
     {
+        inAHtml(node);
+        
         String name = node.getIdentifier().toString().trim();
         
         List<PHtmlbody> copy = new ArrayList<PHtmlbody>(node.getHtmlbody());
@@ -62,8 +109,13 @@ public class SymbolAnalyzer extends DepthFirstAdapter
             }
         }
         
+        outAHtml(node);
     }
     
+    public void outAHtml(AHtml node)
+    {
+        fCurrentSymTable = fCurrentSymTable.getNext();
+    }
     
     public void caseASchema(ASchema node)
     {
@@ -214,14 +266,40 @@ public class SymbolAnalyzer extends DepthFirstAdapter
         String name = node.getIdentifier().toString().trim();
         if(fTraversal == SymbolAnalysisTraversal.COLLECT_IDENTIFIERS)
         {
-            if(SymbolTable.getSymbol(fCurrentSymTable, name) != null)
+            if(SymbolTable.getSymbol(fCurrentSymTable.getNext(), name) != null)
             {
                 puts("Error: Hole name " + name + " already defined.");
             }
             else
             {
-                Symbol sym = SymbolTable.putSymbol(fCurrentSymTable, name, SymbolKind.HOLE);
+                Symbol sym = SymbolTable.putSymbol(fCurrentSymTable.getNext(), name, SymbolKind.HOLE);
                 sym.setHole(node);
+            }
+        }
+    }
+    
+    public void caseAInputHtmlbody(AInputHtmlbody node)
+    {
+        LinkedList<PInputattr> attributes = node.getInputattr();
+        String name = null;
+        for(PInputattr attribute : attributes)
+        {
+            if(attribute instanceof  ANameInputattr)
+            {
+                ANameInputattr nameAttr = (ANameInputattr) attribute;
+                name = nameAttr.getName().toString().trim();
+            }
+        }
+    }
+    
+    public void caseASelectHtmlbody(ASelectHtmlbody node)
+    {
+        LinkedList<PInputattr> attributes = node.getInputattr();
+        for(PInputattr attribute : attributes)
+        {
+            if(attribute instanceof  ANameInputattr)
+            {
+                
             }
         }
     }
@@ -229,6 +307,13 @@ public class SymbolAnalyzer extends DepthFirstAdapter
     public void caseACompStm(ACompStm node)
     {
         node.getCompoundstm().apply(this);
+    }
+    
+    public void inACompoundStm(ACompoundstm node)
+    {
+        SymbolTable scopedSymbolTable = SymbolTable.scopeSymbolTable(fCurrentSymTable);
+        fSymbolTables.add(scopedSymbolTable);
+        fCurrentSymTable = scopedSymbolTable;
     }
     
     public void caseACompoundstm(ACompoundstm node)
@@ -250,6 +335,10 @@ public class SymbolAnalyzer extends DepthFirstAdapter
         
     }
     
+    public void outACompoundStm(ACompoundstm node)
+    {
+        fCurrentSymTable = fCurrentSymTable.getNext();
+    }
     
     
     private void puts(String s)
