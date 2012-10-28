@@ -1,6 +1,7 @@
 package wig.symboltable;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -33,7 +34,7 @@ import wig.node.PType;
 import wig.node.PVariable;
 import wig.node.TIdentifier;
 
-public class SymbolAnalyzer extends DepthFirstAdapter
+public class SymbolCollector extends DepthFirstAdapter
 {
     
     private LinkedList<SymbolTable> fSymbolTables = new LinkedList<SymbolTable>();
@@ -48,6 +49,10 @@ public class SymbolAnalyzer extends DepthFirstAdapter
         node.apply(this);
     }
     
+    public LinkedList<SymbolTable> getSymbolTables()
+    {
+        return fSymbolTables;
+    }
     
     public void inAHtml(AHtml node)
     {
