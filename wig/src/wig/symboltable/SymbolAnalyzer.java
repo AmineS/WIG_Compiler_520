@@ -14,12 +14,20 @@ import wig.node.AField;
 import wig.node.AFunction;
 import wig.node.AHoleHtmlbody;
 import wig.node.AHtml;
+import wig.node.AIdDocument;
+import wig.node.AInput;
 import wig.node.AInputHtmlbody;
 import wig.node.ANameInputattr;
+import wig.node.APlug;
+import wig.node.APlugDocument;
+import wig.node.APlugs;
+import wig.node.AReceive;
+import wig.node.PReceive;
 import wig.node.ASchema;
 import wig.node.ASelectHtmlbody;
 import wig.node.AService;
 import wig.node.ASession;
+import wig.node.AShowStm;
 import wig.node.AStrAttr;
 import wig.node.AVariable;
 import wig.node.Node;
@@ -28,7 +36,10 @@ import wig.node.PField;
 import wig.node.PFunction;
 import wig.node.PHtml;
 import wig.node.PHtmlbody;
+import wig.node.PInput;
 import wig.node.PInputattr;
+import wig.node.PPlug;
+import wig.node.PReceive;
 import wig.node.PSchema;
 import wig.node.PSession;
 import wig.node.PStm;
@@ -139,7 +150,7 @@ public class SymbolAnalyzer extends DepthFirstAdapter
     public void caseACompStm(ACompStm node)
     {
         node.getCompoundstm().apply(this);
-    }
+    }    
     
     public void inACompoundStm(ACompoundstm node)
     {
@@ -174,7 +185,92 @@ public class SymbolAnalyzer extends DepthFirstAdapter
         currentSymbolTable = currentSymbolTable.getNext();
     }
 
+    public void inAShowStm(AShowStm node)
+    {
+        
+    }    
     
+    public void caseAShowStm(AShowStm node)
+    {
+        AReceive receive = null;
+        
+        if (node.getReceive() != null)
+        {
+            receive = (AReceive) node.getReceive();
+        }
+        
+        String htmlName = null;
+        
+        if (node.getDocument() instanceof APlugDocument)
+        {
+            APlugDocument doc = (APlugDocument) node.getDocument();
+            htmlName = doc.getIdentifier().getText().trim();
+        }
+        else
+        {
+            AIdDocument doc = (AIdDocument) node.getDocument();
+            htmlName = doc.getIdentifier().getText().trim();
+        }
+        
+        Symbol symbol = SymbolTable.getSymbol(serviceSymbolTable, htmlName);
+        SymbolTable htmlNameTable = SymbolTable.getScopedSymbolTable(symbol);
+
+        if (receive != null)
+        {
+            LinkedList<PInput> inputList = receive.getInput();
+            
+            for (PInput pi: inputList)
+            {
+                AInput ai = (AInput) pi;
+                
+                if (!(SymbolTable.defSymbol(htmlNameTable, ai.getIdentifier().getText())))
+                {
+                    System.out.println("Error: Identifier '" + ai.getIdentifier().getText() + "' in receive statement is not defined. Line no:" + ai.getIdentifier().getLine());
+                }
+                
+                ai.apply(this);
+            }
+        }
+        
+        node.getDocument().apply(this);
+        node.getReceive().apply(this);
+    }
+    
+    public void outAShowStm(AShowStm node)
+    {
+    }
+    
+    public void caseAPlugs(APlugs node)
+    {
+        LinkedList<PPlug> plugList = node.getPlug();
+        for (PPlug pp: plugList)
+        {
+            pp.apply(this);
+        }
+    }
+        
+    public void caseAPlugDocument(APlugDocument node)
+    {
+        String htmlName = node.getIdentifier().getText();
+        Symbol symbol = SymbolTable.getSymbol(serviceSymbolTable, htmlName);
+        SymbolTable htmlNameTable = SymbolTable.getScopedSymbolTable(symbol);
+        LinkedList<PPlug> plugList = node.getPlug();
+        
+        for (PPlug pp : plugList)
+        {
+            APlug ap = (APlug) pp;
+            
+            // check if the identifier part was defined in the html which has name htmlName
+            if (!(SymbolTable.defSymbol(htmlNameTable, ap.getIdentifier().getText())))
+            {
+                System.out.println("Error: Plug identifier '" + ap.getIdentifier().getText() + "' is not defined. Line no:" + ap.getIdentifier().getLine());
+            }
+            
+            ap.getExp().apply(this);
+            pp.apply(this);
+        }
+        node.getIdentifier().apply(this);
+    }
     
     private void puts(String s)
     {
