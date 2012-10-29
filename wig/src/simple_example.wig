@@ -39,6 +39,7 @@ service {
 		counter = counter + 1;
   	}
   	
+  	dumbopo(1, 2);
     counter = counter + 1;
     
     while (counter>2)

@@ -4,38 +4,20 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Stack;
 
 import wig.analysis.DepthFirstAdapter;
-import wig.node.AArgument;
+import wig.node.ACallExp;
 import wig.node.ACompStm;
 import wig.node.ACompoundstm;
-import wig.node.AField;
+import wig.node.AExpStm;
 import wig.node.AFunction;
-import wig.node.AHoleHtmlbody;
 import wig.node.AHtml;
-import wig.node.AInputHtmlbody;
-import wig.node.ANameInputattr;
-import wig.node.ASchema;
-import wig.node.ASelectHtmlbody;
-import wig.node.AService;
 import wig.node.ASession;
-import wig.node.AStrAttr;
-import wig.node.AVariable;
 import wig.node.Node;
-import wig.node.PArgument;
-import wig.node.PField;
-import wig.node.PFunction;
-import wig.node.PHtml;
 import wig.node.PHtmlbody;
-import wig.node.PInputattr;
-import wig.node.PSchema;
-import wig.node.PSession;
 import wig.node.PStm;
-import wig.node.PType;
 import wig.node.PVariable;
-import wig.node.TIdentifier;
-import wig.symboltable.symbols.*;
+import wig.symboltable.symbols.Symbol;
 
 public class SymbolAnalyzer extends DepthFirstAdapter
 {
@@ -50,6 +32,7 @@ public class SymbolAnalyzer extends DepthFirstAdapter
     public SymbolAnalyzer(SymbolTable symbolTable)
     {
         serviceSymbolTable = symbolTable;
+        currentSymbolTable= serviceSymbolTable;
     }
     public void inAHtml(AHtml node)
     {
@@ -143,7 +126,10 @@ public class SymbolAnalyzer extends DepthFirstAdapter
     
     public void inACompoundStm(ACompoundstm node)
     {
-        currentSymbolTable = currentSymbolTable.getCompoundStatementSymbolTable(node);
+        if(! (node.parent() instanceof AFunction || node.parent() instanceof ASession) )
+        {
+            currentSymbolTable = currentSymbolTable.getCompoundStatementSymbolTable(node);
+        }
     }
     
     public void caseACompoundstm(ACompoundstm node)
@@ -171,7 +157,19 @@ public class SymbolAnalyzer extends DepthFirstAdapter
     
     public void outACompoundStm(ACompoundstm node)
     {
-        currentSymbolTable = currentSymbolTable.getNext();
+        if(! (node.parent() instanceof AFunction || node.parent() instanceof ASession) )
+        {
+            currentSymbolTable = currentSymbolTable.getNext();
+        }
+    }
+    
+    public void caseACallExp(ACallExp node)
+    {
+        String name = node.getIdentifier().getText().trim();
+        if(!SymbolTable.defSymbol(currentSymbolTable, name))
+        {
+            puts("Function name " + name + " undefined.");
+        }
     }
 
     

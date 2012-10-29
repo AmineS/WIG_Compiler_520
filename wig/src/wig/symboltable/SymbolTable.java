@@ -29,12 +29,13 @@ import wig.symboltable.symbols.Symbol;
 public class SymbolTable
 {
     private HashMap<String, Symbol> fTable;
-    private HashMap<ACompoundstm, SymbolTable> compoundStms;
+    private HashMap<ACompoundstm, SymbolTable> fCompoundStms;
     private SymbolTable fNext;
     
     public SymbolTable()
     {
         fTable = new HashMap<String, Symbol>();
+        fCompoundStms = new HashMap<ACompoundstm, SymbolTable>();
         fNext = null;
     }
     
@@ -189,11 +190,11 @@ public class SymbolTable
     
     public void setCompoundStatementSymbolTable(ACompoundstm node, SymbolTable symbolTable)
     {
-        compoundStms.put(node, symbolTable);
+        fCompoundStms.put(node, symbolTable);
     }
     
     public SymbolTable getCompoundStatementSymbolTable(ACompoundstm node)
     {
-        return compoundStms.get(node);
+        return fCompoundStms.get(node);
     }
 }

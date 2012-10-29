@@ -357,7 +357,8 @@ public class SymbolCollector extends DepthFirstAdapter
         
         while(stm_iter.hasNext())
         {
-            stm_iter.next().apply(this);
+            PStm stm = stm_iter.next();
+            stm.apply(this);
         }
         
         outACompoundStm(node);
@@ -365,7 +366,7 @@ public class SymbolCollector extends DepthFirstAdapter
     
     public void outACompoundStm(ACompoundstm node)
     {
-        if(! (node.parent() instanceof AFunction))
+        if(! (node.parent() instanceof AFunction || node.parent() instanceof ASession) )
         {
             fCurrentSymTable = fCurrentSymTable.getNext();
         }
