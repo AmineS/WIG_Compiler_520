@@ -75,11 +75,12 @@ public class SymbolCollector extends DepthFirstAdapter
             }
         }
         
-        List<PHtmlbody> copy = new ArrayList<PHtmlbody>(node.getHtmlbody());
-        for(PHtmlbody e : copy)
+        for (PHtmlbody phb: node.getHtmlbody())
         {
-            e.apply(this);
+            phb.apply(this);
         }
+        
+        node.getIdentifier().apply(this);
         
         outAHtml(node);
     }
@@ -251,7 +252,7 @@ public class SymbolCollector extends DepthFirstAdapter
     }
     
     // We want hole to be in the global scope
-    public void caseHoleHtmlbody(AHoleHtmlbody node)
+    public void caseAHoleHtmlbody(AHoleHtmlbody node)
     {
         String name = node.getIdentifier().toString().trim();
         if(fTraversal == SymbolAnalysisTraversal.COLLECT_IDENTIFIERS)

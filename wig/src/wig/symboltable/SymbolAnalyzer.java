@@ -9,38 +9,23 @@ import wig.analysis.DepthFirstAdapter;
 import wig.node.ACallExp;
 import wig.node.ACompStm;
 import wig.node.ACompoundstm;
-import wig.node.AExpStm;
+
 import wig.node.AFunction;
 import wig.node.AHtml;
 import wig.node.AIdDocument;
 import wig.node.AInput;
-import wig.node.AInputHtmlbody;
-import wig.node.ANameInputattr;
 import wig.node.APlug;
 import wig.node.APlugDocument;
 import wig.node.APlugs;
 import wig.node.AReceive;
-import wig.node.PReceive;
 import wig.node.ASession;
-import wig.node.AInputHtmlbody;
-import wig.node.ANameInputattr;
 import wig.node.AQualifiedLvalue;
-import wig.node.ASchema;
-import wig.node.ASelectHtmlbody;
-import wig.node.AService;
-import wig.node.ASession;
 import wig.node.AShowStm;
 import wig.node.ASimpleLvalue;
-import wig.node.AStrAttr;
-import wig.node.AVariable;
 import wig.node.Node;
 import wig.node.PHtmlbody;
 import wig.node.PInput;
-import wig.node.PInputattr;
 import wig.node.PPlug;
-import wig.node.PReceive;
-import wig.node.PSchema;
-import wig.node.PSession;
 import wig.node.PStm;
 import wig.node.PVariable;
 import wig.symboltable.symbols.Symbol;
@@ -80,9 +65,8 @@ public class SymbolAnalyzer extends DepthFirstAdapter
             symbol = SymbolTable.lookupHierarchy(currentSymbolTable, name);            
             if(symbol == null)
             {
-                puts("Error: Symbol" + name + "not defined." );
+                puts("Error: Symbol " + name + " not defined. Line no:" + node.getIdentifier().getLine() );
             }
-            
         }
                 
         List<PHtmlbody> copy = new ArrayList<PHtmlbody>(node.getHtmlbody());
@@ -90,6 +74,7 @@ public class SymbolAnalyzer extends DepthFirstAdapter
         {
             body.apply(this);
         }        
+        
         outAHtml(node);
     }
     
@@ -188,7 +173,6 @@ public class SymbolAnalyzer extends DepthFirstAdapter
 
     public void inAShowStm(AShowStm node)
     {
-        
     }    
     
     public void caseAShowStm(AShowStm node)
@@ -228,8 +212,6 @@ public class SymbolAnalyzer extends DepthFirstAdapter
                 {
                     System.out.println("Error: Identifier '" + ai.getIdentifier().getText() + "' in receive statement is not defined. Line no:" + ai.getIdentifier().getLine());
                 }
-                
-                ai.apply(this);
             }
         }
         
@@ -255,6 +237,7 @@ public class SymbolAnalyzer extends DepthFirstAdapter
         String htmlName = node.getIdentifier().getText();
         Symbol symbol = SymbolTable.getSymbol(serviceSymbolTable, htmlName);
         SymbolTable htmlNameTable = SymbolTable.getScopedSymbolTable(symbol);
+        
         LinkedList<PPlug> plugList = node.getPlug();
         
         for (PPlug pp : plugList)
@@ -262,7 +245,7 @@ public class SymbolAnalyzer extends DepthFirstAdapter
             APlug ap = (APlug) pp;
             
             // check if the identifier part was defined in the html which has name htmlName
-            if (!(SymbolTable.defSymbol(htmlNameTable, ap.getIdentifier().getText())))
+            if (!(SymbolTable.defSymbol(htmlNameTable, ap.getIdentifier().getText().trim())))
             {
                 System.out.println("Error: Plug identifier '" + ap.getIdentifier().getText() + "' is not defined. Line no:" + ap.getIdentifier().getLine());
             }
@@ -278,7 +261,7 @@ public class SymbolAnalyzer extends DepthFirstAdapter
         String name = node.getIdentifier().getText().trim();
         if(!SymbolTable.defSymbol(currentSymbolTable, name))
         {
-            puts("Function name " + name + " undefined.");
+            puts("Function name " + name + " undefined. Line no: " + node.getIdentifier().getLine() );
         }
     }
 
@@ -294,7 +277,7 @@ public class SymbolAnalyzer extends DepthFirstAdapter
             symbol = SymbolTable.lookupHierarchy(currentSymbolTable, name);            
             if(symbol == null)
             {
-                puts("Error: Symbol" + name + "not defined." );
+                puts("E1rror: Symbol " + name + " not defined. Line no:" + node.getIdentifier().getLine());
             }            
         }
 
@@ -302,7 +285,6 @@ public class SymbolAnalyzer extends DepthFirstAdapter
 
     public void caseAQualifiedLvalue(AQualifiedLvalue node)
     {
-        
         String leftName = node.getLeft().toString().trim();
         String rightName = node.getLeft().toString().trim();        
         Symbol symbolLeft = SymbolTable.getSymbol(currentSymbolTable, leftName);
@@ -313,7 +295,7 @@ public class SymbolAnalyzer extends DepthFirstAdapter
             symbolLeft = SymbolTable.lookupHierarchy(currentSymbolTable, leftName);            
             if(symbolLeft == null)
             {
-                puts("Error: Symbol" + leftName + "not defined." );
+                puts("Error: Symbol" + leftName + "not defined. Line no:" + node.getLeft().getLine() );
             }            
         }
         
@@ -322,7 +304,7 @@ public class SymbolAnalyzer extends DepthFirstAdapter
             symbolRight = SymbolTable.lookupHierarchy(currentSymbolTable, rightName);            
             if(symbolRight == null)
             {
-                puts("Error: Symbol" + rightName + "not defined." );
+                puts("Error: Symbol " + rightName + " not defined. Line no:" + node.getRight().getLine());
             }            
         }        
     }

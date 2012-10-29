@@ -40,7 +40,7 @@ public class Compiler
     {             
         try
         {
-            File inputFile = new File("simple_example.wig");
+            File inputFile = new File("wall.wig");
             FileReader inputReader = new FileReader(inputFile);
             
             Parser p = 
@@ -50,16 +50,17 @@ public class Compiler
                  
             Start tree = p.parse();
 
+            System.out.println("\nCollecting Symbols...");
+            
             SymbolCollector symCollector = new SymbolCollector();
 
             symCollector.analyze(tree);
             
-            System.out.println("LinkedList size: " + symCollector.getSymbolTables().size());
+            System.out.println("\nAnalyzing Symbols...");
             
             SymbolAnalyzer symAnalyzer = new SymbolAnalyzer(symCollector.getServiceTable());
             
             symAnalyzer.analyze(tree);
-            
             
             //SymbolTablePrinter stp = new SymbolTablePrinter(symAnalyzer);
             //stp.printAll();
@@ -79,6 +80,7 @@ public class Compiler
 ////            Start tree2 = p2.parse();
 ////            PrettyPrinter.print(tree2);
 //            
+            
             // generate command line argument reader
             compilerOptions = CompilerOptionsFactory.getOptions();
             cliParser = new PosixParser();
