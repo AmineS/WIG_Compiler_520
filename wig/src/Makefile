@@ -2,6 +2,8 @@
 
 #.PHONY code
 
+$junit_jar_loc = "/home/2010/dbhage/cs520/group-h/wig/src/junit-4.10.jar"
+
 # to compile the code
 code: clean grammar
 	javac wig/lexer/*.java wig/parser/*.java wig/node/*.java wig/analysis/*.java wig/compiler/*.java wig/weeder/*.java wig/commons/cli/*.java wig/symboltable/*.java
@@ -16,12 +18,20 @@ clean:
 
 # tests
 check: 
-	python check.py
+	python wigrun.py ch
 
 # test weeder
 weed:
-	python weed.py
+	python wigrun.py wd
 
 # test pretty printer
 pretty:
-	python pretty.py
+	python wigrun.py pp
+
+# unit testing
+unit:
+	python wigrun.py ut $(junit_jar_loc)
+
+# test symbol phase
+symbol:
+	python wigrun.py st
