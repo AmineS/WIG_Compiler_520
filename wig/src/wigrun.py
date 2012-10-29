@@ -8,7 +8,7 @@ def main():
 	# check
 	if (cmd=="ch"):
 		# run the wig compiler on simple_example.wig with pretty printer and weeder on
-		subprocess.call(["java", "wig.compiler.Compiler", "-pp", "tester_files/simple_example.wig", "wall.wig"]) 
+		subprocess.call(["java", "wig.compiler.Compiler", "-pp", "-pst", "tester_files/wall.wig"]) 
 
 	# weed
 	elif (cmd=="wd"):

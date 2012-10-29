@@ -1,0 +1,53 @@
+
+service {
+  const html Nikolaj =  <html> <body>
+         <input name="itemAmt4" type="text" size="5" value="0">
+     <input name="itemAmt3" type="text" size="5" value="0">
+  <img src="http://www.brics.dk/~mis/babybath.jpg">
+     <p>      <i>You are visitor number! <[no]></i>
+  </body>  </html>;
+
+    schema player
+     {
+		int score;
+		string score;
+	}
+	
+	schema player2
+	{
+		int walou;
+		int blob;
+	}
+	
+  int counter;
+  int hello, hello3;
+  int counter;
+	int dumb1(int arg1, int arg2)
+	{
+		int funcDumb;
+		return 1;
+	}
+	
+	/*
+	haahah
+	*/
+
+  session Access() {
+  counter = 0;
+  	if (counter==0)
+  	{
+		counter = counter + 1;
+  	}
+  	
+  	dumbopo(1, 2);
+    counter = counter + 1;
+    
+    while (counter>2)
+    {
+    	counter = count +1;
+    	counter = counter - 1;
+    }
+    
+    exit plug Nikolaj[no = counter];
+  }
+}
