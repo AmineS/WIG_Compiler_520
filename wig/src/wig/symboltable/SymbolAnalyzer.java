@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Stack;
 
 import wig.analysis.DepthFirstAdapter;
 import wig.node.AArgument;
@@ -17,45 +18,43 @@ import wig.node.AInputHtmlbody;
 import wig.node.ANameInputattr;
 import wig.node.ASchema;
 import wig.node.ASelectHtmlbody;
+import wig.node.AService;
 import wig.node.ASession;
 import wig.node.AStrAttr;
 import wig.node.AVariable;
 import wig.node.Node;
 import wig.node.PArgument;
 import wig.node.PField;
+import wig.node.PFunction;
+import wig.node.PHtml;
 import wig.node.PHtmlbody;
 import wig.node.PInputattr;
+import wig.node.PSchema;
+import wig.node.PSession;
 import wig.node.PStm;
 import wig.node.PType;
 import wig.node.PVariable;
 import wig.node.TIdentifier;
+import wig.symboltable.symbols.*;
 
-
-public class SymbolCollector extends DepthFirstAdapter
+public class SymbolAnalyzer extends DepthFirstAdapter
 {
-    
-    private LinkedList<SymbolTable> fSymbolTables = new LinkedList<SymbolTable>();
-    private SymbolTable fServiceSymTable = new SymbolTable();
-    private SymbolTable fCurrentSymTable = fServiceSymTable;
-    private SymbolAnalysisTraversal fTraversal = SymbolAnalysisTraversal.COLLECT_IDENTIFIERS;
-    
-    
+    SymbolTable serviceSymbolTable;
+    SymbolTable currentSymbolTable;
+
     public void analyze(Node node)
     {
-        fSymbolTables.add(fServiceSymTable);
         node.apply(this);
     }
     
-    public LinkedList<SymbolTable> getSymbolTables()
+    public SymbolAnalyzer(SymbolTable symbolTable)
     {
-        return fSymbolTables;
+        serviceSymbolTable = symbolTable;
     }
-    
     public void inAHtml(AHtml node)
     {
-        SymbolTable scopedSymbolTable = SymbolTable.scopeSymbolTable(fCurrentSymTable);
-        fSymbolTables.add(scopedSymbolTable);
-        fCurrentSymTable = scopedSymbolTable;
+        Symbol symbol = SymbolTable.getSymbol(currentSymbolTable, node.getIdentifier().getText());
+        currentSymbolTable = SymbolTable.getScopedSymbolTable(symbol);
     }
     
     public void caseAHtml(AHtml node)
@@ -63,23 +62,24 @@ public class SymbolCollector extends DepthFirstAdapter
         inAHtml(node);
         
         String name = node.getIdentifier().toString().trim();
+        Symbol symbol;
         
-        if(fTraversal == SymbolAnalysisTraversal.COLLECT_IDENTIFIERS)
+        symbol = SymbolTable.getSymbol(currentSymbolTable, name);
+        
+        if(symbol == null)
         {
-            if(SymbolTable.getSymbol(fCurrentSymTable.getNext(), name) != null)
+            symbol = SymbolTable.lookupHierarchy(currentSymbolTable, name);            
+            if(symbol == null)
             {
-                puts("Error: HTML variable Name " + name + " already defined.");
+                puts("Error: Symbol" + name + "not defined." );
             }
-            else
-            {
-                SymbolTable.putSymbol(fCurrentSymTable.getNext(), name, SymbolKind.HTML_CONST, node, fCurrentSymTable);
-            }
+            
         }
-        
+                
         List<PHtmlbody> copy = new ArrayList<PHtmlbody>(node.getHtmlbody());
-        for(PHtmlbody e : copy)
+        for(PHtmlbody body : copy)
         {
-            e.apply(this);
+            body.apply(this);
         }
         
         outAHtml(node);
@@ -87,72 +87,9 @@ public class SymbolCollector extends DepthFirstAdapter
     
     public void outAHtml(AHtml node)
     {
-        fCurrentSymTable = fCurrentSymTable.getNext();
-    }
+        currentSymbolTable = currentSymbolTable.getNext();
+    }    
     
-    public void inASchema(ASchema node)
-    {
-        SymbolTable scopedSymbolTable = SymbolTable.scopeSymbolTable(fCurrentSymTable);
-        fSymbolTables.add(scopedSymbolTable);
-        fCurrentSymTable = scopedSymbolTable;
-    }
-    
-    public void caseASchema(ASchema node)
-    {
-        inASchema(node);
-        
-        String name = node.getIdentifier().toString().trim();
-        
-        if(fTraversal == SymbolAnalysisTraversal.COLLECT_IDENTIFIERS)
-        {
-            if(SymbolTable.getSymbol(fCurrentSymTable.getNext(), name) != null)
-            {
-                puts("Error: Schema name " + name + " already defined.");
-            }
-            else
-            {
-                SymbolTable.putSymbol(fCurrentSymTable.getNext(), name, SymbolKind.SCHEMA, node, fCurrentSymTable);
-            }
-        }
-        
-        List<PField> copy = new ArrayList<PField>(node.getField());
-        for(PField e : copy)
-        {
-            e.apply(this);
-        }
-        
-        outASchema(node);
-    }
-    
-    public void outASchema(ASchema node)
-    {
-        fCurrentSymTable = fCurrentSymTable.getNext();
-    }
-    
-    public void caseAVariable(AVariable node)
-    {
-        LinkedList<TIdentifier> variables = node.getIdentifier();
-        String name = null;
-        PType type = node.getType();
-        if(fTraversal == SymbolAnalysisTraversal.COLLECT_IDENTIFIERS)
-        {
-            for(TIdentifier variable : variables)
-            {
-                name = variable.toString().trim();
-                if(SymbolTable.getSymbol(fCurrentSymTable, name) != null)
-                {
-                    puts("Error: Variable name " + name + " already defined.");
-                }
-                else
-                {
-                    List<TIdentifier> tmpList = new ArrayList<TIdentifier>();
-                    tmpList.add(new TIdentifier(name));
-                    AVariable g_l_variable = new AVariable(type, tmpList);
-                    SymbolTable.putSymbol(fCurrentSymTable, name, SymbolKind.VARIABLE, g_l_variable, fCurrentSymTable);
-                }
-            }
-        }
-    }
     
     public void inAFunction(AFunction function)
     {
@@ -233,39 +170,6 @@ public class SymbolCollector extends DepthFirstAdapter
     public void outASession(ASession node)
     {
         fCurrentSymTable = fCurrentSymTable.getNext();
-    }
-    
-    public void caseAArgument(AArgument node)
-    {
-        String name = node.getIdentifier().toString().trim();
-        if(fTraversal == SymbolAnalysisTraversal.COLLECT_IDENTIFIERS)
-        {
-            if(SymbolTable.getSymbol(fCurrentSymTable, name) != null)
-            {
-                puts("Error: Argument name " + name + " already defined.");
-            }
-            else
-            {
-                SymbolTable.putSymbol(fCurrentSymTable, name, SymbolKind.ARGUMENT, node, fCurrentSymTable);
-            }
-        }
-    }
-    
-    // We want hole to be in the global scope
-    public void caseHoleHtmlbody(AHoleHtmlbody node)
-    {
-        String name = node.getIdentifier().toString().trim();
-        if(fTraversal == SymbolAnalysisTraversal.COLLECT_IDENTIFIERS)
-        {
-            if(SymbolTable.getSymbol(fCurrentSymTable.getNext(), name) != null)
-            {
-                puts("Error: Hole name " + name + " already defined.");
-            }
-            else
-            {
-                SymbolTable.putSymbol(fCurrentSymTable.getNext(), name, SymbolKind.HOLE, node, fCurrentSymTable);
-            }
-        }
     }
     
     public void caseAInputHtmlbody(AInputHtmlbody node)
@@ -389,10 +293,5 @@ public class SymbolCollector extends DepthFirstAdapter
     {
         System.out.print(s + "\n");
         System.out.flush();
-    }
-    
-    public SymbolTable getServiceTable()
-    {
-        return this.fServiceSymTable;
-    }
+    }            
 }

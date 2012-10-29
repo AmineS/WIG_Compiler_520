@@ -3,6 +3,8 @@ package wig.symboltable;
 import java.util.HashMap;
 import java.util.LinkedList;
 
+import wig.symboltable.symbols.Symbol;
+
 public class SymbolTablePrinter
 {
 
