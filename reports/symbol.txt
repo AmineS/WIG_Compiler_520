@@ -28,6 +28,8 @@ Symbol table object has the following fields:
 	- HashMap<String, Symbol> table
 	- fCompoundstm----> FAIZ
 	- SymbolTable next that scopes the current one
+
+We implemented methods to set, get and lookup the hierarchy for a symbol.
 > have implemented the analysis of identifier uses;
 	
 Test cases covered:
