@@ -36,8 +36,7 @@ public class SymbolCollector extends DepthFirstAdapter
     
     private LinkedList<SymbolTable> fSymbolTables = new LinkedList<SymbolTable>();
     private SymbolTable fServiceSymTable = new SymbolTable();
-    private SymbolTable fCurrentSymTable = fServiceSymTable;
-    private SymbolAnalysisTraversal fTraversal = SymbolAnalysisTraversal.COLLECT_IDENTIFIERS;    
+    private SymbolTable fCurrentSymTable = fServiceSymTable;    
     
     public void collect(Node node)
     {
@@ -63,17 +62,14 @@ public class SymbolCollector extends DepthFirstAdapter
         
         String name = node.getIdentifier().toString().trim();
         
-        if(fTraversal == SymbolAnalysisTraversal.COLLECT_IDENTIFIERS)
+        if(SymbolTable.getSymbol(fCurrentSymTable.getNext(), name) != null)
         {
-            if(SymbolTable.getSymbol(fCurrentSymTable.getNext(), name) != null)
-            {
-                puts("Error: HTML variable Name " + name + " already defined.");
-                System.exit(1);
-            }
-            else
-            {
-                SymbolTable.putSymbol(fCurrentSymTable.getNext(), name, SymbolKind.HTML_CONST, node, fCurrentSymTable);
-            }
+            puts("Error: HTML variable Name " + name + " already defined.");
+            System.exit(1);
+        }
+        else
+        {
+            SymbolTable.putSymbol(fCurrentSymTable.getNext(), name, SymbolKind.HTML_CONST, node, fCurrentSymTable);
         }
         
         for (PHtmlbody phb: node.getHtmlbody())
@@ -104,17 +100,14 @@ public class SymbolCollector extends DepthFirstAdapter
         
         String name = node.getIdentifier().toString().trim();
         
-        if(fTraversal == SymbolAnalysisTraversal.COLLECT_IDENTIFIERS)
+        if(SymbolTable.getSymbol(fCurrentSymTable.getNext(), name) != null)
         {
-            if(SymbolTable.getSymbol(fCurrentSymTable.getNext(), name) != null)
-            {
-                puts("Error: Schema name " + name + " already defined.");
-                System.exit(1);
-            }
-            else
-            {
-                SymbolTable.putSymbol(fCurrentSymTable.getNext(), name, SymbolKind.SCHEMA, node, fCurrentSymTable);
-            }
+            puts("Error: Schema name " + name + " already defined.");
+            System.exit(1);
+        }
+        else
+        {
+            SymbolTable.putSymbol(fCurrentSymTable.getNext(), name, SymbolKind.SCHEMA, node, fCurrentSymTable);
         }
         
         List<PField> copy = new ArrayList<PField>(node.getField());
@@ -136,23 +129,21 @@ public class SymbolCollector extends DepthFirstAdapter
         LinkedList<TIdentifier> variables = node.getIdentifier();
         String name = null;
         PType type = node.getType();
-        if(fTraversal == SymbolAnalysisTraversal.COLLECT_IDENTIFIERS)
+        
+        for(TIdentifier variable : variables)
         {
-            for(TIdentifier variable : variables)
+            name = variable.toString().trim();
+            if(SymbolTable.getSymbol(fCurrentSymTable, name) != null)
             {
-                name = variable.toString().trim();
-                if(SymbolTable.getSymbol(fCurrentSymTable, name) != null)
-                {
-                    puts("Error: Variable name " + name + " already defined.");
-                    System.exit(1);
-                }
-                else
-                {
-                    List<TIdentifier> tmpList = new ArrayList<TIdentifier>();
-                    tmpList.add(new TIdentifier(name));
-                    AVariable g_l_variable = new AVariable(type, tmpList);
-                    SymbolTable.putSymbol(fCurrentSymTable, name, SymbolKind.VARIABLE, g_l_variable, fCurrentSymTable);
-                }
+                puts("Error: Variable name " + name + " already defined.");
+                System.exit(1);
+            }
+            else
+            {
+                List<TIdentifier> tmpList = new ArrayList<TIdentifier>();
+                tmpList.add(new TIdentifier(name));
+                AVariable g_l_variable = new AVariable(type, tmpList);
+                SymbolTable.putSymbol(fCurrentSymTable, name, SymbolKind.VARIABLE, g_l_variable, fCurrentSymTable);
             }
         }
     }
@@ -169,17 +160,14 @@ public class SymbolCollector extends DepthFirstAdapter
         inAFunction(node);
 
         String name = node.getIdentifier().toString().trim();
-        if(fTraversal == SymbolAnalysisTraversal.COLLECT_IDENTIFIERS)
+        if(SymbolTable.getSymbol(fCurrentSymTable.getNext(), name) != null)
         {
-            if(SymbolTable.getSymbol(fCurrentSymTable.getNext(), name) != null)
-            {
-                puts("Error: Function name " + name + " already defined.");
-                System.exit(1);
-            }
-            else
-            {
-                SymbolTable.putSymbol(fCurrentSymTable.getNext(), name, SymbolKind.FUNCTION, node, fCurrentSymTable);                
-            }
+            puts("Error: Function name " + name + " already defined.");
+            System.exit(1);
+        }
+        else
+        {
+            SymbolTable.putSymbol(fCurrentSymTable.getNext(), name, SymbolKind.FUNCTION, node, fCurrentSymTable);                
         }
         
         if(node.getCompoundstm() != null)
@@ -213,17 +201,14 @@ public class SymbolCollector extends DepthFirstAdapter
         inASession(node);
 
         String name = node.getIdentifier().toString().trim();
-        if(fTraversal == SymbolAnalysisTraversal.COLLECT_IDENTIFIERS)
+        if(SymbolTable.getSymbol(fCurrentSymTable.getNext(), name) != null)
         {
-            if(SymbolTable.getSymbol(fCurrentSymTable.getNext(), name) != null)
-            {
-                puts("Error: Session name " + name + " already defined.");
-                System.exit(1);
-            }
-            else
-            {
-                SymbolTable.putSymbol(fCurrentSymTable.getNext(), name, SymbolKind.SESSION, node, fCurrentSymTable);
-            }
+            puts("Error: Session name " + name + " already defined.");
+            System.exit(1);
+        }
+        else
+        {
+            SymbolTable.putSymbol(fCurrentSymTable.getNext(), name, SymbolKind.SESSION, node, fCurrentSymTable);
         }
         
         if(node.getCompoundstm() != null)
@@ -243,17 +228,14 @@ public class SymbolCollector extends DepthFirstAdapter
     public void caseAArgument(AArgument node)
     {
         String name = node.getIdentifier().toString().trim();
-        if(fTraversal == SymbolAnalysisTraversal.COLLECT_IDENTIFIERS)
+        if(SymbolTable.getSymbol(fCurrentSymTable, name) != null)
         {
-            if(SymbolTable.getSymbol(fCurrentSymTable, name) != null)
-            {
-                puts("Error: Argument name " + name + " already defined.");
-                System.exit(1);
-            }
-            else
-            {
-                SymbolTable.putSymbol(fCurrentSymTable, name, SymbolKind.ARGUMENT, node, fCurrentSymTable);
-            }
+            puts("Error: Argument name " + name + " already defined.");
+            System.exit(1);
+        }
+        else
+        {
+            SymbolTable.putSymbol(fCurrentSymTable, name, SymbolKind.ARGUMENT, node, fCurrentSymTable);
         }
     }
     
@@ -261,17 +243,14 @@ public class SymbolCollector extends DepthFirstAdapter
     public void caseAHoleHtmlbody(AHoleHtmlbody node)
     {
         String name = node.getIdentifier().toString().trim();
-        if(fTraversal == SymbolAnalysisTraversal.COLLECT_IDENTIFIERS)
+        if(SymbolTable.getSymbol(fCurrentSymTable, name) != null)
         {
-            if(SymbolTable.getSymbol(fCurrentSymTable, name) != null)
-            {
-                puts("Error: Hole name " + name + " already defined.");
-                System.exit(1);
-            }
-            else
-            {
-                SymbolTable.putSymbol(fCurrentSymTable, name, SymbolKind.HOLE, node, fCurrentSymTable);
-            }
+            puts("Error: Hole name " + name + " already defined.");
+            System.exit(1);
+        }
+        else
+        {
+            SymbolTable.putSymbol(fCurrentSymTable, name, SymbolKind.HOLE, node, fCurrentSymTable);
         }
     }
     
@@ -290,17 +269,14 @@ public class SymbolCollector extends DepthFirstAdapter
         }
         if(name != null)
         {
-            if(fTraversal == SymbolAnalysisTraversal.COLLECT_IDENTIFIERS)
+            if(SymbolTable.getSymbol(fCurrentSymTable, name) != null)
             {
-                if(SymbolTable.getSymbol(fCurrentSymTable, name) != null)
-                {
-                    puts("Error: Input name " + name + " already defined.");
-                    System.exit(1);
-                }
-                else
-                {
-                    SymbolTable.putSymbol(fCurrentSymTable, name, SymbolKind.INPUT_TAG, node, fCurrentSymTable);
-                }
+                puts("Error: Input name " + name + " already defined.");
+                System.exit(1);
+            }
+            else
+            {
+                SymbolTable.putSymbol(fCurrentSymTable, name, SymbolKind.INPUT_TAG, node, fCurrentSymTable);
             }
         }
     }
@@ -319,17 +295,14 @@ public class SymbolCollector extends DepthFirstAdapter
         }
         if(name != null)
         {
-            if(fTraversal == SymbolAnalysisTraversal.COLLECT_IDENTIFIERS)
+            if(SymbolTable.getSymbol(fCurrentSymTable, name) != null)
             {
-                if(SymbolTable.getSymbol(fCurrentSymTable, name) != null)
-                {
-                    puts("Error: Select name " + name + " already defined.");
-                    System.exit(1);
-                }
-                else
-                {
-                    SymbolTable.putSymbol(fCurrentSymTable, name, SymbolKind.SELECT_TAG, node, fCurrentSymTable);
-                }
+                puts("Error: Select name " + name + " already defined.");
+                System.exit(1);
+            }
+            else
+            {
+                SymbolTable.putSymbol(fCurrentSymTable, name, SymbolKind.SELECT_TAG, node, fCurrentSymTable);
             }
         }
     }
