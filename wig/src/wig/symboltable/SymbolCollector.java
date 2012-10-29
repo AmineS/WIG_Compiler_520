@@ -37,8 +37,7 @@ public class SymbolCollector extends DepthFirstAdapter
     private LinkedList<SymbolTable> fSymbolTables = new LinkedList<SymbolTable>();
     private SymbolTable fServiceSymTable = new SymbolTable();
     private SymbolTable fCurrentSymTable = fServiceSymTable;
-    private SymbolAnalysisTraversal fTraversal = SymbolAnalysisTraversal.COLLECT_IDENTIFIERS;
-    
+    private SymbolAnalysisTraversal fTraversal = SymbolAnalysisTraversal.COLLECT_IDENTIFIERS;    
     
     public void analyze(Node node)
     {
@@ -357,7 +356,8 @@ public class SymbolCollector extends DepthFirstAdapter
         
         while(stm_iter.hasNext())
         {
-            stm_iter.next().apply(this);
+            PStm stm = stm_iter.next();
+            stm.apply(this);
         }
         
         outACompoundStm(node);
@@ -365,7 +365,7 @@ public class SymbolCollector extends DepthFirstAdapter
     
     public void outACompoundStm(ACompoundstm node)
     {
-        if(! (node.parent() instanceof AFunction))
+        if(! (node.parent() instanceof AFunction || node.parent() instanceof ASession) )
         {
             fCurrentSymTable = fCurrentSymTable.getNext();
         }

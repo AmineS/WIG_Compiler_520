@@ -4,15 +4,13 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Stack;
 
 import wig.analysis.DepthFirstAdapter;
-import wig.node.AArgument;
+import wig.node.ACallExp;
 import wig.node.ACompStm;
 import wig.node.ACompoundstm;
-import wig.node.AField;
+import wig.node.AExpStm;
 import wig.node.AFunction;
-import wig.node.AHoleHtmlbody;
 import wig.node.AHtml;
 import wig.node.AIdDocument;
 import wig.node.AInput;
@@ -23,18 +21,19 @@ import wig.node.APlugDocument;
 import wig.node.APlugs;
 import wig.node.AReceive;
 import wig.node.PReceive;
+import wig.node.ASession;
+import wig.node.AInputHtmlbody;
+import wig.node.ANameInputattr;
+import wig.node.AQualifiedLvalue;
 import wig.node.ASchema;
 import wig.node.ASelectHtmlbody;
 import wig.node.AService;
 import wig.node.ASession;
 import wig.node.AShowStm;
+import wig.node.ASimpleLvalue;
 import wig.node.AStrAttr;
 import wig.node.AVariable;
 import wig.node.Node;
-import wig.node.PArgument;
-import wig.node.PField;
-import wig.node.PFunction;
-import wig.node.PHtml;
 import wig.node.PHtmlbody;
 import wig.node.PInput;
 import wig.node.PInputattr;
@@ -43,10 +42,8 @@ import wig.node.PReceive;
 import wig.node.PSchema;
 import wig.node.PSession;
 import wig.node.PStm;
-import wig.node.PType;
 import wig.node.PVariable;
-import wig.node.TIdentifier;
-import wig.symboltable.symbols.*;
+import wig.symboltable.symbols.Symbol;
 
 public class SymbolAnalyzer extends DepthFirstAdapter
 {
@@ -61,6 +58,7 @@ public class SymbolAnalyzer extends DepthFirstAdapter
     public SymbolAnalyzer(SymbolTable symbolTable)
     {
         serviceSymbolTable = symbolTable;
+        currentSymbolTable= serviceSymbolTable;
     }
     public void inAHtml(AHtml node)
     {
@@ -91,8 +89,7 @@ public class SymbolAnalyzer extends DepthFirstAdapter
         for(PHtmlbody body : copy)
         {
             body.apply(this);
-        }
-        
+        }        
         outAHtml(node);
     }
     
@@ -154,13 +151,15 @@ public class SymbolAnalyzer extends DepthFirstAdapter
     
     public void inACompoundStm(ACompoundstm node)
     {
-        currentSymbolTable = currentSymbolTable.getCompoundStatementSymbolTable(node);
+        if(! (node.parent() instanceof AFunction || node.parent() instanceof ASession) )
+        {
+            currentSymbolTable = currentSymbolTable.getCompoundStatementSymbolTable(node);
+        }
     }
     
     public void caseACompoundstm(ACompoundstm node)
     {        
-        inACompoundStm(node);        
-        
+        inACompoundStm(node); 
         
         LinkedList<PStm> stm_list = node.getStm();
         LinkedList<PVariable> var_list = node.getVariable();
@@ -175,14 +174,16 @@ public class SymbolAnalyzer extends DepthFirstAdapter
         while(stm_iter.hasNext())
         {
             stm_iter.next().apply(this);
-        }
-        
+        }        
         outACompoundStm(node);
     }
     
     public void outACompoundStm(ACompoundstm node)
     {
-        currentSymbolTable = currentSymbolTable.getNext();
+        if(! (node.parent() instanceof AFunction || node.parent() instanceof ASession) )
+        {
+            currentSymbolTable = currentSymbolTable.getNext();
+        }
     }
 
     public void inAShowStm(AShowStm node)
@@ -270,6 +271,60 @@ public class SymbolAnalyzer extends DepthFirstAdapter
             pp.apply(this);
         }
         node.getIdentifier().apply(this);
+    }
+    
+    public void caseACallExp(ACallExp node)
+    {
+        String name = node.getIdentifier().getText().trim();
+        if(!SymbolTable.defSymbol(currentSymbolTable, name))
+        {
+            puts("Function name " + name + " undefined.");
+        }
+    }
+
+    public void caseASimpleLvalue(ASimpleLvalue node)
+    {                   
+        String name = node.getIdentifier().toString().trim();
+        Symbol symbol;
+        
+        symbol = SymbolTable.getSymbol(currentSymbolTable, name);
+        
+        if(symbol == null)
+        {
+            symbol = SymbolTable.lookupHierarchy(currentSymbolTable, name);            
+            if(symbol == null)
+            {
+                puts("Error: Symbol" + name + "not defined." );
+            }            
+        }
+
+    }
+
+    public void caseAQualifiedLvalue(AQualifiedLvalue node)
+    {
+        
+        String leftName = node.getLeft().toString().trim();
+        String rightName = node.getLeft().toString().trim();        
+        Symbol symbolLeft = SymbolTable.getSymbol(currentSymbolTable, leftName);
+        Symbol symbolRight = SymbolTable.getSymbol(currentSymbolTable, rightName);
+        
+        if(symbolLeft == null)
+        {
+            symbolLeft = SymbolTable.lookupHierarchy(currentSymbolTable, leftName);            
+            if(symbolLeft == null)
+            {
+                puts("Error: Symbol" + leftName + "not defined." );
+            }            
+        }
+        
+        if(symbolRight == null)
+        {
+            symbolRight = SymbolTable.lookupHierarchy(currentSymbolTable, rightName);            
+            if(symbolRight == null)
+            {
+                puts("Error: Symbol" + rightName + "not defined." );
+            }            
+        }        
     }
     
     private void puts(String s)

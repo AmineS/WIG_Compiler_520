@@ -21,6 +21,7 @@ import wig.parser.Parser;
 import wig.parser.ParserException;
 import wig.prettyprinter.PrettyPrinter;
 
+import wig.symboltable.SymbolAnalyzer;
 import wig.symboltable.SymbolCollector;
 
 import wig.weeder.Weeder;
@@ -49,11 +50,16 @@ public class Compiler
                  
             Start tree = p.parse();
 
-            SymbolCollector symAnalyzer = new SymbolCollector();
+            SymbolCollector symCollector = new SymbolCollector();
 
+            symCollector.analyze(tree);
+            
+            System.out.println("LinkedList size: " + symCollector.getSymbolTables().size());
+            
+            SymbolAnalyzer symAnalyzer = new SymbolAnalyzer(symCollector.getServiceTable());
+            
             symAnalyzer.analyze(tree);
             
-            System.out.println("LinkedList size: " + symAnalyzer.getSymbolTables().size());
             
             //SymbolTablePrinter stp = new SymbolTablePrinter(symAnalyzer);
             //stp.printAll();
