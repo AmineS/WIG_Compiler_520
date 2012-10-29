@@ -37,8 +37,7 @@ public class SymbolCollector extends DepthFirstAdapter
     private LinkedList<SymbolTable> fSymbolTables = new LinkedList<SymbolTable>();
     private SymbolTable fServiceSymTable = new SymbolTable();
     private SymbolTable fCurrentSymTable = fServiceSymTable;
-    private SymbolAnalysisTraversal fTraversal = SymbolAnalysisTraversal.COLLECT_IDENTIFIERS;
-    
+    private SymbolAnalysisTraversal fTraversal = SymbolAnalysisTraversal.COLLECT_IDENTIFIERS;    
     
     public void analyze(Node node)
     {

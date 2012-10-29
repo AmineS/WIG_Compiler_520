@@ -13,6 +13,16 @@ import wig.node.AExpStm;
 import wig.node.AFunction;
 import wig.node.AHtml;
 import wig.node.ASession;
+import wig.node.AInputHtmlbody;
+import wig.node.ANameInputattr;
+import wig.node.AQualifiedLvalue;
+import wig.node.ASchema;
+import wig.node.ASelectHtmlbody;
+import wig.node.AService;
+import wig.node.ASession;
+import wig.node.ASimpleLvalue;
+import wig.node.AStrAttr;
+import wig.node.AVariable;
 import wig.node.Node;
 import wig.node.PHtmlbody;
 import wig.node.PStm;
@@ -63,8 +73,7 @@ public class SymbolAnalyzer extends DepthFirstAdapter
         for(PHtmlbody body : copy)
         {
             body.apply(this);
-        }
-        
+        }        
         outAHtml(node);
     }
     
@@ -134,8 +143,7 @@ public class SymbolAnalyzer extends DepthFirstAdapter
     
     public void caseACompoundstm(ACompoundstm node)
     {        
-        inACompoundStm(node);        
-        
+        inACompoundStm(node); 
         
         LinkedList<PStm> stm_list = node.getStm();
         LinkedList<PVariable> var_list = node.getVariable();
@@ -150,8 +158,7 @@ public class SymbolAnalyzer extends DepthFirstAdapter
         while(stm_iter.hasNext())
         {
             stm_iter.next().apply(this);
-        }
-        
+        }        
         outACompoundStm(node);
     }
     
@@ -172,7 +179,50 @@ public class SymbolAnalyzer extends DepthFirstAdapter
         }
     }
 
-    
+    public void caseASimpleLvalue(ASimpleLvalue node)
+    {                   
+        String name = node.getIdentifier().toString().trim();
+        Symbol symbol;
+        
+        symbol = SymbolTable.getSymbol(currentSymbolTable, name);
+        
+        if(symbol == null)
+        {
+            symbol = SymbolTable.lookupHierarchy(currentSymbolTable, name);            
+            if(symbol == null)
+            {
+                puts("Error: Symbol" + name + "not defined." );
+            }            
+        }
+
+    }
+
+    public void caseAQualifiedLvalue(AQualifiedLvalue node)
+    {
+        
+        String leftName = node.getLeft().toString().trim();
+        String rightName = node.getLeft().toString().trim();        
+        Symbol symbolLeft = SymbolTable.getSymbol(currentSymbolTable, leftName);
+        Symbol symbolRight = SymbolTable.getSymbol(currentSymbolTable, rightName);
+        
+        if(symbolLeft == null)
+        {
+            symbolLeft = SymbolTable.lookupHierarchy(currentSymbolTable, leftName);            
+            if(symbolLeft == null)
+            {
+                puts("Error: Symbol" + leftName + "not defined." );
+            }            
+        }
+        
+        if(symbolRight == null)
+        {
+            symbolRight = SymbolTable.lookupHierarchy(currentSymbolTable, rightName);            
+            if(symbolRight == null)
+            {
+                puts("Error: Symbol" + rightName + "not defined." );
+            }            
+        }        
+    }
     
     private void puts(String s)
     {
