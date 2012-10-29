@@ -55,16 +55,12 @@ public class SymbolAnalyzer extends DepthFirstAdapter
         inAHtml(node);
         
         String name = node.getIdentifier().toString().trim();
-        Symbol symbol;
         
-        symbol = SymbolTable.getSymbol(currentSymbolTable, name);
-        
-        if(symbol == null)
+        if(SymbolTable.getSymbol(currentSymbolTable, name) == null)
         {
-            symbol = SymbolTable.lookupHierarchy(currentSymbolTable, name);            
-            if(symbol == null)
+            if(SymbolTable.lookupHierarchy(currentSymbolTable, name) == null)
             {
-                puts("Error: Symbol" + name + "not defined." );
+                puts("Error: Symbol " + name + " not defined." );
             }
             
         }
@@ -191,7 +187,7 @@ public class SymbolAnalyzer extends DepthFirstAdapter
             symbol = SymbolTable.lookupHierarchy(currentSymbolTable, name);            
             if(symbol == null)
             {
-                puts("Error: Symbol" + name + "not defined." );
+                puts("Error: Symbol " + name + " not defined." );
             }            
         }
 
@@ -210,7 +206,7 @@ public class SymbolAnalyzer extends DepthFirstAdapter
             symbolLeft = SymbolTable.lookupHierarchy(currentSymbolTable, leftName);            
             if(symbolLeft == null)
             {
-                puts("Error: Symbol" + leftName + "not defined." );
+                puts("Error: Symbol " + leftName + " not defined." );
             }            
         }
         
@@ -219,7 +215,7 @@ public class SymbolAnalyzer extends DepthFirstAdapter
             symbolRight = SymbolTable.lookupHierarchy(currentSymbolTable, rightName);            
             if(symbolRight == null)
             {
-                puts("Error: Symbol" + rightName + "not defined." );
+                puts("Error: Symbol " + rightName + " not defined." );
             }            
         }        
     }

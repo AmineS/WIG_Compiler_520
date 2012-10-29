@@ -1,0 +1,44 @@
+> have defined the kinds of identifiers that occur in WIG programs;
+
+The kinds of identifiers that occur in WIG programs are:
+	- HTML_CONST
+	- INPUT_TAG
+	- SELECT_TAG
+	- HOLE
+	- SCHEMA
+	- VARIABLE
+	- FUNCTION
+	- ARGUMENT
+	- SESSION
+	- FIELD
+
+> have decided what symbol information is relevant to each kind; have defined the appropriate SYMBOL (C) or Symbol (Java) type;
+
+Symbol object has the following fields:
+	
+	- String name
+	- Symbol next to handle collisions
+	- The example code provided in the slides uses a union to hold the node value a symbol has.
+	Since we are coding in JAVA we extended the Symbol abstract class into specialized classes like SSession for example which has a value node of type session.
+	- We have a Symbol Table weaved with a symbol for Session, Schema, Function, Session.
+
+> have implemented the construction of symbol tables;
+
+Symbol table object has the following fields:	
+	- HashMap<String, Symbol> table
+	- fCompoundstm----> FAIZ
+	- SymbolTable next that scopes the current one
+> have implemented the analysis of identifier uses;
+	
+Test cases covered:
+
+	- HTML const undefined
+	- FUNCTION undefined
+	- VARIABLE undefined
+	- SIMEPLE_L_VALUE undefined
+
+> have tested your implementation, by:
+	> printing out a symbol table for a representative program and comparing it to a manual construction;
+	> writing test programs that provoke every error message; and making sure your compiler handles either these old examples and the 2009 class benchmarks (previous years are important, but not critical like 2009) or prints an error message if not;
+> have added a command-line switch that enables (or disables) the symbol table phase; and
+> have added a symbol target to your Makefile or build.xml for testing the symbol table.
