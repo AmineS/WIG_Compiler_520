@@ -22,16 +22,22 @@ Symbol object has the following fields:
 	Since we are coding in JAVA we extended the Symbol abstract class into specialized classes like SSession for example which has a value node of type session.
 	- We have a Symbol Table weaved with a symbol for Session, Schema, Function, Session.
 
-> have implemented the construction of symbol tables;
+Symbol Tables
 
-Symbol table object has the following fields:	
+Symbol tables existed as specific hashmaps for each scope. The root hash map is the service hash map and it maps identifer strings to their specicic symbol. A type symbol is an abstract implementation with sub-classes enforcing type safety. Certain symbols such as functions have their own scope and thus have their own symbol tables. The symbols for the functions contain a reference to their symbol table that is added upon construction of the symbol table. The hash maps themselves exist in a symbol table object that provides specific functionality for our wig implementation. 
+
+A Symbol table object has the following fields:	
 	- HashMap<String, Symbol> table
-	- fCompoundstm----> FAIZ
+	- fCompoundstm----> since compound statements have their own specific scope but no unique identifier, a specific hashmap in each symbol table is used to map compound statement nodes to their specific scope. Special getters and setters use this table for compound statements. 
+
 	- SymbolTable next that scopes the current one
 
-We implemented methods to set, get and lookup the hierarchy for a symbol.
-> have implemented the analysis of identifier uses;
+We implemented methods to set, get and lookup the hierarchy for a symbol. These methods are then used in the second pass by the SymbolAnalyzer. 
 	
+Symbol Analyzer
+
+The symbol analyzer builds on the symbol tables created during the Symbol Collection. It is initialized with with the symbol table for the service that is passed in to it. The analyzer then traverses through the AST and when it reaches a node that defines its own scope, it pushes it into the current symbol table. Once it exits that node it pops it off (by assigning current symbol table its next value, which is the next table in the hierarchy). Once the traversal reaches either a terminal statement or expression, it pulls all the identifiers and checks if they exist in the current symbol table context, if not it checks if they exist in the hierarchy. The check for duplicate declarations is already done in the collector. If the symbol has not been declared anywhere within a reachable scope, the symbol analyzer declares an error. 
+
 Test cases covered:
 
 	- HTML const undefined
@@ -45,7 +51,3 @@ Test cases covered:
 > have added a command-line switch that enables (or disables) the symbol table phase; and
 > have added a symbol target to your Makefile or build.xml for testing the symbol table.
 
--------------------------------------------------------------------------
-Symbol Analyzer
-
-The symbol analyzer builds on the symbol tables created during the Symbol Collection. It is initialized with with the symbol table for the service that is passed in to it. The analyzer then traverses through the AST and when it reaches a node that defines its own scope, it pushes it into the current symbol table. Once it exits that node it pops it off (by assigning current symbol table its next value, which is the next table in the hierarchy). Once the traversal reaches either a terminal statement or expression, it pulls all the identifiers and checks if they exist in the current symbol table context, if not it checks if they exist in the hierarchy. The check for duplicate declarations is already done in the collector. If the symbol has not been declared anywhere within a reachable scope, the symbol analyzer declares an error. 
