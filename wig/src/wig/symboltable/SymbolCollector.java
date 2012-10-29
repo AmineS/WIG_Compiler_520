@@ -257,13 +257,13 @@ public class SymbolCollector extends DepthFirstAdapter
         String name = node.getIdentifier().toString().trim();
         if(fTraversal == SymbolAnalysisTraversal.COLLECT_IDENTIFIERS)
         {
-            if(SymbolTable.getSymbol(fCurrentSymTable.getNext(), name) != null)
+            if(SymbolTable.getSymbol(fCurrentSymTable, name) != null)
             {
                 puts("Error: Hole name " + name + " already defined.");
             }
             else
             {
-                SymbolTable.putSymbol(fCurrentSymTable.getNext(), name, SymbolKind.HOLE, node, fCurrentSymTable);
+                SymbolTable.putSymbol(fCurrentSymTable, name, SymbolKind.HOLE, node, fCurrentSymTable);
             }
         }
     }

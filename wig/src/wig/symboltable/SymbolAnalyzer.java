@@ -91,11 +91,10 @@ public class SymbolAnalyzer extends DepthFirstAdapter
     }    
     
     
-    public void inAFunction(AFunction function)
+    public void inAFunction(AFunction node)
     {
-        SymbolTable scopedSymbolTable = SymbolTable.scopeSymbolTable(fCurrentSymTable);
-        fSymbolTables.add(scopedSymbolTable);
-        fCurrentSymTable = scopedSymbolTable;
+        Symbol symbol = SymbolTable.getSymbol(currentSymbolTable, node.getIdentifier().getText());
+        currentSymbolTable = SymbolTable.getScopedSymbolTable(symbol);
     }
     
     public void caseAFunction(AFunction node)
@@ -129,16 +128,15 @@ public class SymbolAnalyzer extends DepthFirstAdapter
         outAFunction(node);
     }
     
-    public void outAFunction(AFunction function)
+    public void outAFunction(AFunction node)
     {
-        fCurrentSymTable = fCurrentSymTable.getNext();
+        currentSymbolTable = currentSymbolTable.getNext();
     }
 
     public void inASession(ASession node)
     {
-        SymbolTable scopedSymbolTable = SymbolTable.scopeSymbolTable(fCurrentSymTable);
-        fSymbolTables.add(scopedSymbolTable);
-        fCurrentSymTable = scopedSymbolTable;
+        Symbol symbol = SymbolTable.getSymbol(currentSymbolTable, node.getIdentifier().getText());
+        currentSymbolTable = SymbolTable.getScopedSymbolTable(symbol);
     }
     
     public void caseASession(ASession node)
@@ -169,7 +167,7 @@ public class SymbolAnalyzer extends DepthFirstAdapter
     
     public void outASession(ASession node)
     {
-        fCurrentSymTable = fCurrentSymTable.getNext();
+        currentSymbolTable = currentSymbolTable.getNext();
     }
     
     public void caseAInputHtmlbody(AInputHtmlbody node)
@@ -270,7 +268,7 @@ public class SymbolAnalyzer extends DepthFirstAdapter
     {
         if(! (node.parent() instanceof AFunction))
         {
-            fCurrentSymTable = fCurrentSymTable.getNext();
+            currentSymbolTable = currentSymbolTable.getNext();
         }
     }
     
