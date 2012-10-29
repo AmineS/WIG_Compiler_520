@@ -2,7 +2,15 @@
 
 #.PHONY code
 
-$junit_jar_loc = "/home/2010/dbhage/cs520/group-h/wig/src/junit-4.10.jar"
+junit_jar_loc="/home/2010/dbhage/cs520/group-h/wig/src/junit-4.10.jar"
+
+all:	
+	make code
+	make check
+	make weed
+	make pretty
+	make unit
+	make symbol
 
 # to compile the code
 code: clean grammar
