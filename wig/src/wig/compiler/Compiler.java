@@ -39,53 +39,12 @@ public class Compiler
     public static void main(String[] args)
     {             
         try
-        {
-            File inputFile = new File("wall.wig");
-            FileReader inputReader = new FileReader(inputFile);
-            
-            Parser p = 
-                    new Parser (
-                      new Lexer (
-                         new PushbackReader(inputReader, 1024)));
-                 
-            Start tree = p.parse();
-
-            System.out.println("\nCollecting Symbols...");
-            
-            SymbolCollector symCollector = new SymbolCollector();
-
-            symCollector.analyze(tree);
-            
-            System.out.println("\nAnalyzing Symbols...");
-            
-            SymbolAnalyzer symAnalyzer = new SymbolAnalyzer(symCollector.getServiceTable());
-            
-            symAnalyzer.analyze(tree);
-            
-            //SymbolTablePrinter stp = new SymbolTablePrinter(symAnalyzer);
-            //stp.printAll();
-           
-            
-//            //Weeder.weed(tree);
-//            PrettyPrinter.print(tree);
-////            
-////            File inputFile2 = new File("testingpppppp.txt");
-////            FileReader inputReader2 = new FileReader(inputFile2);
-////            
-////            Parser p2 = 
-////                    new Parser (
-////                      new Lexer (
-////                         new PushbackReader(inputReader2, 1024)));
-////                 
-////            Start tree2 = p2.parse();
-////            PrettyPrinter.print(tree2);
-//            
-            
+        {   
             // generate command line argument reader
             compilerOptions = CompilerOptionsFactory.getOptions();
             cliParser = new PosixParser();
             commandLine = cliParser.parse(compilerOptions, args);
-               /*
+               
             String[] files = commandLine.getArgs();
                         
             if(commandLine.hasOption("help"))
@@ -104,11 +63,11 @@ public class Compiler
                 // compile each file
                 for(String file : files)
                 {
-                    System.out.println("-------Generating output: " + file +"-------");
+                    System.out.println("------- Generating output: " + file + "-------");
                     compileInput(getFileReader(file));
                     System.out.println();
                 }
-            }    */                  
+            }          
         }
         catch(Exception e)
         {
@@ -116,9 +75,12 @@ public class Compiler
         }
     }
     
-
-    // Generates a reader for a file and ouputs an error with the filename if
-    // file not found
+    /**
+     * Generates a reader for a file and outputs an error with the filename if
+     * file does not exist
+     * @param filename
+     * @return Reader
+     */
     private static Reader getFileReader(String filename)
     {       
         File file;
@@ -137,6 +99,13 @@ public class Compiler
         return reader;
     }
     
+    /**
+     * Compile input parameters
+     * @param inputReader
+     * @throws ParserException
+     * @throws LexerException
+     * @throws IOException
+     */
     private static void compileInput(Reader inputReader) throws ParserException, LexerException, IOException
     {
         // parse
@@ -155,7 +124,37 @@ public class Compiler
         // if pretty printing was requested then pretty print
         if(commandLine.hasOption("pp"))
         {
+            System.out.println("\n..............................................................\nPretty Print:\n");
             PrettyPrinter.print(tree);
-        }                        
+            System.out.println("\n\n..............................................................");
+        }              
+        
+        // if symbol table phase was requested, perform symbol table phase
+        if(commandLine.hasOption("st") || commandLine.hasOption("pst"))
+        {
+            System.out.println("\n..............................................................");
+            System.out.println("Symbol Table Phase:");
+            
+            // collect symbols
+            System.out.println("\nCollecting Symbols...");
+            SymbolCollector symCollector = new SymbolCollector();
+            symCollector.analyze(tree);
+            
+            // analyze symbols
+            System.out.println("\nAnalyzing Symbols...");
+            SymbolAnalyzer symAnalyzer = new SymbolAnalyzer(symCollector.getServiceTable());
+            symAnalyzer.analyze(tree);
+            
+            // print symbol tables if required:
+            if (commandLine.hasOption("pst"))
+            {
+                SymbolTablePrinter stp = new SymbolTablePrinter(symCollector);
+                stp.printAll();
+            }
+            
+            // st phase done
+            System.out.println("\nSymbol Table Phase Done.");
+            System.out.println("..............................................................");
+        }
     }
 }

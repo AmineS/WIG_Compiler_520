@@ -10,6 +10,7 @@ import wig.node.ACallExp;
 import wig.node.ACompStm;
 import wig.node.ACompoundstm;
 
+import wig.node.AExitStm;
 import wig.node.AFunction;
 import wig.node.AHtml;
 import wig.node.AIdDocument;
@@ -160,6 +161,7 @@ public class SymbolAnalyzer extends DepthFirstAdapter
         {
             stm_iter.next().apply(this);
         }        
+        
         outACompoundStm(node);
     }
     
@@ -170,57 +172,55 @@ public class SymbolAnalyzer extends DepthFirstAdapter
             currentSymbolTable = currentSymbolTable.getNext();
         }
     }
-
-    public void inAShowStm(AShowStm node)
-    {
-    }    
     
     public void caseAShowStm(AShowStm node)
     {
         AReceive receive = null;
+        String htmlName = null;
         
         if (node.getReceive() != null)
         {
             receive = (AReceive) node.getReceive();
         }
         
-        String htmlName = null;
-        
+        // check if we have an APlugDocument or an AIdDocument node
         if (node.getDocument() instanceof APlugDocument)
         {
             APlugDocument doc = (APlugDocument) node.getDocument();
-            htmlName = doc.getIdentifier().getText().trim();
+            htmlName = doc.getIdentifier().getText();
         }
         else
         {
             AIdDocument doc = (AIdDocument) node.getDocument();
-            htmlName = doc.getIdentifier().getText().trim();
+            htmlName = doc.getIdentifier().getText();
         }
         
-        Symbol symbol = SymbolTable.getSymbol(serviceSymbolTable, htmlName);
-        SymbolTable htmlNameTable = SymbolTable.getScopedSymbolTable(symbol);
-
-        if (receive != null)
+        // check if the html name the show statement is referring to is defined
+        if (SymbolTable.defSymbol(serviceSymbolTable,htmlName))
         {
-            LinkedList<PInput> inputList = receive.getInput();
-            
-            for (PInput pi: inputList)
+            Symbol symbol = SymbolTable.getSymbol(serviceSymbolTable, htmlName);
+            SymbolTable htmlNameTable = SymbolTable.getScopedSymbolTable(symbol);
+    
+            if (receive != null)
             {
-                AInput ai = (AInput) pi;
+                LinkedList<PInput> inputList = receive.getInput();
                 
-                if (!(SymbolTable.defSymbol(htmlNameTable, ai.getIdentifier().getText())))
+                // check if identifiers in receive statement are valid
+                for (PInput pi: inputList)
                 {
-                    System.out.println("Error: Identifier '" + ai.getIdentifier().getText() + "' in receive statement is not defined. Line no:" + ai.getIdentifier().getLine());
+                    AInput ai = (AInput) pi;
+                    
+                    if (!(SymbolTable.defSymbol(htmlNameTable, ai.getIdentifier().getText())))
+                    {
+                        System.out.println("Error: Identifier '" + ai.getIdentifier().getText() + "' in receive statement is not defined. Line no:" + ai.getIdentifier().getLine());
+                    }
                 }
             }
         }
-        
-        node.getDocument().apply(this);
-        node.getReceive().apply(this);
-    }
-    
-    public void outAShowStm(AShowStm node)
-    {
+        else
+        {
+            System.out.println("Error: Html const '" + htmlName + "' show statement is referring to does not exist.");
+        }
     }
     
     public void caseAPlugs(APlugs node)
@@ -244,7 +244,7 @@ public class SymbolAnalyzer extends DepthFirstAdapter
         {
             APlug ap = (APlug) pp;
             
-            // check if the identifier part was defined in the html which has name htmlName
+            // check if the identifier part of plug was defined in the html which has name htmlName
             if (!(SymbolTable.defSymbol(htmlNameTable, ap.getIdentifier().getText().trim())))
             {
                 System.out.println("Error: Plug identifier '" + ap.getIdentifier().getText() + "' is not defined. Line no:" + ap.getIdentifier().getLine());
@@ -254,6 +254,16 @@ public class SymbolAnalyzer extends DepthFirstAdapter
             pp.apply(this);
         }
         node.getIdentifier().apply(this);
+    }
+    
+    public void caseAIdDocument(AIdDocument node)
+    {
+        String htmlName = node.getIdentifier().getText();
+        // check if the html name exists
+        if (!SymbolTable.defSymbol(serviceSymbolTable, htmlName))
+        {
+            System.out.println("Error: Html const '" + htmlName +"' is not defined. Line no:" + node.getIdentifier().getLine());
+        }
     }
     
     public void caseACallExp(ACallExp node)
@@ -277,10 +287,9 @@ public class SymbolAnalyzer extends DepthFirstAdapter
             symbol = SymbolTable.lookupHierarchy(currentSymbolTable, name);            
             if(symbol == null)
             {
-                puts("E1rror: Symbol " + name + " not defined. Line no:" + node.getIdentifier().getLine());
+                puts("Error: Symbol " + name + " not defined. Line no:" + node.getIdentifier().getLine());
             }            
         }
-
     }
 
     public void caseAQualifiedLvalue(AQualifiedLvalue node)
@@ -307,6 +316,11 @@ public class SymbolAnalyzer extends DepthFirstAdapter
                 puts("Error: Symbol " + rightName + " not defined. Line no:" + node.getRight().getLine());
             }            
         }        
+    }
+    
+    public void caseAExitStm(AExitStm node)
+    {
+        node.getDocument().apply(this);
     }
     
     private void puts(String s)
