@@ -55,6 +55,16 @@ public class SymbolAnalyzer extends DepthFirstAdapter
     public void caseAHtml(AHtml node)
     {
         inAHtml(node);
+       
+        String name = node.getIdentifier().toString().trim();
+        
+        if(SymbolTable.getSymbol(currentSymbolTable, name) == null)
+        {
+            if(SymbolTable.lookupHierarchy(currentSymbolTable, name) == null)
+            {
+                puts("Error: Symbol " + name + " not defined. Line no:" + node.getIdentifier().getLine() );
+            }
+        }
                 
         List<PHtmlbody> copy = new ArrayList<PHtmlbody>(node.getHtmlbody());
         for(PHtmlbody body : copy)
