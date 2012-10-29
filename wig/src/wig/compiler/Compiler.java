@@ -138,7 +138,7 @@ public class Compiler
             // collect symbols
             System.out.println("\nCollecting Symbols...");
             SymbolCollector symCollector = new SymbolCollector();
-            symCollector.analyze(tree);
+            symCollector.collect(tree);
             
             // analyze symbols
             System.out.println("\nAnalyzing Symbols...");

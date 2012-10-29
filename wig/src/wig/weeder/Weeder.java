@@ -25,7 +25,7 @@ public class Weeder extends DepthFirstAdapter
         node.apply(new Weeder());
         if (fErrorPresent)
         {
-            System.exit(0);
+            System.exit(1);
         }
     }
 
@@ -327,8 +327,8 @@ public class Weeder extends DepthFirstAdapter
         // check if 2 or more hole variables have the same name
         if (fHoleVariables.contains(node.getIdentifier().getText()))
         {
-            System.out.println("Error: Duplicate hole variable: " + node.getIdentifier().getText() + " at line " + node.getIdentifier().getLine());
-            fErrorPresent = true;
+            //System.out.println("Error: Duplicate hole variable: " + node.getIdentifier().getText() + " at line " + node.getIdentifier().getLine());
+            //fErrorPresent = true;
         }
         else
         {        

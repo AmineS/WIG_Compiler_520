@@ -55,20 +55,6 @@ public class SymbolAnalyzer extends DepthFirstAdapter
     public void caseAHtml(AHtml node)
     {
         inAHtml(node);
-        
-        String name = node.getIdentifier().toString().trim();
-        Symbol symbol;
-        
-        symbol = SymbolTable.getSymbol(currentSymbolTable, name);
-        
-        if(symbol == null)
-        {
-            symbol = SymbolTable.lookupHierarchy(currentSymbolTable, name);            
-            if(symbol == null)
-            {
-                puts("Error: Symbol " + name + " not defined. Line no:" + node.getIdentifier().getLine() );
-            }
-        }
                 
         List<PHtmlbody> copy = new ArrayList<PHtmlbody>(node.getHtmlbody());
         for(PHtmlbody body : copy)
@@ -188,6 +174,7 @@ public class SymbolAnalyzer extends DepthFirstAdapter
         {
             APlugDocument doc = (APlugDocument) node.getDocument();
             htmlName = doc.getIdentifier().getText();
+            doc.apply(this);
         }
         else
         {
@@ -213,6 +200,7 @@ public class SymbolAnalyzer extends DepthFirstAdapter
                     if (!(SymbolTable.defSymbol(htmlNameTable, ai.getIdentifier().getText())))
                     {
                         System.out.println("Error: Identifier '" + ai.getIdentifier().getText() + "' in receive statement is not defined. Line no:" + ai.getIdentifier().getLine());
+                        System.exit(1);
                     }
                 }
             }
@@ -220,6 +208,7 @@ public class SymbolAnalyzer extends DepthFirstAdapter
         else
         {
             System.out.println("Error: Html const '" + htmlName + "' show statement is referring to does not exist.");
+            System.exit(1);
         }
     }
     
@@ -248,6 +237,7 @@ public class SymbolAnalyzer extends DepthFirstAdapter
             if (!(SymbolTable.defSymbol(htmlNameTable, ap.getIdentifier().getText().trim())))
             {
                 System.out.println("Error: Plug identifier '" + ap.getIdentifier().getText() + "' is not defined. Line no:" + ap.getIdentifier().getLine());
+                System.exit(1);
             }
             
             ap.getExp().apply(this);
@@ -263,15 +253,17 @@ public class SymbolAnalyzer extends DepthFirstAdapter
         if (!SymbolTable.defSymbol(serviceSymbolTable, htmlName))
         {
             System.out.println("Error: Html const '" + htmlName +"' is not defined. Line no:" + node.getIdentifier().getLine());
+            System.exit(1);
         }
     }
     
     public void caseACallExp(ACallExp node)
     {
         String name = node.getIdentifier().getText().trim();
-        if(!SymbolTable.defSymbol(currentSymbolTable, name))
+        if(SymbolTable.lookupHierarchy(currentSymbolTable, name) == null)
         {
             puts("Function name " + name + " undefined. Line no: " + node.getIdentifier().getLine() );
+            System.exit(1);
         }
     }
 
@@ -288,6 +280,7 @@ public class SymbolAnalyzer extends DepthFirstAdapter
             if(symbol == null)
             {
                 puts("Error: Symbol " + name + " not defined. Line no:" + node.getIdentifier().getLine());
+                System.exit(1);
             }            
         }
     }
@@ -305,17 +298,9 @@ public class SymbolAnalyzer extends DepthFirstAdapter
             if(symbolLeft == null)
             {
                 puts("Error: Symbol" + leftName + "not defined. Line no:" + node.getLeft().getLine() );
+                System.exit(1);
             }            
         }
-        
-        if(symbolRight == null)
-        {
-            symbolRight = SymbolTable.lookupHierarchy(currentSymbolTable, rightName);            
-            if(symbolRight == null)
-            {
-                puts("Error: Symbol " + rightName + " not defined. Line no:" + node.getRight().getLine());
-            }            
-        }        
     }
     
     public void caseAExitStm(AExitStm node)

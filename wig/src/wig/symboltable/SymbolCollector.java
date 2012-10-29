@@ -39,7 +39,7 @@ public class SymbolCollector extends DepthFirstAdapter
     private SymbolTable fCurrentSymTable = fServiceSymTable;
     private SymbolAnalysisTraversal fTraversal = SymbolAnalysisTraversal.COLLECT_IDENTIFIERS;    
     
-    public void analyze(Node node)
+    public void collect(Node node)
     {
         fSymbolTables.add(fServiceSymTable);
         node.apply(this);
@@ -68,6 +68,7 @@ public class SymbolCollector extends DepthFirstAdapter
             if(SymbolTable.getSymbol(fCurrentSymTable.getNext(), name) != null)
             {
                 puts("Error: HTML variable Name " + name + " already defined.");
+                System.exit(1);
             }
             else
             {
@@ -108,6 +109,7 @@ public class SymbolCollector extends DepthFirstAdapter
             if(SymbolTable.getSymbol(fCurrentSymTable.getNext(), name) != null)
             {
                 puts("Error: Schema name " + name + " already defined.");
+                System.exit(1);
             }
             else
             {
@@ -142,6 +144,7 @@ public class SymbolCollector extends DepthFirstAdapter
                 if(SymbolTable.getSymbol(fCurrentSymTable, name) != null)
                 {
                     puts("Error: Variable name " + name + " already defined.");
+                    System.exit(1);
                 }
                 else
                 {
@@ -171,6 +174,7 @@ public class SymbolCollector extends DepthFirstAdapter
             if(SymbolTable.getSymbol(fCurrentSymTable.getNext(), name) != null)
             {
                 puts("Error: Function name " + name + " already defined.");
+                System.exit(1);
             }
             else
             {
@@ -214,6 +218,7 @@ public class SymbolCollector extends DepthFirstAdapter
             if(SymbolTable.getSymbol(fCurrentSymTable.getNext(), name) != null)
             {
                 puts("Error: Session name " + name + " already defined.");
+                System.exit(1);
             }
             else
             {
@@ -243,6 +248,7 @@ public class SymbolCollector extends DepthFirstAdapter
             if(SymbolTable.getSymbol(fCurrentSymTable, name) != null)
             {
                 puts("Error: Argument name " + name + " already defined.");
+                System.exit(1);
             }
             else
             {
@@ -260,6 +266,7 @@ public class SymbolCollector extends DepthFirstAdapter
             if(SymbolTable.getSymbol(fCurrentSymTable, name) != null)
             {
                 puts("Error: Hole name " + name + " already defined.");
+                System.exit(1);
             }
             else
             {
@@ -288,6 +295,7 @@ public class SymbolCollector extends DepthFirstAdapter
                 if(SymbolTable.getSymbol(fCurrentSymTable, name) != null)
                 {
                     puts("Error: Input name " + name + " already defined.");
+                    System.exit(1);
                 }
                 else
                 {
@@ -315,7 +323,8 @@ public class SymbolCollector extends DepthFirstAdapter
             {
                 if(SymbolTable.getSymbol(fCurrentSymTable, name) != null)
                 {
-                    puts("Error: Input name " + name + " already defined.");
+                    puts("Error: Select name " + name + " already defined.");
+                    System.exit(1);
                 }
                 else
                 {
@@ -379,6 +388,7 @@ public class SymbolCollector extends DepthFirstAdapter
         if(SymbolTable.getSymbol(fCurrentSymTable, name) != null)
         {
             puts("Error: Field name " + name + " already defined.");
+            System.exit(1);
         }
         else
         {
