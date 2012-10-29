@@ -44,3 +44,8 @@ Test cases covered:
 	> writing test programs that provoke every error message; and making sure your compiler handles either these old examples and the 2009 class benchmarks (previous years are important, but not critical like 2009) or prints an error message if not;
 > have added a command-line switch that enables (or disables) the symbol table phase; and
 > have added a symbol target to your Makefile or build.xml for testing the symbol table.
+
+-------------------------------------------------------------------------
+Symbol Analyzer
+
+The symbol analyzer builds on the symbol tables created during the Symbol Collection. It is initialized with with the symbol table for the service that is passed in to it. The analyzer then traverses through the AST and when it reaches a node that defines its own scope, it pushes it into the current symbol table. Once it exits that node it pops it off (by assigning current symbol table its next value, which is the next table in the hierarchy). Once the traversal reaches either a terminal statement or expression, it pulls all the identifiers and checks if they exist in the current symbol table context, if not it checks if they exist in the hierarchy. The check for duplicate declarations is already done in the collector. If the symbol has not been declared anywhere within a reachable scope, the symbol analyzer declares an error. 
