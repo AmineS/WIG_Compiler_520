@@ -29,6 +29,8 @@ def main():
 		tester_files = os.listdir("tester_files/symbol_table_testers/")
 		i=0
 		for fname in tester_files:
+			if (fname.endswith(".wig")==0):
+				continue
 			print "Test" + str(i)
 			subprocess.call(["java", "wig.compiler.Compiler", "tester_files/symbol_table_testers/" + fname, "-pst", "-dw"])
 			print "\n\n"
