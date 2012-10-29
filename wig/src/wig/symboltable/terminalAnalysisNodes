@@ -1,0 +1,14 @@
+Statements: 
+    show - D 
+    receive - A 
+    exit  - F 
+    exp 
+
+Expressions: 
+    lvalue - D 
+    call - A 
+    remove - F
+    keep_many - *
+    remove_many - *
+
+

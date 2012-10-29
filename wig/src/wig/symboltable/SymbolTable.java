@@ -3,6 +3,7 @@ package wig.symboltable;
 import java.util.HashMap;
 
 import wig.node.AArgument;
+import wig.node.ACompoundstm;
 import wig.node.AField;
 import wig.node.AFunction;
 import wig.node.AHoleHtmlbody;
@@ -28,6 +29,7 @@ import wig.symboltable.symbols.Symbol;
 public class SymbolTable
 {
     private HashMap<String, Symbol> fTable;
+    private HashMap<ACompoundstm, SymbolTable> compoundStms;
     private SymbolTable fNext;
     
     public SymbolTable()
@@ -183,5 +185,15 @@ public class SymbolTable
         }
         
         return symbolTable;
+    }
+    
+    public void setCompoundStatementSymbolTable(ACompoundstm node, SymbolTable symbolTable)
+    {
+        compoundStms.put(node, symbolTable);
+    }
+    
+    public SymbolTable getCompoundStatementSymbolTable(ACompoundstm node)
+    {
+        return compoundStms.get(node);
     }
 }

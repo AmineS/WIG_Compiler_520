@@ -336,6 +336,7 @@ public class SymbolCollector extends DepthFirstAdapter
         {
             SymbolTable scopedSymbolTable = SymbolTable.scopeSymbolTable(fCurrentSymTable);
             fSymbolTables.add(scopedSymbolTable);
+            fCurrentSymTable.setCompoundStatementSymbolTable(node, scopedSymbolTable);
             fCurrentSymTable = scopedSymbolTable;
         }
     }

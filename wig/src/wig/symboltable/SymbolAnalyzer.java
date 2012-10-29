@@ -99,32 +99,13 @@ public class SymbolAnalyzer extends DepthFirstAdapter
     
     public void caseAFunction(AFunction node)
     {
-        inAFunction(node);
-
-        String name = node.getIdentifier().toString().trim();
-        if(fTraversal == SymbolAnalysisTraversal.COLLECT_IDENTIFIERS)
-        {
-            if(SymbolTable.getSymbol(fCurrentSymTable.getNext(), name) != null)
-            {
-                puts("Error: Function name " + name + " already defined.");
-            }
-            else
-            {
-                SymbolTable.putSymbol(fCurrentSymTable.getNext(), name, SymbolKind.FUNCTION, node, fCurrentSymTable);                
-            }
-        }
+        inAFunction(node);          
         
         if(node.getCompoundstm() != null)
         {
             node.getCompoundstm().apply(this);
         }
-        
-        List<PArgument> copy = new ArrayList<PArgument>(node.getArgument());
-        for(PArgument e : copy)
-        {
-            e.apply(this);
-        }
-                
+             
         outAFunction(node);
     }
     
@@ -142,26 +123,10 @@ public class SymbolAnalyzer extends DepthFirstAdapter
     public void caseASession(ASession node)
     {
         inASession(node);
-
-        String name = node.getIdentifier().toString().trim();
-        if(fTraversal == SymbolAnalysisTraversal.COLLECT_IDENTIFIERS)
-        {
-            if(SymbolTable.getSymbol(fCurrentSymTable.getNext(), name) != null)
-            {
-                puts("Error: Session name " + name + " already defined.");
-            }
-            else
-            {
-                SymbolTable.putSymbol(fCurrentSymTable.getNext(), name, SymbolKind.SESSION, node, fCurrentSymTable);
-            }
-        }
-        
         if(node.getCompoundstm() != null)
         {
             node.getCompoundstm().apply(this);
-        }
-        
-        
+        }               
         outASession(node);
     }
     
@@ -170,62 +135,6 @@ public class SymbolAnalyzer extends DepthFirstAdapter
         currentSymbolTable = currentSymbolTable.getNext();
     }
     
-    public void caseAInputHtmlbody(AInputHtmlbody node)
-    {
-        LinkedList<PInputattr> attributes = node.getInputattr();
-        String name = null;
-        for(PInputattr attribute : attributes)
-        {
-            if(attribute instanceof  ANameInputattr)
-            {
-                ANameInputattr nameAttr = (ANameInputattr) attribute;
-                AStrAttr strAttr = (AStrAttr) nameAttr.getAttr();
-                name = strAttr.getStringconst().getText().trim().replace("\"", "");
-            }
-        }
-        if(name != null)
-        {
-            if(fTraversal == SymbolAnalysisTraversal.COLLECT_IDENTIFIERS)
-            {
-                if(SymbolTable.getSymbol(fCurrentSymTable, name) != null)
-                {
-                    puts("Error: Input name " + name + " already defined.");
-                }
-                else
-                {
-                    SymbolTable.putSymbol(fCurrentSymTable, name, SymbolKind.INPUT_TAG, node, fCurrentSymTable);
-                }
-            }
-        }
-    }
-    
-    public void caseASelectHtmlbody(ASelectHtmlbody node)
-    {
-        LinkedList<PInputattr> attributes = node.getInputattr();
-        String name = null;
-        for(PInputattr attribute : attributes)
-        {
-            if(attribute instanceof  ANameInputattr)
-            {
-                ANameInputattr nameAttr = (ANameInputattr) attribute;
-                name = nameAttr.getName().toString().trim();
-            }
-        }
-        if(name != null)
-        {
-            if(fTraversal == SymbolAnalysisTraversal.COLLECT_IDENTIFIERS)
-            {
-                if(SymbolTable.getSymbol(fCurrentSymTable, name) != null)
-                {
-                    puts("Error: Input name " + name + " already defined.");
-                }
-                else
-                {
-                    SymbolTable.putSymbol(fCurrentSymTable, name, SymbolKind.SELECT_TAG, node, fCurrentSymTable);
-                }
-            }
-        }
-    }
     
     public void caseACompStm(ACompStm node)
     {
@@ -234,17 +143,13 @@ public class SymbolAnalyzer extends DepthFirstAdapter
     
     public void inACompoundStm(ACompoundstm node)
     {
-        if(! (node.parent() instanceof AFunction || node.parent() instanceof ASession) )
-        {
-            SymbolTable scopedSymbolTable = SymbolTable.scopeSymbolTable(fCurrentSymTable);
-            fSymbolTables.add(scopedSymbolTable);
-            fCurrentSymTable = scopedSymbolTable;
-        }
+        currentSymbolTable = currentSymbolTable.getCompoundStatementSymbolTable(node);
     }
     
     public void caseACompoundstm(ACompoundstm node)
-    {
-        inACompoundStm(node);
+    {        
+        inACompoundStm(node);        
+        
         
         LinkedList<PStm> stm_list = node.getStm();
         LinkedList<PVariable> var_list = node.getVariable();
@@ -266,25 +171,9 @@ public class SymbolAnalyzer extends DepthFirstAdapter
     
     public void outACompoundStm(ACompoundstm node)
     {
-        if(! (node.parent() instanceof AFunction))
-        {
-            currentSymbolTable = currentSymbolTable.getNext();
-        }
+        currentSymbolTable = currentSymbolTable.getNext();
     }
-    
-    
-    public void caseAField(AField node)
-    {
-        String name = node.getIdentifier().toString().trim();
-        if(SymbolTable.getSymbol(fCurrentSymTable, name) != null)
-        {
-            puts("Error: Field name " + name + " already defined.");
-        }
-        else
-        {
-            SymbolTable.putSymbol(fCurrentSymTable, name, SymbolKind.FIELD, node, fCurrentSymTable);
-        }
-    }
+
     
     
     private void puts(String s)
