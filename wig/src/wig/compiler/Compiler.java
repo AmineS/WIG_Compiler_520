@@ -163,18 +163,13 @@ public class Compiler
         {
             System.out.println("\n..............................................................");
             System.out.println("Type Checking Phase:");
-
-            /*
+            
             // collect symbols
             SymbolCollector symCollector = new SymbolCollector();
             symCollector.collect(tree);
             
-            // analyze symbols
-            SymbolAnalyzer symAnalyzer = new SymbolAnalyzer(symCollector.getServiceTable());
-            symAnalyzer.analyze(tree);
-            
-            TypeChecker typeChecker = new TypeChecker();
-            */
+            TypeChecker typeChecker = new TypeChecker(symCollector.getServiceTable());
+            typeChecker.typeCheck(tree);
             
             System.out.println("\nType Checking Phase Done.");
             System.out.println("..............................................................");

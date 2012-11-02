@@ -46,6 +46,12 @@ public class SymbolAnalyzer extends DepthFirstAdapter
         serviceSymbolTable = symbolTable;
         currentSymbolTable= serviceSymbolTable;
     }
+    
+    public SymbolTable getServiceSymbolTable()
+    {
+        return serviceSymbolTable;
+    }
+    
     public void inAHtml(AHtml node)
     {
         Symbol symbol = SymbolTable.getSymbol(currentSymbolTable, node.getIdentifier().getText());
