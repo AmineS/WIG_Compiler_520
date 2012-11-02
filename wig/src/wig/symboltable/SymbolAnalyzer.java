@@ -9,7 +9,6 @@ import wig.analysis.DepthFirstAdapter;
 import wig.node.ACallExp;
 import wig.node.ACompStm;
 import wig.node.ACompoundstm;
-
 import wig.node.AExitStm;
 import wig.node.AFunction;
 import wig.node.AHtml;
@@ -18,9 +17,9 @@ import wig.node.AInput;
 import wig.node.APlug;
 import wig.node.APlugDocument;
 import wig.node.APlugs;
+import wig.node.AQualifiedLvalue;
 import wig.node.AReceive;
 import wig.node.ASession;
-import wig.node.AQualifiedLvalue;
 import wig.node.AShowStm;
 import wig.node.ASimpleLvalue;
 import wig.node.Node;
@@ -29,6 +28,7 @@ import wig.node.PInput;
 import wig.node.PPlug;
 import wig.node.PStm;
 import wig.node.PVariable;
+import wig.symboltable.symbols.SVariable;
 import wig.symboltable.symbols.Symbol;
 
 public class SymbolAnalyzer extends DepthFirstAdapter
@@ -298,19 +298,29 @@ public class SymbolAnalyzer extends DepthFirstAdapter
     public void caseAQualifiedLvalue(AQualifiedLvalue node)
     {
         String leftName = node.getLeft().toString().trim();
-        String rightName = node.getLeft().toString().trim();        
-        Symbol symbolLeft = SymbolTable.getSymbol(currentSymbolTable, leftName);
-        Symbol symbolRight = SymbolTable.getSymbol(currentSymbolTable, rightName);
+        String rightName = node.getRight().toString().trim();        
+        Symbol symbolLeft = SymbolTable.lookupHierarchy(currentSymbolTable, leftName);
         
-        if(symbolLeft == null)
+        if(symbolLeft != null)
         {
             symbolLeft = SymbolTable.lookupHierarchy(currentSymbolTable, leftName);            
             if(symbolLeft == null)
             {
                 puts("Error: Symbol" + leftName + "not defined. Line no:" + node.getLeft().getLine() );
                 System.exit(1);
-            }            
+            }
+            if(symbolLeft instanceof SVariable)
+            {
+                SVariable sVariable = (SVariable) symbolLeft;
+                SymbolTable symbolTableOfSchema = SymbolTable.getSymbolTableOfSchema(currentSymbolTable, sVariable.getVariable());
+                if(!SymbolTable.defSymbol(symbolTableOfSchema, rightName))
+                {
+                    puts("Error: Symbol" + rightName + " not defined in the tuple's schema. Line no:" + node.getLeft().getLine() );
+                    System.exit(1);
+                }
+            }
         }
+        
     }
     
     public void caseAExitStm(AExitStm node)

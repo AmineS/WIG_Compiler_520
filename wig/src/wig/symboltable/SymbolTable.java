@@ -12,8 +12,10 @@ import wig.node.AInputHtmlbody;
 import wig.node.ASchema;
 import wig.node.ASelectHtmlbody;
 import wig.node.ASession;
+import wig.node.ATupleType;
 import wig.node.AVariable;
 import wig.node.Node;
+import wig.node.TIdentifier;
 import wig.symboltable.symbols.SArgument;
 import wig.symboltable.symbols.SField;
 import wig.symboltable.symbols.SFunction;
@@ -196,5 +198,30 @@ public class SymbolTable
     public SymbolTable getCompoundStatementSymbolTable(ACompoundstm node)
     {
         return fCompoundStms.get(node);
+    }
+    
+    public static SymbolTable getSymbolTableOfSchema(SymbolTable current, Node node)
+    {
+        if(node instanceof AVariable)
+        {
+            AVariable variable = (AVariable) node;
+            if(variable.getType() instanceof ATupleType)
+            {
+                ATupleType tupleType = (ATupleType) variable.getType();
+                String nameOfSchema = tupleType.getIdentifier().getText().trim();
+                Symbol symbol = lookupHierarchy(current, nameOfSchema);
+                if(symbol == null)
+                {
+                    return null;
+                }
+                else if(symbol.getKind() == SymbolKind.SCHEMA)
+                {
+                    SSchema sSchema = (SSchema) symbol;
+                    return sSchema.getSymTable();
+                }
+            }
+        }
+        
+        return null;
     }
 }

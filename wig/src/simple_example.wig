@@ -7,20 +7,17 @@ service {
      <p>      <i>You are visitor number! <[no]></i>
   </body>  </html>;
 
-    schema player
-     {
-		int score;
-		string s;
-	}
 	
-	schema player2
-	{
-		int walou;
-		int blob;
-	}
-	
+  schema num {
+    int num1; 
+    int num2;
+  }
+
+  tuple num num0;
+  	
   int counter;
   int hello, hello3;
+  
 	int dumb1(int arg1, int arg2)
 	{
 		int funcDumb;
@@ -37,7 +34,9 @@ service {
   	{
 		counter = counter + 1;
   	}
-
+	
+	num0.num1 = 2;
+	
     counter = counter + 1;
     
     while (counter>2)
