@@ -29,6 +29,7 @@ import wig.weeder.Weeder;
 import java.util.LinkedList;
 
 import wig.symboltable.SymbolTablePrinter;
+import wig.type.TypeChecker;
 
 public class Compiler
 {
@@ -154,6 +155,28 @@ public class Compiler
             
             // st phase done
             System.out.println("\nSymbol Table Phase Done.");
+            System.out.println("..............................................................");
+        }
+        
+        // if type checking was requested, perform type checking
+        if (commandLine.hasOption("tc"))
+        {
+            System.out.println("\n..............................................................");
+            System.out.println("Type Checking Phase:");
+
+            /*
+            // collect symbols
+            SymbolCollector symCollector = new SymbolCollector();
+            symCollector.collect(tree);
+            
+            // analyze symbols
+            SymbolAnalyzer symAnalyzer = new SymbolAnalyzer(symCollector.getServiceTable());
+            symAnalyzer.analyze(tree);
+            
+            TypeChecker typeChecker = new TypeChecker();
+            */
+            
+            System.out.println("\nType Checking Phase Done.");
             System.out.println("..............................................................");
         }
     }
