@@ -10,7 +10,7 @@ service {
     schema player
      {
 		int score;
-		string score;
+		string s;
 	}
 	
 	schema player2
@@ -21,7 +21,6 @@ service {
 	
   int counter;
   int hello, hello3;
-  int counter;
 	int dumb1(int arg1, int arg2)
 	{
 		int funcDumb;
@@ -33,18 +32,17 @@ service {
 	*/
 
   session Access() {
-  counter = 0;
+   counter = 0;
   	if (counter==0)
   	{
 		counter = counter + 1;
   	}
-  	
-  	dumbopo(1, 2);
+
     counter = counter + 1;
     
     while (counter>2)
     {
-    	counter = count +1;
+    	counter = counter + 1;
     	counter = counter - 1;
     }
     
