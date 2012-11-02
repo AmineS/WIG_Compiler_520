@@ -11,6 +11,7 @@ all:
 	make pretty
 	make unit
 	make symbol
+	make type
 
 # to compile the code
 code: clean grammar
@@ -43,3 +44,7 @@ unit:
 # test symbol phase
 symbol:
 	python wigrun.py st
+
+# type checking
+type:
+	python wigrun.py tc

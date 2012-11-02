@@ -40,6 +40,10 @@ def main():
 		print "apart from good.wig, which also tests SymbolTablePrinter by",
 		print "printing the symbol tables."
 
+	elif (cmd=="tc"):
+		print "type checking"
+
+
 	else:
 		sys.exit(1)
 

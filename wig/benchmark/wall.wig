@@ -28,8 +28,13 @@ service
 
   const html exitMsg = <html> <center> <h1>See you later</h1> <img src="alligator.jpg" alt="Smiley face" height="200" width="200"> </center> </html>;
 
+	schema y 
+	{
+		int a;
+	}
 
   string messages;
+	tuple y x;
 
   session Calculate() 
   {
