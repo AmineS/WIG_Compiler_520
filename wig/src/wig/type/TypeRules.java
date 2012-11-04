@@ -85,10 +85,14 @@ public class TypeRules
                     argumentsAreValid = false;
                     break;
                 }
-            }
-            
+            }            
         }             
         return argumentsAreValid;
+    }
+    
+    public static boolean returnExpression(Types e1, Types e2)
+    {
+        return e1 == e2;
     }
 /* 
  *  

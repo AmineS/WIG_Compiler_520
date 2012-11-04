@@ -12,7 +12,7 @@ import wig.node.ACompoundstm;
 
 import wig.node.*;
 import wig.symboltable.SymbolTable;
-import wig.symboltable.symbols.Symbol;
+import wig.symboltable.symbols.*;
 
 /**
  * Performs Type Checking
@@ -1983,14 +1983,81 @@ public class TypeChecker extends DepthFirstAdapter
         {
             node.getIdentifier().apply(this);
         }
+        SFunction symbol = (SFunction) SymbolTable.getSymbol(fCurrentSymbolTable, node.getIdentifier().getText());
+        AFunction function = symbol.getFunction();
+        
+        Types[] argTypes = getArgumentTypes(function.getArgument());
+        Types[] paramTypes;
         {
-            List<PExp> copy = new ArrayList<PExp>(node.getExp());
+            List<PExp> copy = new ArrayList<PExp>(node.getExp());            
+            paramTypes = new Types[copy.size()];
+            
             for(PExp e : copy)
             {
                 e.apply(this);
             }
+            
+            for(int i=0; i<paramTypes.length; ++i)
+            {
+                paramTypes[i] = fTypeTable.getNodeType(copy.get(i));
+            }
+        }        
+        
+        if(TypeRules.functionCall(argTypes, paramTypes))
+        {
+           
+            fTypeTable.setNodeType(node, nodeToType(function.getType()));
+        }
+        else
+        {
+            puts("Error: Argument mismatch for function call " + function.getIdentifier().getText()+ "!");
         }
         outACallExp(node);
+    }
+    
+    private Types[] getArgumentTypes(LinkedList<PArgument> arguments)
+    {
+        Types[] argTypes = new Types[arguments.size()];
+        
+        for(int i = 0; i<argTypes.length; ++i)
+        {
+            AArgument arg = (AArgument)arguments.get(i);
+            argTypes[i] = nodeToType(arg.getType());
+        }
+        
+        return argTypes;
+    }
+    
+    private Types nodeToType(PType node)
+    {
+        Types type = null;
+        if(node instanceof AIntType)
+        {
+            type = Types.INT;
+        }
+        else if (node instanceof AStringType)
+        {
+            type = Types.STRING;
+        }
+        else if (node instanceof ABoolType)
+        {
+            type = Types.BOOL;
+        }
+        else if (node instanceof AVoidType)
+        {
+            type = Types.VOID;   
+        }
+        else if (node instanceof ATupleType)
+        {
+            type = Types.TUPLE;
+        }
+        else
+        {
+            puts("Error: Unexpected type!");
+//            System.exit(-1);
+        }
+        
+        return type;
     }
 
     public void inAIntExp(AIntExp node)
@@ -2154,6 +2221,11 @@ public class TypeChecker extends DepthFirstAdapter
         {
             node.getIdentifier().apply(this);
         }
+        
+        SVariable symbol = (SVariable) SymbolTable.getSymbol(fCurrentSymbolTable, node.getIdentifier().getText());
+        AVariable variable = symbol.getVariable();        
+        fTypeTable.setNodeType(node, nodeToType(variable.getType()));
+        
         outASimpleLvalue(node);
     }
 
