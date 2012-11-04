@@ -446,7 +446,7 @@ Productions
 
 /************************************
 * Abstract Syntax Tree
-**************************************/
+**************************************/AIdentifiers
 Abstract Syntax Tree
 
     service = P.html+ P.schema* variable* function* P.session+;

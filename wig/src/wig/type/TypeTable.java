@@ -25,7 +25,7 @@ public class TypeTable
      * @param node
      * @return node's type
      */
-    public Types getType(Node node)
+    public Types getNodeType(Node node)
     {
        return fHashTable.get(node); 
     }
@@ -35,7 +35,7 @@ public class TypeTable
      * @param node - node for which type is being set
      * @param type - the type of the node
      */
-    public void setType(Node node, Types type)
+    public void setNodeType(Node node, Types type)
     {
         fHashTable.put(node, type);
     }

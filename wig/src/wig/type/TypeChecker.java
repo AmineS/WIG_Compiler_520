@@ -2006,12 +2006,7 @@ public class TypeChecker extends DepthFirstAdapter
     @Override
     public void caseAIntExp(AIntExp node)
     {
-        inAIntExp(node);
-        if(node.getIntconst() != null)
-        {
-            node.getIntconst().apply(this);
-        }
-        outAIntExp(node);
+        fTypeTable.setNodeType(node, Types.INT);
     }
 
     public void inATrueExp(ATrueExp node)
@@ -2069,12 +2064,7 @@ public class TypeChecker extends DepthFirstAdapter
     @Override
     public void caseAStringExp(AStringExp node)
     {
-        inAStringExp(node);
-        if(node.getStringconst() != null)
-        {
-            node.getStringconst().apply(this);
-        }
-        outAStringExp(node);
+        fTypeTable.setNodeType(node, Types.STRING);
     }
 
     public void inATupleExp(ATupleExp node)
