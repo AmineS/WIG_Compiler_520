@@ -47,7 +47,7 @@ public class TypeRules
     }
     
     
-    public static boolean notStatement(Types e)     
+    public static boolean notExpression(Types e)     
     {
         return e == Types.INT;
     }

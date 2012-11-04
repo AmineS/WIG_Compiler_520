@@ -1116,6 +1116,25 @@ public class TypeChecker extends DepthFirstAdapter
         {
             node.getExp().apply(this);
         }
+        
+        Types conditionNodeType = fTypeTable.getNodeType(node.getExp());
+        
+        if(conditionNodeType != null)
+        {
+            if(TypeRules.controlFlow(conditionNodeType))
+            {
+                fTypeTable.setNodeType(node, Types.BOOL);
+            }
+            else
+            {
+                puts("Error: Type mismatch for condition in if statement.");
+            }
+        }
+        else
+        {
+            puts("Error: Type table does not contain entries for required nodes!");
+        }
+        
         if(node.getStm() != null)
         {
             node.getStm().apply(this);
@@ -1141,6 +1160,25 @@ public class TypeChecker extends DepthFirstAdapter
         {
             node.getExp().apply(this);
         }
+        
+        Types conditionNodeType = fTypeTable.getNodeType(node.getExp());
+        
+        if(conditionNodeType != null)
+        {
+            if(TypeRules.controlFlow(conditionNodeType))
+            {
+                fTypeTable.setNodeType(node, Types.BOOL);
+            }
+            else
+            {
+                puts("Error: Type mismatch for condition in if else statement.");
+            }
+        }
+        else
+        {
+            puts("Error: Type table does not contain entries for required nodes!");
+        }
+        
         if(node.getThenStm() != null)
         {
             node.getThenStm().apply(this);
@@ -1170,6 +1208,25 @@ public class TypeChecker extends DepthFirstAdapter
         {
             node.getExp().apply(this);
         }
+        
+        Types conditionNodeType = fTypeTable.getNodeType(node.getExp());
+        
+        if(conditionNodeType != null)
+        {
+            if(TypeRules.controlFlow(conditionNodeType))
+            {
+                fTypeTable.setNodeType(node, Types.BOOL);
+            }
+            else
+            {
+                puts("Error: Type mismatch for condition in while statement.");
+            }
+        }
+        else
+        {
+            puts("Error: Type table does not contain entries for required nodes!");
+        }
+        
         if(node.getStm() != null)
         {
             node.getStm().apply(this);
@@ -1422,6 +1479,22 @@ public class TypeChecker extends DepthFirstAdapter
         {
             node.getRight().apply(this);
         }
+        
+        Types leftNodeType = fTypeTable.getNodeType(node.getLvalue());
+        Types rightNodeType = fTypeTable.getNodeType(node.getRight());
+        
+        if(leftNodeType != null && rightNodeType != null)
+        {
+            if(! TypeRules.assignment(leftNodeType, rightNodeType))
+            {
+                puts("Error: Type mismatch for addition.");
+            }
+        }
+        else
+        {
+            puts("Error: Type table does not contain entries for required nodes!");
+        }
+        
         outAAssignExp(node);
     }
 
@@ -1446,6 +1519,25 @@ public class TypeChecker extends DepthFirstAdapter
         if(node.getRight() != null)
         {
             node.getRight().apply(this);
+        }
+        
+        Types leftNodeType = fTypeTable.getNodeType(node.getLeft());
+        Types rightNodeType = fTypeTable.getNodeType(node.getRight());
+        
+        if(leftNodeType != null && rightNodeType != null)
+        {
+            if(TypeRules.logicalComparison(leftNodeType, rightNodeType))
+            {
+                fTypeTable.setNodeType(node, Types.BOOL);
+            }
+            else
+            {
+                puts("Error: Type mismatch for || logical comparison.");
+            }
+        }
+        else
+        {
+            puts("Error: Type table does not contain entries for required nodes!");
         }
         outAOrExp(node);
     }
@@ -1472,6 +1564,25 @@ public class TypeChecker extends DepthFirstAdapter
         {
             node.getRight().apply(this);
         }
+        
+        Types leftNodeType = fTypeTable.getNodeType(node.getLeft());
+        Types rightNodeType = fTypeTable.getNodeType(node.getRight());
+        
+        if(leftNodeType != null && rightNodeType != null)
+        {
+            if(TypeRules.logicalComparison(leftNodeType, rightNodeType))
+            {
+                fTypeTable.setNodeType(node, Types.BOOL);
+            }
+            else
+            {
+                puts("Error: Type mismatch for && logical comparison.");
+            }
+        }
+        else
+        {
+            puts("Error: Type table does not contain entries for required nodes!");
+        }
         outAAndExp(node);
     }
 
@@ -1496,6 +1607,25 @@ public class TypeChecker extends DepthFirstAdapter
         if(node.getRight() != null)
         {
             node.getRight().apply(this);
+        }
+        
+        Types leftNodeType = fTypeTable.getNodeType(node.getLeft());
+        Types rightNodeType = fTypeTable.getNodeType(node.getRight());
+        
+        if(leftNodeType != null && rightNodeType != null)
+        {
+            if(TypeRules.intComparison(leftNodeType, rightNodeType))
+            {
+                fTypeTable.setNodeType(node, Types.BOOL);
+            }
+            else
+            {
+                puts("Error: Type mismatch for equal comparison.");
+            }
+        }
+        else
+        {
+            puts("Error: Type table does not contain entries for required nodes!");
         }
         outAEqExp(node);
     }
@@ -1522,6 +1652,25 @@ public class TypeChecker extends DepthFirstAdapter
         {
             node.getRight().apply(this);
         }
+        
+        Types leftNodeType = fTypeTable.getNodeType(node.getLeft());
+        Types rightNodeType = fTypeTable.getNodeType(node.getRight());
+        
+        if(leftNodeType != null && rightNodeType != null)
+        {
+            if(TypeRules.intComparison(leftNodeType, rightNodeType))
+            {
+                fTypeTable.setNodeType(node, Types.BOOL);
+            }
+            else
+            {
+                puts("Error: Type mismatch for not equal comparison.");
+            }
+        }
+        else
+        {
+            puts("Error: Type table does not contain entries for required nodes!");
+        }
         outANeqExp(node);
     }
 
@@ -1546,6 +1695,25 @@ public class TypeChecker extends DepthFirstAdapter
         if(node.getRight() != null)
         {
             node.getRight().apply(this);
+        }
+        
+        Types leftNodeType = fTypeTable.getNodeType(node.getLeft());
+        Types rightNodeType = fTypeTable.getNodeType(node.getRight());
+        
+        if(leftNodeType != null && rightNodeType != null)
+        {
+            if(TypeRules.intComparison(leftNodeType, rightNodeType))
+            {
+                fTypeTable.setNodeType(node, Types.BOOL);
+            }
+            else
+            {
+                puts("Error: Type mismatch for less than comparison.");
+            }
+        }
+        else
+        {
+            puts("Error: Type table does not contain entries for required nodes!");
         }
         outALtExp(node);
     }
@@ -1572,6 +1740,25 @@ public class TypeChecker extends DepthFirstAdapter
         {
             node.getRight().apply(this);
         }
+        
+        Types leftNodeType = fTypeTable.getNodeType(node.getLeft());
+        Types rightNodeType = fTypeTable.getNodeType(node.getRight());
+        
+        if(leftNodeType != null && rightNodeType != null)
+        {
+            if(TypeRules.intComparison(leftNodeType, rightNodeType))
+            {
+                fTypeTable.setNodeType(node, Types.BOOL);
+            }
+            else
+            {
+                puts("Error: Type mismatch for greater than comparison.");
+            }
+        }
+        else
+        {
+            puts("Error: Type table does not contain entries for required nodes!");
+        }
         outAGtExp(node);
     }
 
@@ -1596,6 +1783,25 @@ public class TypeChecker extends DepthFirstAdapter
         if(node.getRight() != null)
         {
             node.getRight().apply(this);
+        }
+        
+        Types leftNodeType = fTypeTable.getNodeType(node.getLeft());
+        Types rightNodeType = fTypeTable.getNodeType(node.getRight());
+        
+        if(leftNodeType != null && rightNodeType != null)
+        {
+            if(TypeRules.intComparison(leftNodeType, rightNodeType))
+            {
+                fTypeTable.setNodeType(node, Types.BOOL);
+            }
+            else
+            {
+                puts("Error: Type mismatch for less or equal comparison.");
+            }
+        }
+        else
+        {
+            puts("Error: Type table does not contain entries for required nodes!");
         }
         outALteqExp(node);
     }
@@ -1622,6 +1828,25 @@ public class TypeChecker extends DepthFirstAdapter
         {
             node.getRight().apply(this);
         }
+        
+        Types leftNodeType = fTypeTable.getNodeType(node.getLeft());
+        Types rightNodeType = fTypeTable.getNodeType(node.getRight());
+        
+        if(leftNodeType != null && rightNodeType != null)
+        {
+            if(TypeRules.intComparison(leftNodeType, rightNodeType))
+            {
+                fTypeTable.setNodeType(node, Types.BOOL);
+            }
+            else
+            {
+                puts("Error: Type mismatch for greater or equal comparison.");
+            }
+        }
+        else
+        {
+            puts("Error: Type table does not contain entries for required nodes!");
+        }
         outAGteqExp(node);
     }
 
@@ -1646,6 +1871,29 @@ public class TypeChecker extends DepthFirstAdapter
         if(node.getRight() != null)
         {
             node.getRight().apply(this);
+        }
+        
+        Types leftNodeType = fTypeTable.getNodeType(node.getLeft());
+        Types rightNodeType = fTypeTable.getNodeType(node.getRight());
+        
+        if(leftNodeType != null && rightNodeType != null)
+        {
+            if(TypeRules.intAddition(leftNodeType, rightNodeType))
+            {
+                fTypeTable.setNodeType(node, Types.INT);
+            }
+            else if(TypeRules.stringAddition(leftNodeType, rightNodeType))
+            {
+                fTypeTable.setNodeType(node, Types.STRING);
+            }
+            else
+            {
+                puts("Error: Type mismatch for addition.");
+            }
+        }
+        else
+        {
+            puts("Error: Type table does not contain entries for required nodes!");
         }
         outAPlusExp(node);
     }
@@ -1672,6 +1920,25 @@ public class TypeChecker extends DepthFirstAdapter
         {
             node.getRight().apply(this);
         }
+        
+        Types leftNodeType = fTypeTable.getNodeType(node.getLeft());
+        Types rightNodeType = fTypeTable.getNodeType(node.getRight());
+        
+        if(leftNodeType != null && rightNodeType != null)
+        {
+            if(TypeRules.intSubtraction(leftNodeType, rightNodeType))
+            {
+                fTypeTable.setNodeType(node, Types.INT);
+            }
+            else
+            {
+                puts("Error: Type mismatch for subtraction.");
+            }
+        }
+        else
+        {
+            puts("Error: Type table does not contain entries for required nodes!");
+        }
         outAMinusExp(node);
     }
 
@@ -1696,6 +1963,25 @@ public class TypeChecker extends DepthFirstAdapter
         if(node.getRight() != null)
         {
             node.getRight().apply(this);
+        }
+        
+        Types leftNodeType = fTypeTable.getNodeType(node.getLeft());
+        Types rightNodeType = fTypeTable.getNodeType(node.getRight());
+        
+        if(leftNodeType != null && rightNodeType != null)
+        {
+            if(TypeRules.intMultiplication(leftNodeType, rightNodeType))
+            {
+                fTypeTable.setNodeType(node, Types.INT);
+            }
+            else
+            {
+                puts("Error: Type mismatch for multiplication.");
+            }
+        }
+        else
+        {
+            puts("Error: Type table does not contain entries for required nodes!");
         }
         outAMultExp(node);
     }
@@ -1722,6 +2008,25 @@ public class TypeChecker extends DepthFirstAdapter
         {
             node.getRight().apply(this);
         }
+        
+        Types leftNodeType = fTypeTable.getNodeType(node.getLeft());
+        Types rightNodeType = fTypeTable.getNodeType(node.getRight());
+        
+        if(leftNodeType != null && rightNodeType != null)
+        {
+            if(TypeRules.intDivision(leftNodeType, rightNodeType))
+            {
+                fTypeTable.setNodeType(node, Types.INT);
+            }
+            else
+            {
+                puts("Error: Type mismatch for division.");
+            }
+        }
+        else
+        {
+            puts("Error: Type table does not contain entries for required nodes!");
+        }
         outADivExp(node);
     }
 
@@ -1746,6 +2051,25 @@ public class TypeChecker extends DepthFirstAdapter
         if(node.getRight() != null)
         {
             node.getRight().apply(this);
+        }
+        
+        Types leftNodeType = fTypeTable.getNodeType(node.getLeft());
+        Types rightNodeType = fTypeTable.getNodeType(node.getRight());
+        
+        if(leftNodeType != null && rightNodeType != null)
+        {
+            if(TypeRules.intModulo(leftNodeType, rightNodeType))
+            {
+                fTypeTable.setNodeType(node, Types.INT);
+            }
+            else
+            {
+                puts("Error: Type mismatch for modulo.");
+            }
+        }
+        else
+        {
+            puts("Error: Type table does not contain entries for required nodes!");
         }
         outAModExp(node);
     }
@@ -1899,6 +2223,23 @@ public class TypeChecker extends DepthFirstAdapter
         {
             node.getLeft().apply(this);
         }
+        Types leftNodeType = fTypeTable.getNodeType(node.getLeft());
+        
+        if(leftNodeType != null)
+        {
+            if(TypeRules.notExpression(leftNodeType))
+            {
+                fTypeTable.setNodeType(node, Types.BOOL);
+            }
+            else
+            {
+                puts("Error: Type mismatch for not expression.");
+            }
+        }
+        else
+        {
+            puts("Error: Type table does not contain entries for required nodes!");
+        }
         outANotExp(node);
     }
 
@@ -1919,6 +2260,24 @@ public class TypeChecker extends DepthFirstAdapter
         if(node.getLeft() != null)
         {
             node.getLeft().apply(this);
+        }
+        
+        Types leftNodeType = fTypeTable.getNodeType(node.getLeft());
+        
+        if(leftNodeType != null)
+        {
+            if(TypeRules.intNegation(leftNodeType))
+            {
+                fTypeTable.setNodeType(node, Types.INT);
+            }
+            else
+            {
+                puts("Error: Type mismatch for negation.");
+            }
+        }
+        else
+        {
+            puts("Error: Type table does not contain entries for required nodes!");
         }
         outANegExp(node);
     }
@@ -1941,6 +2300,11 @@ public class TypeChecker extends DepthFirstAdapter
         {
             node.getLeft().apply(this);
         }
+        Types leftNodeType = fTypeTable.getNodeType(node.getLeft());
+        if(leftNodeType != null)
+        {
+            fTypeTable.setNodeType(node, leftNodeType);
+        }
         outADefaultExp(node);
     }
 
@@ -1961,6 +2325,11 @@ public class TypeChecker extends DepthFirstAdapter
         if(node.getLvalue() != null)
         {
             node.getLvalue().apply(this);
+        }
+        Types lValueNodeType = fTypeTable.getNodeType(node.getLvalue());
+        if(lValueNodeType != null)
+        {
+            fTypeTable.setNodeType(node, lValueNodeType);
         }
         outALvalueExp(node);
     }
@@ -2025,7 +2394,7 @@ public class TypeChecker extends DepthFirstAdapter
         inATrueExp(node);
         if(node.getTrue() != null)
         {
-            node.getTrue().apply(this);
+            fTypeTable.setNodeType(node, Types.BOOL);
         }
         outATrueExp(node);
     }
@@ -2046,7 +2415,7 @@ public class TypeChecker extends DepthFirstAdapter
         inAFalseExp(node);
         if(node.getFalse() != null)
         {
-            node.getFalse().apply(this);
+            fTypeTable.setNodeType(node, Types.BOOL);
         }
         outAFalseExp(node);
     }
@@ -2108,6 +2477,11 @@ public class TypeChecker extends DepthFirstAdapter
         if(node.getExp() != null)
         {
             node.getExp().apply(this);
+        }
+        Types expType = fTypeTable.getNodeType(node.getExp());
+        if(expType != null)
+        {
+            fTypeTable.setNodeType(node, expType);
         }
         outAParenExp(node);
     }
