@@ -41,40 +41,6 @@ public class TypeChecker extends DepthFirstAdapter
         return fTypeTable;
     }
     
-    public void inAHtml(AHtml node)
-    {
-        Symbol symbol = SymbolTable.getSymbol(fCurrentSymbolTable, node.getIdentifier().getText());
-        fCurrentSymbolTable = SymbolTable.getScopedSymbolTable(symbol);
-    }
-    
-    public void outAHtml(AHtml node)
-    {
-        fCurrentSymbolTable = fCurrentSymbolTable.getNext();
-    }    
-    
-    
-    public void inAFunction(AFunction node)
-    {
-        Symbol symbol = SymbolTable.getSymbol(fCurrentSymbolTable, node.getIdentifier().getText());
-        fCurrentSymbolTable = SymbolTable.getScopedSymbolTable(symbol);
-    }
-    
-    public void outAFunction(AFunction node)
-    {
-        fCurrentSymbolTable = fCurrentSymbolTable.getNext();
-    }
-
-    public void inASession(ASession node)
-    {
-        Symbol symbol = SymbolTable.getSymbol(fCurrentSymbolTable, node.getIdentifier().getText());
-        fCurrentSymbolTable = SymbolTable.getScopedSymbolTable(symbol);
-    }
-    
-    public void outASession(ASession node)
-    {
-        fCurrentSymbolTable = fCurrentSymbolTable.getNext();
-    }
-    
     public void inACompoundStm(ACompoundstm node)
     {
         if(! (node.parent() instanceof AFunction || node.parent() instanceof ASession) )
@@ -195,6 +161,12 @@ public class TypeChecker extends DepthFirstAdapter
         outAService(node);
     }
 
+    public void inAHtml(AHtml node)
+    {
+        Symbol symbol = SymbolTable.getSymbol(fCurrentSymbolTable, node.getIdentifier().getText());
+        fCurrentSymbolTable = SymbolTable.getScopedSymbolTable(symbol);
+    }
+
     @Override
     public void caseAHtml(AHtml node)
     {
@@ -212,6 +184,11 @@ public class TypeChecker extends DepthFirstAdapter
         }
         outAHtml(node);
     }
+    
+    public void outAHtml(AHtml node)
+    {
+        fCurrentSymbolTable = fCurrentSymbolTable.getNext();
+    }   
 
     public void inATagStartHtmlbody(ATagStartHtmlbody node)
     {
@@ -908,6 +885,12 @@ public class TypeChecker extends DepthFirstAdapter
         outATupleType(node);
     }
 
+    public void inAFunction(AFunction node)
+    {
+        Symbol symbol = SymbolTable.getSymbol(fCurrentSymbolTable, node.getIdentifier().getText());
+        fCurrentSymbolTable = SymbolTable.getScopedSymbolTable(symbol);
+    }
+
     @Override
     public void caseAFunction(AFunction node)
     {
@@ -932,6 +915,11 @@ public class TypeChecker extends DepthFirstAdapter
             node.getCompoundstm().apply(this);
         }
         outAFunction(node);
+    }
+    
+    public void outAFunction(AFunction node)
+    {
+        fCurrentSymbolTable = fCurrentSymbolTable.getNext();
     }
 
     public void inAArguments(AArguments node)
@@ -983,6 +971,12 @@ public class TypeChecker extends DepthFirstAdapter
         outAArgument(node);
     }
 
+    public void inASession(ASession node)
+    {
+        Symbol symbol = SymbolTable.getSymbol(fCurrentSymbolTable, node.getIdentifier().getText());
+        fCurrentSymbolTable = SymbolTable.getScopedSymbolTable(symbol);
+    }
+
     @Override
     public void caseASession(ASession node)
     {
@@ -996,6 +990,11 @@ public class TypeChecker extends DepthFirstAdapter
             node.getCompoundstm().apply(this);
         }
         outASession(node);
+    }
+    
+    public void outASession(ASession node)
+    {
+        fCurrentSymbolTable = fCurrentSymbolTable.getNext();
     }
 
     public void inAEmptyStm(AEmptyStm node)
