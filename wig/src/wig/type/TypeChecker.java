@@ -1035,6 +1035,19 @@ public class TypeChecker extends DepthFirstAdapter
         if(node.getReceive() != null)
         {
             node.getReceive().apply(this);
+            
+            LinkedList<PInput> inputList = ((AReceive)node.getReceive()).getInput();
+            
+            for (PInput pi:inputList)
+            {
+                AInput ai = (AInput)pi;
+                ai.apply(this);
+
+                if (fTypeTable.getNodeType(ai.getLvalue()) != Types.STRING)
+                {
+                    puts("Error: Left Value in Receive statement not of type string.");
+                }
+            }
         }
         outAShowStm(node);
     }
@@ -1916,6 +1929,7 @@ public class TypeChecker extends DepthFirstAdapter
         {
             node.getLeft().apply(this);
         }
+        
         if(node.getRight() != null)
         {
             node.getRight().apply(this);

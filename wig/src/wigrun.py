@@ -42,7 +42,7 @@ def main():
 
 	elif (cmd=="tc"):
 		print "type checking"
-
+		subprocess.call(["java", "wig.compiler.Compiler", "wall.wig", "-st", "-tc"])
 
 	else:
 		sys.exit(1)
