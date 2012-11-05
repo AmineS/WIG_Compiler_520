@@ -11,7 +11,7 @@ import wig.node.Node;
 public class TypeTable
 {
     /** The hashtable from node to type */
-    private Hashtable<Node,Types> fHashTable = new Hashtable<Node,Types>();
+    private Hashtable<Node,Type> fHashTable = new Hashtable<Node,Type>();
     
     /**
      * Constructor
@@ -25,7 +25,7 @@ public class TypeTable
      * @param node
      * @return node's type
      */
-    public Types getNodeType(Node node)
+    public Type getNodeType(Node node)
     {
        return fHashTable.get(node); 
     }
@@ -35,7 +35,7 @@ public class TypeTable
      * @param node - node for which type is being set
      * @param type - the type of the node
      */
-    public void setNodeType(Node node, Types type)
+    public void setNodeType(Node node, Type type)
     {
         fHashTable.put(node, type);
     }

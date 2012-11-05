@@ -1,6 +1,6 @@
 package wig.type;
 
-public enum Types
+public enum Type
 {
     INT, BOOL, TUPLE, VOID, STRING
 }

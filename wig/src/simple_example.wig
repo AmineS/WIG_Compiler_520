@@ -11,6 +11,7 @@ service {
   schema num {
     int num1; 
     int num2;
+    string s;
   }
 
   tuple num num0;
@@ -18,10 +19,43 @@ service {
   int counter;
   int hello, hello3;
   
-	int dumb1(int arg1, int arg2)
+	int func1(int arg1, int arg2)
 	{
-		int funcDumb;
-		return 1;
+		int tmp;
+		/*tmp = func1(func1(2, 3), 3) + 1;
+		tmp = func1("hello");
+		tmp = func1("hello", "yellow");
+		tmp = func1(1, "hello");
+		tmp = 3 * "hello";
+		tmp = 3 / "hello";
+		tmp = 3 % "hello";
+		return num0;
+		if( 1 > 3 && "h3llo" > 2)
+		{
+			return tmp;
+		}
+		if( 1 > 3 || "h3llo")
+		{
+			return tmp;
+		}
+		if( 1 < 3 && "h3llo")
+		{
+			return tmp;
+		}
+		while(false && !(true || func1(2,3) <= 4))
+		{
+			return tmp;
+			while(false && !(true || func1(2,3) <= 4))
+			{
+				while(false && !(true || func1(2,3) <= 4))
+				{
+					return tmp;
+				}
+			}
+		}
+		tmp = num0.s;
+		*/
+		return tmp;
 	}
 	
 	/*
@@ -35,7 +69,7 @@ service {
 		counter = counter + 1;
   	}
 	
-	num0.num1 = 2;
+	num0.num2 = 2;
 	
     counter = counter + 1;
     
