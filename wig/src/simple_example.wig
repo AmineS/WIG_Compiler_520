@@ -35,7 +35,7 @@ service {
 		counter = counter + 1;
   	}
 	
-	num0.num1 = 2;
+	num0.num2 = 2;
 	
     counter = counter + 1;
     

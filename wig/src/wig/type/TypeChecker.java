@@ -2617,14 +2617,19 @@ public class TypeChecker extends DepthFirstAdapter
     public void caseAQualifiedLvalue(AQualifiedLvalue node)
     {
         inAQualifiedLvalue(node);
-        if(node.getLeft() != null)
+        
+        SVariable symbol = (SVariable) SymbolTable.getSymbol(fCurrentSymbolTable, node.getLeft().getText());
+        SymbolTable schemaSymbolTable = SymbolTable.getSymbolTableOfSchema(fCurrentSymbolTable, symbol.getVariable()); 
+        SField field = (SField) SymbolTable.getSymbol(schemaSymbolTable, node.getRight().getText());
+        
+        if(field == null)
         {
-            node.getLeft().apply(this);
+            puts("Error: a field with the name " + node.getRight().getText() + " does not exist in the schema for tuple " + node.getRight().getText() + "!");
         }
-        if(node.getRight() != null)
-        {
-            node.getRight().apply(this);
-        }
+        else
+        {            
+            fTypeTable.setNodeType(node, nodeToType(field.getField().getType()));
+        }               
         outAQualifiedLvalue(node);
     }
 
