@@ -11,6 +11,7 @@ service {
   schema num {
     int num1; 
     int num2;
+    string s;
   }
 
   tuple num num0;
@@ -51,7 +52,9 @@ service {
 					return tmp;
 				}
 			}
-		}*/
+		}
+		tmp = num0.s;
+		*/
 		return tmp;
 	}
 	

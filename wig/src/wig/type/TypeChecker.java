@@ -1512,7 +1512,7 @@ public class TypeChecker extends DepthFirstAdapter
         {
             if(! TypeRules.assignment(leftNodeType, rightNodeType))
             {
-                puts("Error: Type mismatch for addition.");
+                puts("Error: Type mismatch for assignment.");
             }
         }
         else
