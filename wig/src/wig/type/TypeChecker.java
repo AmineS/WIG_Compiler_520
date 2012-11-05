@@ -1095,6 +1095,27 @@ public class TypeChecker extends DepthFirstAdapter
         {
             node.getExp().apply(this);
         }
+        
+        Types nodeType = fTypeTable.getNodeType(node.getExp());
+        
+        if(nodeType != null)
+        {
+            Node parentNode = node.parent();
+            while(!(parentNode instanceof AFunction))
+            {
+                parentNode = node.parent();
+            }
+            AFunction functionNode = (AFunction) parentNode;
+            Types functionType = nodeToType(functionNode.getType());
+            if(!TypeRules.returnExpression(functionType, nodeType))
+            {
+                puts("Error: Return type mismatch in function " + functionNode.getIdentifier().getText().trim() + " return statement.");
+            }
+        }
+        else
+        {
+            puts("Error: Type table does not contain entries for required nodes!");
+        }
         outAReturnexpStm(node);
     }
 
@@ -2374,7 +2395,6 @@ public class TypeChecker extends DepthFirstAdapter
         
         if(TypeRules.functionCall(argTypes, paramTypes))
         {
-           
             fTypeTable.setNodeType(node, nodeToType(function.getType()));
         }
         else
