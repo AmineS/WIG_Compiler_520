@@ -142,7 +142,8 @@ public class SymbolCollector extends DepthFirstAdapter
             {
                 List<TIdentifier> tmpList = new ArrayList<TIdentifier>();
                 tmpList.add(new TIdentifier(name));
-                AVariable g_l_variable = new AVariable(type, tmpList);
+                PType t = (PType) type.clone();
+                AVariable g_l_variable = new AVariable(t, tmpList);
                 SymbolTable.putSymbol(fCurrentSymTable, name, SymbolKind.VARIABLE, g_l_variable, fCurrentSymTable);
             }
         }

@@ -163,7 +163,7 @@ public class TypeChecker extends DepthFirstAdapter
 
     public void inAHtml(AHtml node)
     {
-        Symbol symbol = SymbolTable.getSymbol(fCurrentSymbolTable, node.getIdentifier().getText());
+        Symbol symbol = SymbolTable.lookupHierarchy(fCurrentSymbolTable, node.getIdentifier().getText());
         fCurrentSymbolTable = SymbolTable.getScopedSymbolTable(symbol);
     }
 
@@ -887,7 +887,7 @@ public class TypeChecker extends DepthFirstAdapter
 
     public void inAFunction(AFunction node)
     {
-        Symbol symbol = SymbolTable.getSymbol(fCurrentSymbolTable, node.getIdentifier().getText());
+        Symbol symbol = SymbolTable.lookupHierarchy(fCurrentSymbolTable, node.getIdentifier().getText());
         fCurrentSymbolTable = SymbolTable.getScopedSymbolTable(symbol);
     }
 
@@ -973,7 +973,7 @@ public class TypeChecker extends DepthFirstAdapter
 
     public void inASession(ASession node)
     {
-        Symbol symbol = SymbolTable.getSymbol(fCurrentSymbolTable, node.getIdentifier().getText());
+        Symbol symbol = SymbolTable.lookupHierarchy(fCurrentSymbolTable, node.getIdentifier().getText());
         fCurrentSymbolTable = SymbolTable.getScopedSymbolTable(symbol);
     }
 
@@ -1074,6 +1074,10 @@ public class TypeChecker extends DepthFirstAdapter
     public void caseAReturnStm(AReturnStm node)
     {
         inAReturnStm(node);
+        if(node != null)
+        {
+            node.apply(this);
+        }
         outAReturnStm(node);
     }
 
@@ -1096,20 +1100,20 @@ public class TypeChecker extends DepthFirstAdapter
             node.getExp().apply(this);
         }
         
-        Types nodeType = fTypeTable.getNodeType(node.getExp());
+        Type nodeType = fTypeTable.getNodeType(node.getExp());
         
         if(nodeType != null)
         {
             Node parentNode = node.parent();
             while(!(parentNode instanceof AFunction))
             {
-                parentNode = node.parent();
+                parentNode = parentNode.parent();
             }
             AFunction functionNode = (AFunction) parentNode;
-            Types functionType = nodeToType(functionNode.getType());
+            Type functionType = nodeToType(functionNode.getType());
             if(!TypeRules.returnExpression(functionType, nodeType))
             {
-                puts("Error: Return type mismatch in function " + functionNode.getIdentifier().getText().trim() + " return statement.");
+                puts("Error: Return type mismatch in function " + functionNode.getIdentifier().getText().trim());
             }
         }
         else
@@ -1138,13 +1142,13 @@ public class TypeChecker extends DepthFirstAdapter
             node.getExp().apply(this);
         }
         
-        Types conditionNodeType = fTypeTable.getNodeType(node.getExp());
+        Type conditionNodeType = fTypeTable.getNodeType(node.getExp());
         
         if(conditionNodeType != null)
         {
             if(TypeRules.controlFlow(conditionNodeType))
             {
-                fTypeTable.setNodeType(node, Types.BOOL);
+                fTypeTable.setNodeType(node, Type.BOOL);
             }
             else
             {
@@ -1182,13 +1186,13 @@ public class TypeChecker extends DepthFirstAdapter
             node.getExp().apply(this);
         }
         
-        Types conditionNodeType = fTypeTable.getNodeType(node.getExp());
+        Type conditionNodeType = fTypeTable.getNodeType(node.getExp());
         
         if(conditionNodeType != null)
         {
             if(TypeRules.controlFlow(conditionNodeType))
             {
-                fTypeTable.setNodeType(node, Types.BOOL);
+                fTypeTable.setNodeType(node, Type.BOOL);
             }
             else
             {
@@ -1230,13 +1234,13 @@ public class TypeChecker extends DepthFirstAdapter
             node.getExp().apply(this);
         }
         
-        Types conditionNodeType = fTypeTable.getNodeType(node.getExp());
+        Type conditionNodeType = fTypeTable.getNodeType(node.getExp());
         
         if(conditionNodeType != null)
         {
             if(TypeRules.controlFlow(conditionNodeType))
             {
-                fTypeTable.setNodeType(node, Types.BOOL);
+                fTypeTable.setNodeType(node, Type.BOOL);
             }
             else
             {
@@ -1501,8 +1505,8 @@ public class TypeChecker extends DepthFirstAdapter
             node.getRight().apply(this);
         }
         
-        Types leftNodeType = fTypeTable.getNodeType(node.getLvalue());
-        Types rightNodeType = fTypeTable.getNodeType(node.getRight());
+        Type leftNodeType = fTypeTable.getNodeType(node.getLvalue());
+        Type rightNodeType = fTypeTable.getNodeType(node.getRight());
         
         if(leftNodeType != null && rightNodeType != null)
         {
@@ -1542,14 +1546,14 @@ public class TypeChecker extends DepthFirstAdapter
             node.getRight().apply(this);
         }
         
-        Types leftNodeType = fTypeTable.getNodeType(node.getLeft());
-        Types rightNodeType = fTypeTable.getNodeType(node.getRight());
+        Type leftNodeType = fTypeTable.getNodeType(node.getLeft());
+        Type rightNodeType = fTypeTable.getNodeType(node.getRight());
         
         if(leftNodeType != null && rightNodeType != null)
         {
             if(TypeRules.logicalComparison(leftNodeType, rightNodeType))
             {
-                fTypeTable.setNodeType(node, Types.BOOL);
+                fTypeTable.setNodeType(node, Type.BOOL);
             }
             else
             {
@@ -1586,14 +1590,14 @@ public class TypeChecker extends DepthFirstAdapter
             node.getRight().apply(this);
         }
         
-        Types leftNodeType = fTypeTable.getNodeType(node.getLeft());
-        Types rightNodeType = fTypeTable.getNodeType(node.getRight());
+        Type leftNodeType = fTypeTable.getNodeType(node.getLeft());
+        Type rightNodeType = fTypeTable.getNodeType(node.getRight());
         
         if(leftNodeType != null && rightNodeType != null)
         {
             if(TypeRules.logicalComparison(leftNodeType, rightNodeType))
             {
-                fTypeTable.setNodeType(node, Types.BOOL);
+                fTypeTable.setNodeType(node, Type.BOOL);
             }
             else
             {
@@ -1630,14 +1634,14 @@ public class TypeChecker extends DepthFirstAdapter
             node.getRight().apply(this);
         }
         
-        Types leftNodeType = fTypeTable.getNodeType(node.getLeft());
-        Types rightNodeType = fTypeTable.getNodeType(node.getRight());
+        Type leftNodeType = fTypeTable.getNodeType(node.getLeft());
+        Type rightNodeType = fTypeTable.getNodeType(node.getRight());
         
         if(leftNodeType != null && rightNodeType != null)
         {
             if(TypeRules.intComparison(leftNodeType, rightNodeType))
             {
-                fTypeTable.setNodeType(node, Types.BOOL);
+                fTypeTable.setNodeType(node, Type.BOOL);
             }
             else
             {
@@ -1674,14 +1678,14 @@ public class TypeChecker extends DepthFirstAdapter
             node.getRight().apply(this);
         }
         
-        Types leftNodeType = fTypeTable.getNodeType(node.getLeft());
-        Types rightNodeType = fTypeTable.getNodeType(node.getRight());
+        Type leftNodeType = fTypeTable.getNodeType(node.getLeft());
+        Type rightNodeType = fTypeTable.getNodeType(node.getRight());
         
         if(leftNodeType != null && rightNodeType != null)
         {
             if(TypeRules.intComparison(leftNodeType, rightNodeType))
             {
-                fTypeTable.setNodeType(node, Types.BOOL);
+                fTypeTable.setNodeType(node, Type.BOOL);
             }
             else
             {
@@ -1718,14 +1722,14 @@ public class TypeChecker extends DepthFirstAdapter
             node.getRight().apply(this);
         }
         
-        Types leftNodeType = fTypeTable.getNodeType(node.getLeft());
-        Types rightNodeType = fTypeTable.getNodeType(node.getRight());
+        Type leftNodeType = fTypeTable.getNodeType(node.getLeft());
+        Type rightNodeType = fTypeTable.getNodeType(node.getRight());
         
         if(leftNodeType != null && rightNodeType != null)
         {
             if(TypeRules.intComparison(leftNodeType, rightNodeType))
             {
-                fTypeTable.setNodeType(node, Types.BOOL);
+                fTypeTable.setNodeType(node, Type.BOOL);
             }
             else
             {
@@ -1762,14 +1766,14 @@ public class TypeChecker extends DepthFirstAdapter
             node.getRight().apply(this);
         }
         
-        Types leftNodeType = fTypeTable.getNodeType(node.getLeft());
-        Types rightNodeType = fTypeTable.getNodeType(node.getRight());
+        Type leftNodeType = fTypeTable.getNodeType(node.getLeft());
+        Type rightNodeType = fTypeTable.getNodeType(node.getRight());
         
         if(leftNodeType != null && rightNodeType != null)
         {
             if(TypeRules.intComparison(leftNodeType, rightNodeType))
             {
-                fTypeTable.setNodeType(node, Types.BOOL);
+                fTypeTable.setNodeType(node, Type.BOOL);
             }
             else
             {
@@ -1806,14 +1810,14 @@ public class TypeChecker extends DepthFirstAdapter
             node.getRight().apply(this);
         }
         
-        Types leftNodeType = fTypeTable.getNodeType(node.getLeft());
-        Types rightNodeType = fTypeTable.getNodeType(node.getRight());
+        Type leftNodeType = fTypeTable.getNodeType(node.getLeft());
+        Type rightNodeType = fTypeTable.getNodeType(node.getRight());
         
         if(leftNodeType != null && rightNodeType != null)
         {
             if(TypeRules.intComparison(leftNodeType, rightNodeType))
             {
-                fTypeTable.setNodeType(node, Types.BOOL);
+                fTypeTable.setNodeType(node, Type.BOOL);
             }
             else
             {
@@ -1850,14 +1854,14 @@ public class TypeChecker extends DepthFirstAdapter
             node.getRight().apply(this);
         }
         
-        Types leftNodeType = fTypeTable.getNodeType(node.getLeft());
-        Types rightNodeType = fTypeTable.getNodeType(node.getRight());
+        Type leftNodeType = fTypeTable.getNodeType(node.getLeft());
+        Type rightNodeType = fTypeTable.getNodeType(node.getRight());
         
         if(leftNodeType != null && rightNodeType != null)
         {
             if(TypeRules.intComparison(leftNodeType, rightNodeType))
             {
-                fTypeTable.setNodeType(node, Types.BOOL);
+                fTypeTable.setNodeType(node, Type.BOOL);
             }
             else
             {
@@ -1894,18 +1898,18 @@ public class TypeChecker extends DepthFirstAdapter
             node.getRight().apply(this);
         }
         
-        Types leftNodeType = fTypeTable.getNodeType(node.getLeft());
-        Types rightNodeType = fTypeTable.getNodeType(node.getRight());
+        Type leftNodeType = fTypeTable.getNodeType(node.getLeft());
+        Type rightNodeType = fTypeTable.getNodeType(node.getRight());
         
         if(leftNodeType != null && rightNodeType != null)
         {
             if(TypeRules.intAddition(leftNodeType, rightNodeType))
             {
-                fTypeTable.setNodeType(node, Types.INT);
+                fTypeTable.setNodeType(node, Type.INT);
             }
             else if(TypeRules.stringAddition(leftNodeType, rightNodeType))
             {
-                fTypeTable.setNodeType(node, Types.STRING);
+                fTypeTable.setNodeType(node, Type.STRING);
             }
             else
             {
@@ -1942,14 +1946,14 @@ public class TypeChecker extends DepthFirstAdapter
             node.getRight().apply(this);
         }
         
-        Types leftNodeType = fTypeTable.getNodeType(node.getLeft());
-        Types rightNodeType = fTypeTable.getNodeType(node.getRight());
+        Type leftNodeType = fTypeTable.getNodeType(node.getLeft());
+        Type rightNodeType = fTypeTable.getNodeType(node.getRight());
         
         if(leftNodeType != null && rightNodeType != null)
         {
             if(TypeRules.intSubtraction(leftNodeType, rightNodeType))
             {
-                fTypeTable.setNodeType(node, Types.INT);
+                fTypeTable.setNodeType(node, Type.INT);
             }
             else
             {
@@ -1986,14 +1990,14 @@ public class TypeChecker extends DepthFirstAdapter
             node.getRight().apply(this);
         }
         
-        Types leftNodeType = fTypeTable.getNodeType(node.getLeft());
-        Types rightNodeType = fTypeTable.getNodeType(node.getRight());
+        Type leftNodeType = fTypeTable.getNodeType(node.getLeft());
+        Type rightNodeType = fTypeTable.getNodeType(node.getRight());
         
         if(leftNodeType != null && rightNodeType != null)
         {
             if(TypeRules.intMultiplication(leftNodeType, rightNodeType))
             {
-                fTypeTable.setNodeType(node, Types.INT);
+                fTypeTable.setNodeType(node, Type.INT);
             }
             else
             {
@@ -2030,14 +2034,14 @@ public class TypeChecker extends DepthFirstAdapter
             node.getRight().apply(this);
         }
         
-        Types leftNodeType = fTypeTable.getNodeType(node.getLeft());
-        Types rightNodeType = fTypeTable.getNodeType(node.getRight());
+        Type leftNodeType = fTypeTable.getNodeType(node.getLeft());
+        Type rightNodeType = fTypeTable.getNodeType(node.getRight());
         
         if(leftNodeType != null && rightNodeType != null)
         {
             if(TypeRules.intDivision(leftNodeType, rightNodeType))
             {
-                fTypeTable.setNodeType(node, Types.INT);
+                fTypeTable.setNodeType(node, Type.INT);
             }
             else
             {
@@ -2074,14 +2078,14 @@ public class TypeChecker extends DepthFirstAdapter
             node.getRight().apply(this);
         }
         
-        Types leftNodeType = fTypeTable.getNodeType(node.getLeft());
-        Types rightNodeType = fTypeTable.getNodeType(node.getRight());
+        Type leftNodeType = fTypeTable.getNodeType(node.getLeft());
+        Type rightNodeType = fTypeTable.getNodeType(node.getRight());
         
         if(leftNodeType != null && rightNodeType != null)
         {
             if(TypeRules.intModulo(leftNodeType, rightNodeType))
             {
-                fTypeTable.setNodeType(node, Types.INT);
+                fTypeTable.setNodeType(node, Type.INT);
             }
             else
             {
@@ -2244,13 +2248,13 @@ public class TypeChecker extends DepthFirstAdapter
         {
             node.getLeft().apply(this);
         }
-        Types leftNodeType = fTypeTable.getNodeType(node.getLeft());
+        Type leftNodeType = fTypeTable.getNodeType(node.getLeft());
         
         if(leftNodeType != null)
         {
             if(TypeRules.notExpression(leftNodeType))
             {
-                fTypeTable.setNodeType(node, Types.BOOL);
+                fTypeTable.setNodeType(node, Type.BOOL);
             }
             else
             {
@@ -2283,13 +2287,13 @@ public class TypeChecker extends DepthFirstAdapter
             node.getLeft().apply(this);
         }
         
-        Types leftNodeType = fTypeTable.getNodeType(node.getLeft());
+        Type leftNodeType = fTypeTable.getNodeType(node.getLeft());
         
         if(leftNodeType != null)
         {
             if(TypeRules.intNegation(leftNodeType))
             {
-                fTypeTable.setNodeType(node, Types.INT);
+                fTypeTable.setNodeType(node, Type.INT);
             }
             else
             {
@@ -2321,7 +2325,7 @@ public class TypeChecker extends DepthFirstAdapter
         {
             node.getLeft().apply(this);
         }
-        Types leftNodeType = fTypeTable.getNodeType(node.getLeft());
+        Type leftNodeType = fTypeTable.getNodeType(node.getLeft());
         if(leftNodeType != null)
         {
             fTypeTable.setNodeType(node, leftNodeType);
@@ -2347,7 +2351,7 @@ public class TypeChecker extends DepthFirstAdapter
         {
             node.getLvalue().apply(this);
         }
-        Types lValueNodeType = fTypeTable.getNodeType(node.getLvalue());
+        Type lValueNodeType = fTypeTable.getNodeType(node.getLvalue());
         if(lValueNodeType != null)
         {
             fTypeTable.setNodeType(node, lValueNodeType);
@@ -2369,18 +2373,15 @@ public class TypeChecker extends DepthFirstAdapter
     public void caseACallExp(ACallExp node)
     {
         inACallExp(node);
-        if(node.getIdentifier() != null)
-        {
-            node.getIdentifier().apply(this);
-        }
-        SFunction symbol = (SFunction) SymbolTable.getSymbol(fCurrentSymbolTable, node.getIdentifier().getText());
+       
+        SFunction symbol = (SFunction) SymbolTable.lookupHierarchy(fCurrentSymbolTable, node.getIdentifier().getText().trim());
         AFunction function = symbol.getFunction();
         
-        Types[] argTypes = getArgumentTypes(function.getArgument());
-        Types[] paramTypes;
+        Type[] argTypes = getArgumentTypes(function.getArgument());
+        Type[] paramTypes;
         {
             List<PExp> copy = new ArrayList<PExp>(node.getExp());            
-            paramTypes = new Types[copy.size()];
+            paramTypes = new Type[copy.size()];
             
             for(PExp e : copy)
             {
@@ -2404,9 +2405,9 @@ public class TypeChecker extends DepthFirstAdapter
         outACallExp(node);
     }
     
-    private Types[] getArgumentTypes(LinkedList<PArgument> arguments)
+    private Type[] getArgumentTypes(LinkedList<PArgument> arguments)
     {
-        Types[] argTypes = new Types[arguments.size()];
+        Type[] argTypes = new Type[arguments.size()];
         
         for(int i = 0; i<argTypes.length; ++i)
         {
@@ -2417,28 +2418,28 @@ public class TypeChecker extends DepthFirstAdapter
         return argTypes;
     }
     
-    private Types nodeToType(PType node)
+    private Type nodeToType(PType node)
     {
-        Types type = null;
+        Type type = null;
         if(node instanceof AIntType)
         {
-            type = Types.INT;
+            type = Type.INT;
         }
         else if (node instanceof AStringType)
         {
-            type = Types.STRING;
+            type = Type.STRING;
         }
         else if (node instanceof ABoolType)
         {
-            type = Types.BOOL;
+            type = Type.BOOL;
         }
         else if (node instanceof AVoidType)
         {
-            type = Types.VOID;   
+            type = Type.VOID;   
         }
         else if (node instanceof ATupleType)
         {
-            type = Types.TUPLE;
+            type = Type.TUPLE;
         }
         else
         {
@@ -2462,7 +2463,7 @@ public class TypeChecker extends DepthFirstAdapter
     @Override
     public void caseAIntExp(AIntExp node)
     {
-        fTypeTable.setNodeType(node, Types.INT);
+        fTypeTable.setNodeType(node, Type.INT);
     }
 
     public void inATrueExp(ATrueExp node)
@@ -2481,7 +2482,7 @@ public class TypeChecker extends DepthFirstAdapter
         inATrueExp(node);
         if(node.getTrue() != null)
         {
-            fTypeTable.setNodeType(node, Types.BOOL);
+            fTypeTable.setNodeType(node, Type.BOOL);
         }
         outATrueExp(node);
     }
@@ -2502,7 +2503,7 @@ public class TypeChecker extends DepthFirstAdapter
         inAFalseExp(node);
         if(node.getFalse() != null)
         {
-            fTypeTable.setNodeType(node, Types.BOOL);
+            fTypeTable.setNodeType(node, Type.BOOL);
         }
         outAFalseExp(node);
     }
@@ -2520,7 +2521,7 @@ public class TypeChecker extends DepthFirstAdapter
     @Override
     public void caseAStringExp(AStringExp node)
     {
-        fTypeTable.setNodeType(node, Types.STRING);
+        fTypeTable.setNodeType(node, Type.STRING);
     }
 
     public void inATupleExp(ATupleExp node)
@@ -2565,7 +2566,7 @@ public class TypeChecker extends DepthFirstAdapter
         {
             node.getExp().apply(this);
         }
-        Types expType = fTypeTable.getNodeType(node.getExp());
+        Type expType = fTypeTable.getNodeType(node.getExp());
         if(expType != null)
         {
             fTypeTable.setNodeType(node, expType);
@@ -2616,7 +2617,7 @@ public class TypeChecker extends DepthFirstAdapter
             node.getIdentifier().apply(this);
         }
         
-        SVariable symbol = (SVariable) SymbolTable.getSymbol(fCurrentSymbolTable, node.getIdentifier().getText());
+        SVariable symbol = (SVariable) SymbolTable.lookupHierarchy(fCurrentSymbolTable, node.getIdentifier().getText());
         AVariable variable = symbol.getVariable();        
         fTypeTable.setNodeType(node, nodeToType(variable.getType()));
         
@@ -2638,7 +2639,7 @@ public class TypeChecker extends DepthFirstAdapter
     {
         inAQualifiedLvalue(node);
         
-        SVariable symbol = (SVariable) SymbolTable.getSymbol(fCurrentSymbolTable, node.getLeft().getText());
+        SVariable symbol = (SVariable) SymbolTable.lookupHierarchy(fCurrentSymbolTable, node.getLeft().getText());
         SymbolTable schemaSymbolTable = SymbolTable.getSymbolTableOfSchema(fCurrentSymbolTable, symbol.getVariable()); 
         SField field = (SField) SymbolTable.getSymbol(schemaSymbolTable, node.getRight().getText());
         
