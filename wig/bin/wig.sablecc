@@ -1,0 +1,572 @@
+Package wig;
+
+/************************************
+* Helpers
+**************************************/
+Helpers
+
+	any = [0..0xffff];
+
+	letter = [['a'..'z'] + ['A'..'Z']];
+	digit = ['0'..'9'];
+	letter_or_digit = letter | digit;
+	letter_or_digit_or_us = letter_or_digit | '_';
+	letter_or_us = letter | '_';
+
+	tab = 9;
+	cr = 13;
+	lf = 10;
+	eol = lf|cr|cr lf;
+
+	no_dash = [any - '-'];
+	no_meta_stm = [no_dash -'>'];
+	no_quote = [any-'"'];
+	no_star = [any-'*'];
+	no_star_backslash = [no_star -'/'];
+	no_cr_lf = [any - [lf+cr]];
+
+	escapequote = '\"';
+
+	meta_start = '<!--';
+	meta_end = '-->';
+	meta_stmt = meta_start no_dash* '-'+ (no_meta_stm no_dash* '-'+)* meta_end;
+
+	string_const = '"' (no_quote* escapequote* no_quote*)* '"';
+
+	inline_comment = '//' no_cr_lf* eol;
+	block_comment = '/*' no_star* '*'+(no_star_backslash no_star* '*' +)* '/';
+	wig_comment = inline_comment|block_comment;
+
+	whatever_stm = [[any-'<']-'>']*; //anything without < and >
+
+/************************************
+* States
+**************************************/
+States
+
+	wig_scope,html_scope,whatever_scope,html_tag_scope, hole_scope;
+
+/************************************
+* Tokens
+**************************************/
+Tokens
+
+/*********************
+* Wig Keywords
+*********************/
+	{wig_scope} service = 'service';
+	{wig_scope} const = 'const';
+	{wig_scope} html = 'html';
+	{wig_scope->html_scope,html_scope} html_tag_start = '<html>';
+	{wig_scope} schema = 'schema';
+	{wig_scope} session = 'session';
+	{wig_scope} show = 'show';
+	{wig_scope} exit = 'exit';
+	{wig_scope} return = 'return';
+	{wig_scope} if = 'if';
+	{wig_scope} else = 'else';
+	{wig_scope} while = 'while';
+	{wig_scope} plug = 'plug';
+	{wig_scope} receive = 'receive';
+	{wig_scope} int = 'int';
+	{wig_scope} bool = 'bool';
+	{wig_scope} string = 'string';
+	{wig_scope} void = 'void';
+	{wig_scope} tuple = 'tuple';
+	{wig_scope} true = 'true';
+	{wig_scope} false = 'false';
+
+
+/*********************
+* HTML Keywords
+*********************/
+	{html_scope} meta = meta_stmt; // any string of the form <!-- ... -->
+	{html_scope->wig_scope,whatever_scope->html_scope,wig_scope} html_tag_end = '</html>';
+	{html_scope->html_tag_scope} input = 'input';
+	{html_scope,html_tag_scope,wig_scope} pos_intconst = '0' | [digit-'0'] digit*;
+	{html_scope} neg_intconst = '-' [digit-'0'] digit*;
+	{html_scope} select = 'select'; 
+
+/*********************
+* HTML Tags (Input) Keywords
+*********************/
+	{html_tag_scope} type = 'type';
+	{html_tag_scope} name = 'name';
+	{html_tag_scope} text = 'text';
+	{html_tag_scope} radio = 'radio';
+
+/*********************
+* Symbols & Operators
+*********************/
+	{wig_scope} l_brace = '{';
+	{wig_scope} r_brace = '}';
+	{wig_scope,html_scope,html_tag_scope} assign = '=';
+	{wig_scope, html_scope->wig_scope} semicolon = ';';
+	{wig_scope,whatever_scope->html_scope,html_scope} lt = '<';
+	{wig_scope,html_scope->whatever_scope,html_tag_scope->whatever_scope} gt = '>';
+	{whatever_scope->html_scope,html_scope} lt_slash = '</';
+	{whatever_scope->hole_scope, html_scope} lt_bracket = '<[';
+	{hole_scope->whatever_scope, html_scope} gt_bracket = ']>';
+	{wig_scope} comment = wig_comment;
+	{wig_scope} l_par = '(';
+	{wig_scope} r_par = ')';
+	{wig_scope} l_bracket = '[';
+	{wig_scope} r_bracket = ']';
+	{wig_scope} comma = ',';
+	{wig_scope} keep = '\+';
+	{wig_scope} remove = '\-';
+	{wig_scope} join = '<<';
+	{wig_scope} eq = '==';
+	{wig_scope} neq = '!=';
+	{wig_scope} lteq = '<=';
+	{wig_scope} gteq = '>=';
+	{wig_scope} not = '!';
+	{wig_scope} minus = '-';
+	{wig_scope} plus = '+';
+	{wig_scope} mult = '*';
+	{wig_scope} div = '/';
+	{wig_scope} mod = '%';
+	{wig_scope} and = '&&';
+	{wig_scope} or = '||';
+	{wig_scope} dot = '.';
+
+/*********************
+* Others
+*********************/
+	{wig_scope,html_scope,html_tag_scope} eol = eol;
+	{wig_scope,html_scope,html_tag_scope} blank = (tab|' '|eol)*;
+	{wig_scope,html_scope,html_tag_scope, hole_scope} identifier = letter_or_us (letter_or_us|digit)*; // usual identifiers
+	{wig_scope, html_tag_scope, html_scope} stringconst = string_const ; // usual string constants
+	
+	{whatever_scope} whatever = whatever_stm; // any string not containing < or >
+
+/*********************
+* Ignored Tokens *
+*********************/
+Ignored Tokens
+	blank, comment, eol;
+
+
+/************************************
+* Productions
+**************************************/
+Productions
+
+    service = T.service l_brace P.html+ P.schema* variable* function* P.session+ r_brace
+        {-> New service([html], [schema], [variable], [function], [session])};
+
+    html = const T.html identifier assign html_tag_start htmlbody* html_tag_end semicolon
+        {-> New html(identifier, [htmlbody])};
+
+    htmlbody{->htmlbody} = 
+      {tag_start} lt identifier attribute* gt
+        {->New htmlbody.tag_start(identifier, [attribute])}
+    | {tag_end} lt_slash identifier gt
+        {->New htmlbody.tag_end(identifier)}
+    | {hole} lt_bracket identifier gt_bracket
+        {->New htmlbody.hole(identifier)}
+    | {whatever} whatever 
+        {->New htmlbody.whatever(whatever)}
+    | {meta} meta 
+        {->New htmlbody.meta(meta)}
+    | {input} lt T.input inputattr+ gt
+        {->New htmlbody.input(T.input, [inputattr])}
+    | {select} lt [select_tag]:select inputattr+ [first_gt]:gt htmlbody* lt_slash select [second_gt]:gt
+        {->New htmlbody.select(select_tag, [inputattr], first_gt, [htmlbody])};
+
+    inputattr{->inputattr} = 
+      {name} name assign attr 
+        {->New inputattr.name(name, attr.attr)}
+    | {type} T.type assign inputtype 
+        {->New inputattr.type(T.type, inputtype)}
+    | {attribute} attribute 
+        {->New inputattr.attribute(attribute)};
+
+    inputtype{->inputtype} =
+      {texttype} text 
+        {->New inputtype.texttype(text)}
+    | {radiotype} radio 
+        {->New inputtype.radiotype(radio)}
+    | {strtype} stringconst 
+        {->New inputtype.strtype(stringconst)};
+
+    attribute {->attribute} =
+      {attr} attr 
+        {->New attribute.attr(attr.attr)}
+    | {assign} [left_attr]:attr assign [right_attr]:attr
+        {->New attribute.assign(left_attr.attr, right_attr.attr)};
+
+    attr{->attr} =
+      {id} identifier 
+        {->New attr.id(identifier)}
+    | {str} stringconst 
+        {->New attr.str(stringconst)}
+    | {iconst} P.intconst 
+        {->New attr.iconst(intconst)};
+
+    intconst{->P.intconst} =
+      {negint} neg_intconst 
+        {->New intconst.negint(neg_intconst)}
+    | {posint} pos_intconst 
+        {->New intconst.posint(pos_intconst)};
+
+    schema = T.schema identifier l_brace field* r_brace
+        {->New schema( identifier, [field])};
+
+    field{->field} = simpletype identifier semicolon 
+        {-> New field(simpletype.type, identifier)};
+
+    variable{->variable} = P.type identifiers semicolon
+        {->New variable(P.type, [identifiers.identifier])};
+
+    identifiers{->identifier*} =
+      {one} identifier
+        {->[identifier]}
+    | {many} identifiers comma identifier
+        {-> [identifiers.identifier, identifier]};
+
+    simpletype{->P.type} =
+      {int} int 
+        {->New type.int(int)}
+    | {bool} bool 
+        {->New type.bool(bool)}
+    | {string} string 
+        {->New type.string(string)}
+    | {void} void 
+        {->New type.void(void)};
+
+    type{->P.type} =
+      {simple} simpletype
+        {->simpletype.type}
+    | {tuple} tuple identifier
+        {->New type.tuple(identifier)};
+
+    function{->function} = P.type identifier l_par arguments? r_par compoundstm
+        {->New function(P.type, identifier, [arguments.argument], compoundstm)};
+
+    arguments{->argument*} =
+      {one} argument 
+        {->[argument]}
+    | {many} arguments comma argument 
+        {-> [arguments.argument, argument]};
+
+    argument{->argument} = P.type identifier 
+        {->New argument(P.type, identifier)};
+
+    session = T.session identifier l_par r_par compoundstm
+        {->New session(identifier, compoundstm)};
+
+    stm{->stm?} =
+      {empty} semicolon 
+        {->New stm.empty()}
+    | {show} show document P.receive? semicolon
+        {-> New stm.show(document, P.receive)}
+    | {exit} exit document semicolon 
+        {-> New stm.exit(document)}
+    | {return} return semicolon 
+        {-> New stm.return()}
+    | {returnexp} return exp semicolon 
+        {-> New stm.returnexp(exp)}
+    | {if} if l_par exp r_par stm 
+        {-> New stm.if(exp, stm)}
+    | {ifelse} if l_par exp r_par [then_stm]:stm_no_short_if else [else_stm]:stm
+        {-> New stm.ifelse(exp, then_stm.stm, else_stm)}
+    | {while} while l_par exp r_par stm 
+        {-> New stm.while(exp, stm)}
+    | {comp} compoundstm 
+        {-> New stm.comp(compoundstm)}
+    | {exp} exp semicolon 
+        {-> New stm.exp(exp)};
+
+    stm_no_short_if{->stm} =
+      {empty} semicolon 
+        {->New stm.empty() }
+    | {show} show document P.receive? semicolon
+        {->New stm.show(document, P.receive) }
+    | {exit} exit document semicolon 
+        {-> New stm.exit(document)}
+    | {return} return semicolon 
+        {-> New stm.return()}
+    | {returnexp} return exp semicolon 
+        {-> New stm.returnexp(exp)}
+    | {ifelse} if l_par exp r_par [then_stm]:stm_no_short_if else [else_stm]:stm_no_short_if
+        {-> New stm.ifelse(exp, then_stm.stm, else_stm.stm)}
+    | {while} while l_par exp r_par stm_no_short_if
+        {-> New stm.while(exp, stm_no_short_if.stm)}
+    | {comp} compoundstm 
+        {-> New stm.comp(compoundstm)}
+    | {exp} exp semicolon 
+        {-> New stm.exp(exp)};
+
+    document =
+      {id} identifier 
+        {-> New document.id(identifier)}
+    | {plug} T.plug identifier l_bracket plugs r_bracket
+        {-> New document.plug(identifier, [plugs.plug])};
+
+    receive = T.receive l_bracket inputs r_bracket
+        {-> New receive([inputs.input])};
+
+    compoundstm = l_brace variable* stm* r_brace
+        {-> New compoundstm([variable], [stm])};
+
+    plugs{->P.plug*} =
+      {one} P.plug 
+        {->[P.plug]}
+    | {many} P.plugs comma P.plug 
+        {-> [plugs.plug, P.plug]};
+
+    plug = identifier assign exp 
+        {-> New plug(identifier, exp.exp)};
+
+    inputs{->P.input*} =
+      {one} P.input 
+        {-> [P.input]}
+    | {many} P.inputs comma P.input 
+        {-> [inputs.input, input]};
+
+    input = lvalue assign identifier 
+        {-> New input(lvalue, identifier)};
+
+    exp{->exp} =
+      {assign} lvalue assign [right]:or_exp
+        {-> New exp.assign(lvalue, right.exp)}
+    | {default} [left]:or_exp 
+        {-> left.exp};
+
+    or_exp{->exp} =
+      {or} [left]:or_exp or [right]:and_exp 
+        {-> New exp.or(left.exp, right.exp)}
+    | {default} [left]:and_exp 
+        {-> left.exp};
+
+    and_exp{->exp} =
+      {and} [left]:and_exp and [right]:cmp_exp
+        {-> New exp.and(left.exp, right.exp)}
+    | {default} [left]:cmp_exp 
+        {-> left.exp};
+
+    cmp_exp{->exp} =
+      {eq} [left]:add_exp eq [right]:add_exp
+        {-> New exp.eq(left.exp, right.exp)}
+    | {neq} [left]:add_exp neq [right]:add_exp
+        {-> New exp.neq(left.exp, right.exp)}
+    | {lt} [left]:add_exp lt [right]:add_exp
+        {-> New exp.lt(left.exp, right.exp)}
+    | {gt} [left]:add_exp gt [right]:add_exp
+        {-> New exp.gt(left.exp, right.exp)}
+    | {lteq} [left]:add_exp lteq [right]:add_exp
+        {-> New exp.lteq(left.exp, right.exp)}
+    | {gteq} [left]:add_exp gteq [right]:add_exp
+        {-> New exp.gteq(left.exp, right.exp)}
+    | {default} [left]:add_exp {-> left.exp};
+
+    add_exp{->exp} =
+      {plus} [left]:add_exp plus [right]:mult_exp
+        {-> New exp.plus(left.exp, right.exp)}
+    | {minus} [left]:add_exp minus [right]:mult_exp
+        {-> New exp.minus(left.exp, right.exp)}
+    | {default} [left]:mult_exp 
+        {-> left.exp};
+
+    mult_exp{->exp} =
+      {mult} [left]:mult_exp mult [right]:join_exp
+        {-> New exp.mult(left.exp, right.exp)}
+    | {div} [left]:mult_exp div [right]:join_exp
+        {-> New exp.div(left.exp, right.exp)}
+    | {mod} [left]:mult_exp mod [right]:join_exp
+        {-> New exp.mod(left.exp, right.exp)}
+    | {default} [left]:join_exp 
+        {-> left.exp};
+
+    join_exp{->exp} =
+      {join} [left]:tuple_exp join [right]:join_exp
+        {-> New exp.join(left.exp, right.exp)}
+    | {default} [left]:tuple_exp 
+        {-> left.exp};
+
+    tuple_exp{->exp} =
+      {keep} [left]:tuple_exp keep identifier
+        {-> New exp.keep(left.exp, identifier)}
+    | {remove} [left]:tuple_exp remove identifier
+        {-> New exp.remove(left.exp, identifier)}
+    | {keep_many} [left]:tuple_exp keep l_par identifiers r_par
+        {-> New exp.keep_many(left.exp, [identifiers.identifier])}
+    | {remove_many} [left]:tuple_exp remove l_par identifiers r_par
+        {-> New exp.remove_many(left.exp, [identifiers.identifier])}
+    | {default} [left]:unary_exp
+        {-> left.exp};
+
+    unary_exp{->exp} =
+      {not} not [left]:base_exp 
+        {-> New exp.not(left.exp)}
+    | {neg} minus [left]:base_exp 
+        {-> New exp.neg(left.exp)}
+    | {default} [left]:base_exp 
+        {-> left.exp};
+
+    base_exp{->exp} =
+      {lvalue} lvalue 
+        {-> New exp.lvalue(lvalue)}
+    | {call} identifier l_par exps? r_par
+        {-> New exp.call(identifier, [exps.exp])}
+    | {int} P.intconst 
+        {-> New exp.int(intconst)}
+    | {true} true 
+        {-> New exp.true(true)}
+    | {false} false 
+        {-> New exp.false(false)}
+    | {string} stringconst 
+        {-> New exp.string(stringconst)}
+    | {tuple} tuple l_brace fieldvalues? r_brace
+        {-> New exp.tuple([fieldvalues.fieldvalue])}
+    | {paren} l_par exp r_par
+        {-> exp.exp};
+
+    exps{->exp*} =
+      {one} exp 
+        {-> [exp]}
+    | {many} exps comma exp 
+        {-> [exps.exp, exp]};
+
+    lvalue =
+      {simple} identifier 
+        {-> New lvalue.simple(identifier)}
+    | {qualified} [left]:identifier dot [right]:identifier
+        {-> New lvalue.qualified(left, right)};
+
+    fieldvalues{->fieldvalue*} =
+      {one} fieldvalue 
+        {-> [fieldvalue]}
+    | {many} fieldvalues comma fieldvalue
+        {-> [fieldvalues.fieldvalue, fieldvalue]};
+
+    fieldvalue = identifier assign exp 
+        {-> New fieldvalue(identifier, exp)};
+
+/************************************
+* Abstract Syntax Tree
+**************************************/
+Abstract Syntax Tree
+
+    service = P.html+ P.schema* variable* function* P.session+;
+
+    html = identifier htmlbody*;
+    
+    htmlbody = 
+          {tag_start} identifier attribute*
+        | {tag_end} identifier
+        | {hole} identifier
+        | {whatever} whatever
+        | {meta} meta
+        | {input} T.input inputattr+
+        | {select} [select_tag]:select inputattr+ [first_gt]:gt htmlbody*;
+
+    inputattr = 
+          {name} name attr
+        | {type} T.type inputtype
+        | {attribute} attribute
+        ;
+
+    inputtype = 
+          {texttype} text
+        | {radiotype} radio
+        | {strtype} stringconst;
+
+    attribute = 
+          {attr} attr
+        | {assign} [left_attr]:attr [right_attr]:attr;
+
+    attr = 
+          {id} identifier
+        | {str} stringconst
+        | {iconst} P.intconst;
+
+    intconst = 
+         {negint} neg_intconst
+        |{posint} pos_intconst;
+
+    schema = identifier field*;
+    field = P.type identifier;
+    variable = P.type identifier+;
+    identifiers = identifier*;
+
+    type = 
+          {int} int
+        | {bool} bool
+        | {string} string
+        | {void} void
+        | {simple} P.type
+        | {tuple} identifier;
+
+    function = P.type identifier argument* compoundstm;
+    arguments = argument*;
+    argument = P.type identifier;
+    session = identifier compoundstm;
+
+    stm = 
+          {empty}
+        | {show} document P.receive?
+        | {exit} document
+        | {return}
+        | {returnexp} exp
+        | {if} exp stm
+        | {ifelse} exp [then_stm]:stm [else_stm]:stm
+        | {while} exp stm
+        | {comp} compoundstm
+        | {exp} exp;
+
+    document = 
+          {id} identifier
+        | {plug} identifier P.plug*;
+
+    receive = P.input*;
+
+    compoundstm = variable* stm*;
+
+    plugs = P.plug*;
+    plug = identifier exp;
+
+    inputs = P.input*;
+    input = lvalue identifier;
+
+    exp = 
+          {assign} lvalue [right]:exp
+        | {or} [left]:exp [right]:exp
+        | {and} [left]:exp [right]:exp
+        | {eq} [left]:exp [right]:exp
+        | {neq} [left]:exp [right]:exp
+        | {lt} [left]:exp [right]:exp
+        | {gt} [left]:exp [right]:exp
+        | {lteq} [left]:exp [right]:exp
+        | {gteq} [left]:exp [right]:exp
+        | {plus} [left]:exp [right]:exp
+        | {minus} [left]:exp [right]:exp
+        | {mult} [left]:exp [right]:exp
+        | {div} [left]:exp [right]:exp
+        | {mod} [left]:exp [right]:exp
+        | {join} [left]:exp [right]:exp
+        | {keep} [left]:exp identifier
+        | {remove} [left]:exp identifier
+        | {keep_many} [left]:exp identifier+
+        | {remove_many} [left]:exp identifier+
+        | {not} [left]:exp
+        | {neg} [left]:exp
+        | {default} [left]:exp
+        | {lvalue} lvalue
+        | {call} identifier exp*
+        | {int} P.intconst
+        | {true} true
+        | {false} false
+        | {string} stringconst
+        | {tuple} fieldvalue*
+        | {paren} exp;
+
+    exps = exp*;
+
+    lvalue = 
+          {simple} identifier 
+        | {qualified} [left]:identifier [right]:identifier;
+    
+    fieldvalues = fieldvalue*;
+    fieldvalue = identifier exp;

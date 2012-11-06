@@ -101,7 +101,7 @@ public class TypeRules
     }
 /* 
  *  
-
+Ask Prof
 Not complete:
 
  - keep: “e keep x” is of type T, then e is of type ‘t1’, x is of type ‘a’, T.x is of type ‘a’
