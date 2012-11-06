@@ -20,6 +20,7 @@ import wig.node.Start;
 import wig.parser.Parser;
 import wig.parser.ParserException;
 import wig.prettyprinter.PrettyPrinter;
+import wig.prettyprinter.TypePrettyPrinter;
 
 import wig.symboltable.SymbolAnalyzer;
 import wig.symboltable.SymbolCollector;
@@ -129,6 +130,25 @@ public class Compiler
             PrettyPrinter.print(tree);
             System.out.println("\n\n..............................................................");
         }              
+        
+        // if type pretty printing was requested, then print the type of each expression
+        if (commandLine.hasOption("tp"))
+        {
+            System.out.println("\n..............................................................\nPretty Print:\n");
+            SymbolCollector symCollector = new SymbolCollector();
+            symCollector.collect(tree);
+            
+            SymbolAnalyzer symAnalyzer = new SymbolAnalyzer(symCollector.getServiceTable());
+            symAnalyzer.analyze(tree);
+            
+            TypeChecker typeChecker = new TypeChecker(symCollector.getServiceTable());
+            typeChecker.typeCheck(tree);
+
+            TypePrettyPrinter tpp = new TypePrettyPrinter(typeChecker.getTypeTable());
+            
+            tpp.print(tree);
+            System.out.println("\n\n..............................................................");
+        }
         
         // if symbol table phase was requested, perform symbol table phase
         if(commandLine.hasOption("st") || commandLine.hasOption("pst"))

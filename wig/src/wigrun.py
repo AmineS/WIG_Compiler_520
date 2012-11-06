@@ -41,8 +41,19 @@ def main():
 		print "printing the symbol tables."
 
 	elif (cmd=="tc"):
-		print "type checking"
-		subprocess.call(["java", "wig.compiler.Compiler", "wall.wig", "-st", "-tc"])
+		tester_files = os.listdir("tester_files/type_checker_testers/")
+		i=0
+		for fname in tester_files:
+			if (fname.endswith(".wig")==0):
+				continue
+			print "Test" + str(i)
+			subprocess.call(["java", "wig.compiler.Compiler", "tester_files/type_checker_testers/" + fname, "-tp"])
+			print "\n\n"
+			i=i+1
+
+		print "All wig files which are being tested have a distinct error",
+		print "apart from good.wig, which also tests TypePrettyPrinter by",
+		print "printing the code with types for expressions."
 
 	else:
 		sys.exit(1)

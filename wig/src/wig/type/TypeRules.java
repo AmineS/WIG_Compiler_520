@@ -46,6 +46,10 @@ public class TypeRules
         return e1 == Type.INT && e2 == Type.INT;
     }
     
+    public static boolean strComparison(Type e1, Type e2)
+    {
+        return e1 == Type.STRING && e2 == Type.STRING;
+    }
     
     public static boolean notExpression(Type e)     
     {
@@ -75,6 +79,7 @@ public class TypeRules
         if(arguments.length != parameters.length)
         {
             System.out.println("Invalid number of arguments in functional call!");
+            System.exit(-1);
         }
         else 
         {

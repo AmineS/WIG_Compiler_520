@@ -1043,9 +1043,11 @@ public class TypeChecker extends DepthFirstAdapter
                 AInput ai = (AInput)pi;
                 ai.apply(this);
 
-                if (fTypeTable.getNodeType(ai.getLvalue()) != Types.STRING)
+                if (fTypeTable.getNodeType(ai.getLvalue()) != Type.STRING
+                        && fTypeTable.getNodeType(ai.getLvalue()) != Type.INT)
                 {
-                    puts("Error: Left Value in Receive statement not of type string.");
+                    puts("Error: Left Value in Receive statement not of type string/int. Line no:" + ai.getIdentifier().getLine());
+                    System.exit(-1);
                 }
             }
         }
@@ -1126,12 +1128,14 @@ public class TypeChecker extends DepthFirstAdapter
             Type functionType = nodeToType(functionNode.getType());
             if(!TypeRules.returnExpression(functionType, nodeType))
             {
-                puts("Error: Return type mismatch in function " + functionNode.getIdentifier().getText().trim());
+                puts("Error: Return type mismatch in function " + functionNode.getIdentifier().getText().trim() + ". Line no.:" + functionNode.getIdentifier().getLine());
+                System.exit(-1);
             }
         }
         else
         {
-            puts("Error: Type table does not contain entries for required nodes!");
+            puts("Fatal Error (loc=1): Type table does not contain entries for required nodes!");
+            System.exit(-1);
         }
         outAReturnexpStm(node);
     }
@@ -1166,11 +1170,13 @@ public class TypeChecker extends DepthFirstAdapter
             else
             {
                 puts("Error: Type mismatch for condition in if statement.");
+                System.exit(-1);
             }
         }
         else
         {
-            puts("Error: Type table does not contain entries for required nodes!");
+            puts("Fatal Error (loc=2): Type table does not contain entries for required nodes!");
+            System.exit(-1);
         }
         
         if(node.getStm() != null)
@@ -1210,11 +1216,13 @@ public class TypeChecker extends DepthFirstAdapter
             else
             {
                 puts("Error: Type mismatch for condition in if else statement.");
+                System.exit(-1);
             }
         }
         else
         {
-            puts("Error: Type table does not contain entries for required nodes!");
+            puts("Fatal Error (loc=3): Type table does not contain entries for required nodes!");
+            System.exit(-1);
         }
         
         if(node.getThenStm() != null)
@@ -1258,11 +1266,13 @@ public class TypeChecker extends DepthFirstAdapter
             else
             {
                 puts("Error: Type mismatch for condition in while statement.");
+                System.exit(-1);
             }
         }
         else
         {
-            puts("Error: Type table does not contain entries for required nodes!");
+            puts("Fatal Error (loc=4): Type table does not contain entries for required nodes!");
+            System.exit(-1);
         }
         
         if(node.getStm() != null)
@@ -1526,11 +1536,14 @@ public class TypeChecker extends DepthFirstAdapter
             if(! TypeRules.assignment(leftNodeType, rightNodeType))
             {
                 puts("Error: Type mismatch for assignment.");
+                System.exit(-1);
             }
+            fTypeTable.setNodeType(node, leftNodeType);
         }
         else
         {
-            puts("Error: Type table does not contain entries for required nodes!");
+            puts("Fatal Error (loc=5): Type table does not contain entries for required nodes!");
+            System.exit(-1);
         }
         
         outAAssignExp(node);
@@ -1571,11 +1584,13 @@ public class TypeChecker extends DepthFirstAdapter
             else
             {
                 puts("Error: Type mismatch for || logical comparison.");
+                System.exit(-1);
             }
         }
         else
         {
-            puts("Error: Type table does not contain entries for required nodes!");
+            puts("Fatal Error (loc=6): Type table does not contain entries for required nodes!");
+            System.exit(-1);
         }
         outAOrExp(node);
     }
@@ -1615,11 +1630,13 @@ public class TypeChecker extends DepthFirstAdapter
             else
             {
                 puts("Error: Type mismatch for && logical comparison.");
+                System.exit(-1);
             }
         }
         else
         {
-            puts("Error: Type table does not contain entries for required nodes!");
+            puts("Fatal Error (loc=7): Type table does not contain entries for required nodes!");
+            System.exit(-1);
         }
         outAAndExp(node);
     }
@@ -1652,18 +1669,21 @@ public class TypeChecker extends DepthFirstAdapter
         
         if(leftNodeType != null && rightNodeType != null)
         {
-            if(TypeRules.intComparison(leftNodeType, rightNodeType))
+            if(TypeRules.intComparison(leftNodeType, rightNodeType) ||
+                    TypeRules.strComparison(leftNodeType, rightNodeType))
             {
                 fTypeTable.setNodeType(node, Type.BOOL);
             }
             else
             {
                 puts("Error: Type mismatch for equal comparison.");
+                System.exit(-1);
             }
         }
         else
         {
-            puts("Error: Type table does not contain entries for required nodes!");
+            puts("Error (loc=8): Type table does not contain entries for required nodes!");
+            System.exit(-1);
         }
         outAEqExp(node);
     }
@@ -1696,18 +1716,21 @@ public class TypeChecker extends DepthFirstAdapter
         
         if(leftNodeType != null && rightNodeType != null)
         {
-            if(TypeRules.intComparison(leftNodeType, rightNodeType))
+            if(TypeRules.intComparison(leftNodeType, rightNodeType)||
+                    TypeRules.strComparison(leftNodeType, rightNodeType))
             {
                 fTypeTable.setNodeType(node, Type.BOOL);
             }
             else
             {
                 puts("Error: Type mismatch for not equal comparison.");
+                System.exit(-1);
             }
         }
         else
         {
-            puts("Error: Type table does not contain entries for required nodes!");
+            puts("Error(9): Type table does not contain entries for required nodes!");
+            System.exit(-1);
         }
         outANeqExp(node);
     }
@@ -1747,11 +1770,13 @@ public class TypeChecker extends DepthFirstAdapter
             else
             {
                 puts("Error: Type mismatch for less than comparison.");
+                System.exit(-1);
             }
         }
         else
         {
-            puts("Error: Type table does not contain entries for required nodes!");
+            puts("Error(10): Type table does not contain entries for required nodes!");
+            System.exit(-1);
         }
         outALtExp(node);
     }
@@ -1791,11 +1816,13 @@ public class TypeChecker extends DepthFirstAdapter
             else
             {
                 puts("Error: Type mismatch for greater than comparison.");
+                System.exit(-1);
             }
         }
         else
         {
-            puts("Error: Type table does not contain entries for required nodes!");
+            puts("Error(11): Type table does not contain entries for required nodes!");
+            System.exit(-1);
         }
         outAGtExp(node);
     }
@@ -1835,11 +1862,13 @@ public class TypeChecker extends DepthFirstAdapter
             else
             {
                 puts("Error: Type mismatch for less or equal comparison.");
+                System.exit(-1);
             }
         }
         else
         {
-            puts("Error: Type table does not contain entries for required nodes!");
+            puts("Error(12): Type table does not contain entries for required nodes!");
+            System.exit(-1);
         }
         outALteqExp(node);
     }
@@ -1879,11 +1908,13 @@ public class TypeChecker extends DepthFirstAdapter
             else
             {
                 puts("Error: Type mismatch for greater or equal comparison.");
+                System.exit(-1);
             }
         }
         else
         {
-            puts("Error: Type table does not contain entries for required nodes!");
+            puts("Error(13): Type table does not contain entries for required nodes!");
+            System.exit(-1);
         }
         outAGteqExp(node);
     }
@@ -1927,11 +1958,13 @@ public class TypeChecker extends DepthFirstAdapter
             else
             {
                 puts("Error: Type mismatch for addition.");
+                System.exit(-1);
             }
         }
         else
         {
-            puts("Error: Type table does not contain entries for required nodes!");
+            puts("Error(14): Type table does not contain entries for required nodes!");
+            System.exit(-1);
         }
         outAPlusExp(node);
     }
@@ -1972,11 +2005,13 @@ public class TypeChecker extends DepthFirstAdapter
             else
             {
                 puts("Error: Type mismatch for subtraction.");
+                System.exit(-1);
             }
         }
         else
         {
-            puts("Error: Type table does not contain entries for required nodes!");
+            puts("Error(15): Type table does not contain entries for required nodes!");
+            System.exit(-1);
         }
         outAMinusExp(node);
     }
@@ -2016,11 +2051,13 @@ public class TypeChecker extends DepthFirstAdapter
             else
             {
                 puts("Error: Type mismatch for multiplication.");
+                System.exit(-1);
             }
         }
         else
         {
-            puts("Error: Type table does not contain entries for required nodes!");
+            puts("Error(16): Type table does not contain entries for required nodes!");
+            System.exit(-1);
         }
         outAMultExp(node);
     }
@@ -2060,11 +2097,13 @@ public class TypeChecker extends DepthFirstAdapter
             else
             {
                 puts("Error: Type mismatch for division.");
+                System.exit(-1);
             }
         }
         else
         {
-            puts("Error: Type table does not contain entries for required nodes!");
+            puts("Error(17): Type table does not contain entries for required nodes!");
+            System.exit(-1);
         }
         outADivExp(node);
     }
@@ -2104,11 +2143,13 @@ public class TypeChecker extends DepthFirstAdapter
             else
             {
                 puts("Error: Type mismatch for modulo.");
+                System.exit(-1);
             }
         }
         else
         {
-            puts("Error: Type table does not contain entries for required nodes!");
+            puts("Error(18): Type table does not contain entries for required nodes!");
+            System.exit(-1);
         }
         outAModExp(node);
     }
@@ -2273,11 +2314,13 @@ public class TypeChecker extends DepthFirstAdapter
             else
             {
                 puts("Error: Type mismatch for not expression.");
+                System.exit(-1);
             }
         }
         else
         {
-            puts("Error: Type table does not contain entries for required nodes!");
+            puts("Error(19): Type table does not contain entries for required nodes!");
+            //System.exit(-1);
         }
         outANotExp(node);
     }
@@ -2312,11 +2355,13 @@ public class TypeChecker extends DepthFirstAdapter
             else
             {
                 puts("Error: Type mismatch for negation.");
+                System.exit(-1);
             }
         }
         else
         {
-            puts("Error: Type table does not contain entries for required nodes!");
+            puts("Error(20): Type table does not contain entries for required nodes!");
+            //System.exit(-1);
         }
         outANegExp(node);
     }
@@ -2414,7 +2459,8 @@ public class TypeChecker extends DepthFirstAdapter
         }
         else
         {
-            puts("Error: Argument mismatch for function call " + function.getIdentifier().getText()+ "!");
+            puts("Error: Argument mismatch for function call " + function.getIdentifier().getText()+ ". Line no.:" + node.getIdentifier().getLine());
+            System.exit(-1);
         }
         outACallExp(node);
     }
@@ -2458,7 +2504,7 @@ public class TypeChecker extends DepthFirstAdapter
         else
         {
             puts("Error: Unexpected type!");
-//            System.exit(-1);
+            System.exit(-1);
         }
         
         return type;
@@ -2631,10 +2677,18 @@ public class TypeChecker extends DepthFirstAdapter
             node.getIdentifier().apply(this);
         }
         
-        SVariable symbol = (SVariable) SymbolTable.lookupHierarchy(fCurrentSymbolTable, node.getIdentifier().getText());
-        AVariable variable = symbol.getVariable();        
-        fTypeTable.setNodeType(node, nodeToType(variable.getType()));
-        
+        try
+        {
+            SVariable symbol = (SVariable) SymbolTable.lookupHierarchy(fCurrentSymbolTable, node.getIdentifier().getText());
+            AVariable variable = symbol.getVariable();        
+            fTypeTable.setNodeType(node, nodeToType(variable.getType()));
+        }
+        catch(ClassCastException e)
+        {
+            SArgument symbol = (SArgument) SymbolTable.lookupHierarchy(fCurrentSymbolTable, node.getIdentifier().getText());
+            AArgument arg = symbol.getArgument();        
+            fTypeTable.setNodeType(node, nodeToType(arg.getType()));
+        }
         outASimpleLvalue(node);
     }
 
@@ -2659,7 +2713,8 @@ public class TypeChecker extends DepthFirstAdapter
         
         if(field == null)
         {
-            puts("Error: a field with the name " + node.getRight().getText() + " does not exist in the schema for tuple " + node.getRight().getText() + "!");
+            puts("Error: a field with the name " + node.getRight().getText() + " does not exist in the schema for tuple " + node.getRight().getText() + ". Line no.:" + node.getLeft().getLine());
+            System.exit(-1);
         }
         else
         {            

@@ -69,6 +69,7 @@ public class SymbolAnalyzer extends DepthFirstAdapter
             if(SymbolTable.lookupHierarchy(currentSymbolTable, name) == null)
             {
                 puts("Error: Symbol " + name + " not defined. Line no:" + node.getIdentifier().getLine() );
+                System.exit(1);
             }
         }
                 

@@ -1,22 +1,29 @@
 package wig.prettyprinter;
 
-import java.util.*;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
 
-import wig.parser.*;
-import wig.lexer.*;
+import wig.analysis.DepthFirstAdapter;
 import wig.node.*;
-import wig.analysis.*;
+import wig.type.TypeTable;
+import wig.type.Type;
 
-
-public class PrettyPrinter extends DepthFirstAdapter
+public class TypePrettyPrinter extends DepthFirstAdapter
 {
     /** Global variables for printing tabs */
     private int tabCount = 0;
     private int oldCount = 0;
+    private TypeTable typeTable;
     
-    public static void print(Node node)
+    public TypePrettyPrinter(TypeTable tt)
     {
-        node.apply(new PrettyPrinter());
+        typeTable = tt;
+    }
+    
+    public void print(Node node)
+    {
+        node.apply(this);
     }
     
     private void puts(String s)
@@ -508,7 +515,6 @@ public class PrettyPrinter extends DepthFirstAdapter
       {
           LinkedList<PPlug> plug_list;
           Iterator<PPlug> iter;
-          int plug_list_size, counter;
 
           puts("plug ");
           node.getIdentifier().apply(this);
@@ -516,8 +522,6 @@ public class PrettyPrinter extends DepthFirstAdapter
           
           plug_list = node.getPlug();
           iter = plug_list.iterator();
-          counter = 0;
-          plug_list_size = plug_list.size();
           
           while(iter.hasNext())
           {
@@ -533,13 +537,10 @@ public class PrettyPrinter extends DepthFirstAdapter
       {          
           LinkedList<PInput> input_list;
           Iterator<PInput> iter;
-          int input_list_size, counter;
           puts("receive");
           
           input_list = node.getInput();
           iter = input_list.iterator();
-          counter = 0;
-          input_list_size = input_list.size();
 
           puts("[");
           while(iter.hasNext())
@@ -629,101 +630,129 @@ public class PrettyPrinter extends DepthFirstAdapter
       
       public void caseAAssignExp(AAssignExp node)
       {
+          puts("(");
           node.getLvalue().apply(this);
           puts(" = ");
           node.getRight().apply(this);
+          puts("):" + typeToString(typeTable.getNodeType(node)));
       }
       
       public void caseAOrExp(AOrExp node)
       {
+          puts("(");
           node.getLeft().apply(this);
           puts(" || ");
           node.getRight().apply(this);
+          puts("):" + typeToString(typeTable.getNodeType(node)));
       }
       
       public void caseAAndExp(AAndExp node)
       {
+          puts("(");
           node.getLeft().apply(this);
           puts("&&");
           node.getRight().apply(this);
+          puts("):" + typeToString(typeTable.getNodeType(node)));
       }
             
       public void caseAEqExp(AEqExp node)
       {
+          puts("(");
           node.getLeft().apply(this);
           puts("==");
           node.getRight().apply(this);
+          puts("):" + typeToString(typeTable.getNodeType(node)));
       }
             
       public void caseANeqExp(ANeqExp node)
       {
+          puts("(");
           node.getLeft().apply(this);
           puts("!=");
           node.getRight().apply(this);
+          puts("):" + typeToString(typeTable.getNodeType(node)));
       }
       
       public void caseALtExp(ALtExp node)
       {
+          puts("(");
           node.getLeft().apply(this);
           puts("<");
           node.getRight().apply(this);
+          puts("):" + typeToString(typeTable.getNodeType(node)));
       }
       
       public void caseAGtExp(AGtExp node)
       {
+          puts("(");
           node.getLeft().apply(this);
           puts(">");
           node.getRight().apply(this);
+          puts("):" + typeToString(typeTable.getNodeType(node)));
       }
       
       public void caseALteqExp(ALteqExp node)
       {
+          puts("(");
           node.getLeft().apply(this);
           puts("<=");
           node.getRight().apply(this);
+          puts("):" + typeToString(typeTable.getNodeType(node)));
       }
       
       public void caseAGteqExp(AGteqExp node)
       {
+          puts("(");
           node.getLeft().apply(this);
           puts(">=");
           node.getRight().apply(this);
+          puts("):" + typeToString(typeTable.getNodeType(node)));
       }
      
       
       public void caseAPlusExp(APlusExp node)
       {
+          puts("(");
           node.getLeft().apply(this);
           puts("+");
           node.getRight().apply(this);
+          puts("):" + typeToString(typeTable.getNodeType(node)));
       }
       
       public void caseAMinusExp(AMinusExp node)
       {
+          puts("(");
           node.getLeft().apply(this);
           puts("-");
           node.getRight().apply(this);
+          puts("):" + typeToString(typeTable.getNodeType(node)));
       }
       
       public void caseAMultExp(AMultExp node)
       {
+          puts("(");
           node.getLeft().apply(this);
           puts("*");
           node.getRight().apply(this);
+          puts("):" + typeToString(typeTable.getNodeType(node)));
       }
 
       public void caseADivExp(ADivExp node)
       {
+          puts("(");
           node.getLeft().apply(this);
           puts("/");
           node.getRight().apply(this);
+          puts("):" + typeToString(typeTable.getNodeType(node)));
       }
       
       public void caseAModExp(AModExp node)
       {
+          puts("(");
           node.getLeft().apply(this);
           puts("%");
           node.getRight().apply(this);
+          puts("):" + typeToString(typeTable.getNodeType(node)));
       }
       
       public void caseAJoinExp(AJoinExp node)
@@ -735,16 +764,20 @@ public class PrettyPrinter extends DepthFirstAdapter
       
       public void caseAKeepExp(AKeepExp node)
       {
+          puts("(");
           node.getLeft().apply(this);
           puts(" keep ");
           node.getIdentifier().apply(this);
+          puts("):" + typeToString(typeTable.getNodeType(node)));
       }
 
       public void caseARemoveExp(ARemoveExp node)
       {
+          puts("(");
           node.getLeft().apply(this);
           puts(" remove ");
           node.getIdentifier().apply(this);
+          puts("):" + typeToString(typeTable.getNodeType(node)));
       }
       
       public void caseAKeepManyExp(AKeepManyExp node)
@@ -769,6 +802,7 @@ public class PrettyPrinter extends DepthFirstAdapter
               counter++;
           }
           puts(")");
+          puts(":" + typeToString(typeTable.getNodeType(node)));
       }
       
       public void caseARemoveManyExp(ARemoveManyExp node)
@@ -793,28 +827,35 @@ public class PrettyPrinter extends DepthFirstAdapter
               counter++;
           }
           puts(")");
+          puts(":" + typeToString(typeTable.getNodeType(node)));
       }
       
       public void caseANotExp(ANotExp node)
       {
-          puts("!");
+          puts("(!");
           node.getLeft().apply(this);
+          puts("):" + typeToString(typeTable.getNodeType(node)));
       }
       
       public void caseANegExp(ANegExp node)
       {
-          puts("-");
+          puts("(-");
           node.getLeft().apply(this);
+          puts("):" + typeToString(typeTable.getNodeType(node)));
       }
       
       public void caseADefaultExp(ADefaultExp node)
       {
+          puts("(");
           node.apply(this);
+          puts("):" + typeToString(typeTable.getNodeType(node)));
       }
       
       public void caseALvalueExp(ALvalueExp node)
       {
+          puts("(");
           node.getLvalue().apply(this);
+          puts(":" + typeToString(typeTable.getNodeType(node))+")");
       }
 
       public void caseACallExp(ACallExp node)
@@ -830,27 +871,35 @@ public class PrettyPrinter extends DepthFirstAdapter
           {
               iter.next().apply(this);
           }
-          puts(")");
+          puts("):" + typeToString(typeTable.getNodeType(node)));
       }
       
       public void caseAIntExp(AIntExp node)
       {
+          puts("(");
           node.getIntconst().apply(this);
+          puts(":" + typeToString(typeTable.getNodeType(node))+")");
       }
       
       public void caseATrueExp(ATrueExp node)
       {
+          puts("(");
           node.getTrue().apply(this);
+          puts(":" + typeToString(typeTable.getNodeType(node))+")");
       }
       
       public void caseAFalseExp(AFalseExp node)
       {
+          puts("(");
           node.getFalse().apply(this);
+          puts(":" + typeToString(typeTable.getNodeType(node))+")");
       }
       
       public void caseAStringExp(AStringExp node)
       {
+          puts("(");
           node.getStringconst().apply(this);
+          puts(":" + typeToString(typeTable.getNodeType(node))+")");
       }
       
       public void caseATupleExp(ATupleExp node)
@@ -862,6 +911,7 @@ public class PrettyPrinter extends DepthFirstAdapter
               iter.next().apply(this);
           }
           puts("}");
+          puts(":" + typeToString(typeTable.getNodeType(node)));
       }
       
       public void caseAParenExp(AParenExp node)
@@ -882,9 +932,11 @@ public class PrettyPrinter extends DepthFirstAdapter
       
       public void caseAQualifiedLvalue(AQualifiedLvalue node)
       {
+          puts(" (");
           node.getLeft().apply(this);
           puts(".");
           node.getRight().apply(this);
+          puts("):" + typeToString(typeTable.getNodeType(node)));
       }
       
       public void caseASimpleLvalue(ASimpleLvalue node)
@@ -902,9 +954,11 @@ public class PrettyPrinter extends DepthFirstAdapter
       
       public void caseAFieldvalue(AFieldvalue node)
       {
+          puts(" (");
           node.getIdentifier().apply(this);
           puts(" = ");
           node.getExp().apply(this);
+          puts("):" + typeToString(typeTable.getNodeType(node)));
       }
       
       public void caseTService(TService node)
@@ -1418,6 +1472,8 @@ public class PrettyPrinter extends DepthFirstAdapter
           {
               node.getIdentifier().apply(this);
           }
+          if (typeTable.getNodeType(node)!=null)
+              puts("):" + typeToString(typeTable.getNodeType(node)) + " ");
       }
            
       public void caseASession(ASession node)
@@ -1434,4 +1490,18 @@ public class PrettyPrinter extends DepthFirstAdapter
               node.getCompoundstm().apply(this);
           }
       }
+      
+      public String typeToString(Type t)
+      {
+          switch(t)
+          {
+              case INT: return "int";
+              case BOOL: return "bool";
+              case TUPLE: return "tuple";
+              case VOID: return "void";
+              case STRING: return "string";
+              default: System.exit(-1);
+          }
+          return "";
+      }      
 }

@@ -1,0 +1,407 @@
+service{ 
+
+		const html Introduction = <html> <head> <title>Mastermind!</title></head><body> 
+<p>Hello!</p>
+<p>Welcome to the wonderful world of Mastermind.</p>
+				<p>In case you have never played it before the object is to crack the code the computer has prepared which is composed of the letters [A-F] and contains four elements. AABB is a code, as is BAFE, as is BBAA. You have a precious 10 rounds during which to triumph over the computer but do not fear as you get some feedback. Assume that the secret code is:</p>
+
+<table border="1" cellpadding=10> <tr> <td>A</td>
+          <td>F</td> <td>C</td> <td>C</td> </tr>
+          </table>
+<p>And that your first attempt is:</p>
+
+<table border="1" cellpadding="1">
+	      <tr>
+	       <td>&nbsp;F&nbsp;</td>
+	       <td>&nbsp;F&nbsp;</td>
+	       <td>&nbsp;E&nbsp;</td>
+	       <td>&nbsp;E&nbsp;</td>
+	      </tr>
+	      </table>
+
+<p>Upon submitting you will obtain:</p>
+<table border="0">
+<tr>
+	    <td>
+	      <table border="1" cellpadding="1">
+	      <tr>
+	       <td>&nbsp;F&nbsp;</td>
+	       <td>&nbsp;F&nbsp;</td>
+	       <td>&nbsp;E&nbsp;</td>
+	       <td>&nbsp;E&nbsp;</td>
+	      </tr>
+	      </table>
+	    </td>
+	    <td><font color="red">0</font></td>
+	    <td>1</td>
+	  </tr>
+</table>
+<p>Here the black one indicates that you guessed a correct letter in the correct position.</p>
+<table border="0">
+<tr>
+	    <td>
+	      <table border="1" cellpadding="1">
+	      <tr>
+	       <td>&nbsp;F&nbsp;</td>
+	       <td>&nbsp;F&nbsp;</td>
+	       <td>&nbsp;E&nbsp;</td>
+	       <td>&nbsp;E&nbsp;</td>
+	      </tr>
+	      </table>
+	    </td>
+	    <td><font color="red">0</font></td>
+	    <td>1</td>
+	  </tr>
+<tr>
+	    <td>
+	      <table border="1" cellpadding="1">
+	      <tr>
+	       <td>&nbsp;F&nbsp;</td>
+	       <td>&nbsp;A&nbsp;</td>
+	       <td>&nbsp;D&nbsp;</td>
+	       <td>&nbsp;D&nbsp;</td>
+	      </tr>
+	      </table>
+	    </td>
+	    <td><font color="red">2</font></td>
+	    <td>0</td>
+	  </tr>
+</table>
+<p>Here the <font color="red">red</font> number indicates that there are two correct letters but not in the correct position.</p>
+
+																													For more go to <a href="http://en.wikipedia.org/wiki/Mastermind_%28board_game%29">wikipedia</a>. You can also <a href="mastermind.pl?Mastermind">START!</a> (if compiled with something other than lkwig then go to the Mastermind session)
+ </body> </html>;
+	
+	const html EnterSeed = <html> <body> Please enter seed:
+	<input type="text" name="inseed" size=8> </body> </html>;
+	
+	
+	const html ShowAnswer = <html> <head> <title>Mastermind!</title></head>
+	<body> 
+
+	  <table border="0"> <[prevans]> <tr>
+          <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr>
+</table>
+<table border="0">  <tr>
+          <tr>
+<tr><td>Nice try, but no. Here is the answer. Maybe one day your <i>mind</i> will be <i>Master</i>ful enough to grasp the game... </td> </tr>     
+																																																																																										<tr>
+																																																																																																			<td> <table border="1" cellpadding=10> <tr> <td><[pin1]></td>
+          <td><[pin2]></td> <td><[pin3]></td> <td><[pin4]></td> </tr>
+          </table> </td> </table>
+
+
+
+	</body></html>;
+
+
+	const html ShowRound = <html> <head> <title>Mastermind!</title></head>
+	<body> 
+	  <table border="0">
+          <[prevround]>
+	  <tr> <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr>
+	  <tr>
+	    <td>
+	      <table border="1" >
+	      <tr>
+	       <td><input type="text" maxlength="1" name="p1in" size="1" ></td>
+   	       <td><input type="text" maxlength="1" name="p2in" size="1" ></td>
+ 	       <td><input type="text" maxlength="1" name="p3in" size="1" ></td>
+	       <td><input type="text" maxlength="1" name="p4in" size="1" ></td>
+	      </tr>
+	        </table>
+	    </td>
+	  </tr>
+	  </table>
+ <p><[error]></p>	  
+
+	</body></html>;
+
+
+	const html Victory5 = <html> <head> <title>Mastermind!</title></head>
+	<body> 
+
+	  <table border="0">
+          <[prevVic]>
+	  <tr> <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr>
+	  </table>
+   Great job, chap. Jolly good. It only took you <[tries]> tries. The most it can take if you had played optimally is 5, though.
+	</body></html>;
+
+	
+
+
+	const html Victory = <html> <head> <title>Mastermind!</title></head>
+	<body> 
+
+	  <table border="0">
+          <[prevVic]>
+	  <tr> <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr>
+	  </table>																																																																																															INCREDIMAZING JOB! You have beaten <i>the</i> Knuth's solver's optimal time (in the worst case) in only <[tries]> attempts. I am teh impressed (or you cheated).
+	</body></html>;
+
+
+
+	const html Done = <html> <head> <title>Mastermind!</title></head><body>It is over. Do you want to <a href="mastermind.pl?Mastermind">restart?</a> (if compiled with something other than lkwig then go to the Mastermind session) </body></html>;
+
+const html RunNewGame = <html> <head> <title>Mastermind!</title></head><body>Please run the NewGame session first. <a href="mastermind.pl?NewGame">NewGame</a> (quick link if compiled with lkwig) </body></html>;
+
+	schema pinTuple {
+    int pin1; 
+    int pin2;
+    int pin3;
+				int pin4;
+  }
+
+
+	schema rightTuple {
+    int color; 
+    int all;
+  }
+
+
+	int seed;
+	string prev;
+	tuple pinTuple pinSol;
+	tuple rightTuple numCorrect;
+
+
+
+
+	//Random Number
+	int newRandom() {
+	  seed = (1664525 * seed + 1013904223)% 4294967296;
+	  return seed;
+	}
+
+	
+	int getPin() {
+	  return 1+newRandom()%6;
+	}
+
+
+	string appendPrev(string new, string spin1, string spin2, string spin3, string spin4, int rc, int ra){
+	  prev = prev + "
+          <tr>
+	    <td>
+	      <table border=\"1\" cellpadding=\"1\">
+	      <tr>
+	       <td>&nbsp;"+spin1+"&nbsp;</td>
+	       <td>&nbsp;"+spin2+"&nbsp;</td>
+	       <td>&nbsp;"+spin3+"&nbsp;</td>
+	       <td>&nbsp;"+spin4+"&nbsp;</td>
+	      </tr>
+	      </table>
+	    </td>
+	    <td><font color=\"red\">"+rc+"</font></td>
+	    <td>"+ra+"</td>
+	  </tr>";
+
+	    return prev;
+	}
+	// Translate a number to a letter
+	string itos(int i){
+		if (i == 1){
+			return "A";
+		}else if (i == 2){
+			return "B";
+		}else if (i == 3){
+			return "C";
+		}else if (i == 4){
+			return "D";
+		}else if (i == 5){
+			return "E";
+		}else if (i == 6){
+			return "F";
+		}else {
+			return " ";
+		}
+	}
+
+	// Translate a letter to number
+	int stoi(string s){
+		if (s == "A" || s == "a"){
+			return 1;
+		}else if (s == "B"|| s == "b"){
+			return 2;
+		}else if (s == "C"|| s == "c"){
+			return 3;
+		}else if (s == "D"|| s == "d"){
+			return 4;
+		}else if (s == "E"|| s == "e"){
+			return 5;
+		}else if (s == "F"|| s == "f"){
+			return 6;
+		}else {
+			return 0;
+		}
+	}
+
+
+	void calculate(int pin1, int pin2, int pin3, int pin4){
+			if (pin1 == pinSol.pin1){
+					numCorrect.all = numCorrect.all +1; 
+					pinSol.pin1 = 0;
+					pin1 = 7;
+			}
+			if (pin2 == pinSol.pin2){
+					numCorrect.all = numCorrect.all +1; 
+					pinSol.pin2 = 0;
+					pin2 = 7;
+			}
+			if (pin3 == pinSol.pin3){
+					numCorrect.all = numCorrect.all +1; 
+					pinSol.pin3 = 0;
+					pin3 = 7;
+			}
+			if (pin4 == pinSol.pin4){
+					numCorrect.all = numCorrect.all +1; 
+					pinSol.pin4 = 0;
+					pin4 = 7;
+			}
+			if (pin1 == pinSol.pin2){
+					numCorrect.color = numCorrect.color +1; 
+					pinSol.pin2 = 0;
+					pin1 = 7;
+			}
+			if (pin1 == pinSol.pin3){
+					numCorrect.color = numCorrect.color +1; 
+					pinSol.pin3 = 0;
+					pin1 = 7;
+			}
+			if (pin1 == pinSol.pin4){
+					numCorrect.color = numCorrect.color +1; 
+					pinSol.pin4 = 0;
+					pin1 = 7;
+			}
+			if (pin2 == pinSol.pin1){
+					numCorrect.color = numCorrect.color +1; 
+					pinSol.pin1 = 0;
+					pin2 = 7;
+			}
+			if (pin2 == pinSol.pin3){
+					numCorrect.color = numCorrect.color +1; 
+					pinSol.pin3 = 0;
+					pin2 = 7;
+			}
+			if (pin2 == pinSol.pin4){
+					numCorrect.color = numCorrect.color +1; 
+					pinSol.pin4 = 0;
+					pin2 = 7;
+			}
+			if (pin3 == pinSol.pin2){
+					numCorrect.color = numCorrect.color +1; 
+					pinSol.pin2 = 0;
+					pin3 = 7;
+			}
+			if (pin3 == pinSol.pin1){
+					numCorrect.color = numCorrect.color +1; 
+					pinSol.pin1 = 0;
+					pin3 = 7;
+			}
+			if (pin3 == pinSol.pin4){
+					numCorrect.color = numCorrect.color +1; 
+					pinSol.pin4 = 0;
+					pin3 = 7;
+			}
+			if (pin4 == pinSol.pin2){
+					numCorrect.color = numCorrect.color +1; 
+					pinSol.pin2 = 0;
+					pin4 = 7;
+			}
+			if (pin4 == pinSol.pin3){
+					numCorrect.color = numCorrect.color +1; 
+					pinSol.pin3 = 0;
+					pin4 = 7;
+			}
+			if (pin4 == pinSol.pin1){
+					numCorrect.color = numCorrect.color +1; 
+					pinSol.pin1 = 0;
+					pin4 = 7;
+			}
+			
+	}
+
+	session NewGame() {
+			if (seed == 0){
+	    show EnterSeed receive[seed = inseed];
+	  }
+			exit Introduction;
+			
+
+	}
+
+	session Mastermind() {
+	  int pin1, pin2, pin3, pin4, rightcolor, rightall;
+	  int ppin1, ppin2, ppin3, ppin4;
+	  int round;
+	  string spin1, spin2, spin3, spin4;
+			bool notWon;
+
+	  if (seed == 0){
+	    exit RunNewGame;
+	  }
+	  prev = "<p>Start guessing!</p>";
+	  pin1 = getPin();
+	  pin2 = getPin();
+	  pin3 = getPin();
+	  pin4 = getPin();
+	  round = 0;
+			notWon = true;
+			
+			//CHEAT CODE: Uncomment the following
+			//prev = appendPrev(prev, itos(pin1), itos(pin2), itos(pin3), itos(pin4), numCorrect.color, numCorrect.all);
+	   
+	  while (round < 10 && notWon) {
+
+					pinSol.pin1 = pin1;
+					pinSol.pin2 = pin2;
+					pinSol.pin3 = pin3;
+					pinSol.pin4 = pin4;
+					numCorrect.all = 0;
+					numCorrect.color = 0;
+
+	    show plug ShowRound[prevround=prev, error=("")] receive[spin1=p1in, spin2=p2in, spin3=p3in, spin4=p4in];
+
+					//Ask for input until it's good
+	    while ((ppin1 = stoi(spin1)) == 0 || (ppin2 = stoi(spin2)) == 0 ||(ppin3 = stoi(spin3)) == 0 ||(ppin4 = stoi(spin4)) == 0){
+							show plug ShowRound[prevround=(prev), error=("Invalid input! Remember you can only use the letters [A-F]")] receive[spin1=p1in, spin2=p2in, spin3=p3in, spin4=p4in];
+	      
+	    }
+
+					//Obtain points
+					calculate(ppin1, ppin2, ppin3, ppin4);
+					
+					//Win condition
+					if (numCorrect.all == 4){
+							notWon = false;
+					}
+					else{
+							//Creates the history of previous moves
+							prev = appendPrev(prev, itos(ppin1), itos(ppin2), itos(ppin3), itos(ppin4), numCorrect.color, numCorrect.all);
+							round = round + 1;
+					}
+
+	  }
+
+			//To print the proper number
+			round = round+1;
+			
+			if (notWon){
+					//ev =  appendPrev(prev, itos(pin1), itos(pin2), itos(pin3), itos(pin4), "", "");
+				
+					show plug ShowAnswer[prevans=prev, pin1=itos(pin1), pin2=itos(pin2), pin3=itos(pin3), pin4=itos(pin4)];
+			}
+			else{
+					prev =  appendPrev(prev, itos(ppin1), itos(ppin2), itos(ppin3), itos(ppin4), numCorrect.color, numCorrect.all);
+					if (round > 5){
+							show plug Victory5[prevVic=prev, tries=round] ;
+					}
+					else{
+							show plug Victory[prevVic=prev, tries=round] ;
+					}
+			}
+			exit Done;
+
+	}
+}
