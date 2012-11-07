@@ -54,7 +54,10 @@ service {
 			}
 		}
 		tmp = num0.s;
+		counter.num = 0;
 		*/
+		//num0.s = num0.num1 + "2";
+		num0 \+ num1 \+ num2 \+ s;
 		return tmp;
 	}
 	

@@ -1,6 +1,8 @@
 package wig.type;
 
+import java.util.HashMap;
 import java.util.Hashtable;
+import java.util.Map;
 
 import wig.node.Node;
 
@@ -10,8 +12,8 @@ import wig.node.Node;
  */
 public class TypeTable
 {
-    /** The hashtable from node to type */
-    private Hashtable<Node,Type> fHashTable = new Hashtable<Node,Type>();
+    /** The HashMap from node to type */
+    private Map<Node,Type> fNodeToTypeMap = new HashMap<Node,Type>();
     
     /**
      * Constructor
@@ -27,7 +29,7 @@ public class TypeTable
      */
     public Type getNodeType(Node node)
     {
-       return fHashTable.get(node); 
+       return fNodeToTypeMap.get(node); 
     }
     
     /**
@@ -37,7 +39,7 @@ public class TypeTable
      */
     public void setNodeType(Node node, Type type)
     {
-        fHashTable.put(node, type);
+        fNodeToTypeMap.put(node, type);
     }
     
     /**
@@ -46,6 +48,6 @@ public class TypeTable
      */
     public boolean containsNode(Node node)
     {
-       return  fHashTable.contains(node);
+       return  fNodeToTypeMap.containsKey(node);
     }
 }

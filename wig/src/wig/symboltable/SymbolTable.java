@@ -15,7 +15,6 @@ import wig.node.ASession;
 import wig.node.ATupleType;
 import wig.node.AVariable;
 import wig.node.Node;
-import wig.node.TIdentifier;
 import wig.symboltable.symbols.SArgument;
 import wig.symboltable.symbols.SField;
 import wig.symboltable.symbols.SFunction;
@@ -100,6 +99,12 @@ public class SymbolTable
             case VARIABLE: 
                 sym = new SVariable();
                 ((SVariable)sym).setVariable((AVariable)node);
+                SymbolTable variableSymTable = (SymbolTable) getSymbolTableOfSchema(symTable, node);
+                if(variableSymTable != null)
+                {
+                    TupleSymbolTable tupleSymbolTable = new TupleSymbolTable(variableSymTable.getTable());
+                    ((SVariable)sym).setTupleSymbolTable(tupleSymbolTable);
+                }
                 break;
             case FUNCTION: 
                 sym = new SFunction();

@@ -6,13 +6,14 @@ import java.util.LinkedList;
 import java.util.List;
 
 import wig.analysis.DepthFirstAdapter;
-import wig.node.ACallExp;
-import wig.node.ACompStm;
-import wig.node.ACompoundstm;
-
 import wig.node.*;
 import wig.symboltable.SymbolTable;
-import wig.symboltable.symbols.*;
+import wig.symboltable.TupleSymbolTable;
+import wig.symboltable.symbols.SArgument;
+import wig.symboltable.symbols.SField;
+import wig.symboltable.symbols.SFunction;
+import wig.symboltable.symbols.SVariable;
+import wig.symboltable.symbols.Symbol;
 
 /**
  * Performs Type Checking
@@ -2201,6 +2202,44 @@ public class TypeChecker extends DepthFirstAdapter
         {
             node.getIdentifier().apply(this);
         }
+        
+        if(fTypeTable.containsNode(node.getLeft()))
+        {
+            if(fTypeTable.getNodeType(node.getLeft()) == Type.TUPLE)
+            {
+                fTypeTable.setNodeType(node, Type.TUPLE);
+            }
+            else
+            {
+                puts("Error: Type mismatch.");
+                System.exit(-1);
+            }
+        }
+        else if(node.getLeft() instanceof ALvalueExp)
+        {
+            ALvalueExp lvalueExp = (ALvalueExp) node.getLeft();
+            if(lvalueExp.getLvalue() instanceof ASimpleLvalue)
+            {
+                ASimpleLvalue simpleLvalue = (ASimpleLvalue) lvalueExp.getLvalue();
+                String tupleName = simpleLvalue.getIdentifier().getText().trim();
+                SVariable variable = (SVariable) SymbolTable.lookupHierarchy(fCurrentSymbolTable, tupleName);
+                if(variable.getTupleSymbolTable() != null)
+                {
+                    fTypeTable.setNodeType(node, Type.TUPLE);
+                }
+                else
+                {
+                    puts("Error: Type mismatch: " + tupleName + " is not a tuple, at line: "+ simpleLvalue.getIdentifier().getLine());
+                    System.exit(-1);
+                }
+            }
+        }
+        else
+        {
+            puts("Error(21): Type table does not contain entries for required nodes!");
+            System.exit(-1);
+        }
+        
         outAKeepExp(node);
     }
 
@@ -2708,8 +2747,8 @@ public class TypeChecker extends DepthFirstAdapter
         inAQualifiedLvalue(node);
         
         SVariable symbol = (SVariable) SymbolTable.lookupHierarchy(fCurrentSymbolTable, node.getLeft().getText());
-        SymbolTable schemaSymbolTable = SymbolTable.getSymbolTableOfSchema(fCurrentSymbolTable, symbol.getVariable()); 
-        SField field = (SField) SymbolTable.getSymbol(schemaSymbolTable, node.getRight().getText());
+        TupleSymbolTable tupleSymbolTable = symbol.getTupleSymbolTable();
+        SField field = (SField) tupleSymbolTable.getSymbol(node.getRight().getText());
         
         if(field == null)
         {

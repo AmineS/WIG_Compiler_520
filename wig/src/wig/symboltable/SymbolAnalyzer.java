@@ -319,10 +319,15 @@ public class SymbolAnalyzer extends DepthFirstAdapter
             if(symbolLeft instanceof SVariable)
             {
                 SVariable sVariable = (SVariable) symbolLeft;
-                SymbolTable symbolTableOfSchema = SymbolTable.getSymbolTableOfSchema(currentSymbolTable, sVariable.getVariable());
-                if(!SymbolTable.defSymbol(symbolTableOfSchema, rightName))
+                TupleSymbolTable tupleSymbolTable = sVariable.getTupleSymbolTable();
+                if(tupleSymbolTable == null)
                 {
-                    puts("Error: Symbol" + rightName + " not defined in the tuple's schema. Line no:" + node.getLeft().getLine() );
+                    puts("Error: Symbol " + leftName + " is not declared as a tuple. Line no: " + node.getLeft().getLine() );
+                    System.exit(1);
+                }
+                if(!tupleSymbolTable.defSymbol(rightName))
+                {
+                    puts("Error: Symbol " + rightName + " not defined in the tuple's schema. Line no:" + node.getLeft().getLine() );
                     System.exit(1);
                 }
             }
