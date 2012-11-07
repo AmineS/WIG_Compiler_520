@@ -2256,6 +2256,9 @@ public class TypeChecker extends DepthFirstAdapter
                 if(variable.getTupleSymbolTable() != null)
                 {
                     fTypeTable.setNodeType(node, Type.TUPLE);
+                    
+                    // check if identifier part of tuple's schema
+
                 }
                 else
                 {
@@ -2293,16 +2296,7 @@ public class TypeChecker extends DepthFirstAdapter
         {
             node.getIdentifier().apply(this);
         }
-
-        if(node.getLeft() != null)
-        {
-            node.getLeft().apply(this);
-        }
-        if(node.getIdentifier() != null)
-        {
-            node.getIdentifier().apply(this);
-        }
-        
+       
         if(fTypeTable.containsNode(node.getLeft()))
         {
             if(fTypeTable.getNodeType(node.getLeft()) == Type.TUPLE)
@@ -2311,7 +2305,7 @@ public class TypeChecker extends DepthFirstAdapter
             }
             else
             {
-                puts("Error: Type mismatch: Right side of remove expression is not a tuple.");
+                puts("Error: Type mismatch: Left side of remove expression is not a tuple.");
                 System.exit(-1);
             }
         }
@@ -2367,6 +2361,33 @@ public class TypeChecker extends DepthFirstAdapter
                 e.apply(this);
             }
         }
+
+        if(node.getLeft() instanceof ALvalueExp)
+        {
+            ALvalueExp lvalueExp = (ALvalueExp) node.getLeft();
+            if(lvalueExp.getLvalue() instanceof ASimpleLvalue)
+            {
+                ASimpleLvalue simpleLvalue = (ASimpleLvalue) lvalueExp.getLvalue();
+                String tupleName = simpleLvalue.getIdentifier().getText().trim();
+                SVariable variable = (SVariable) SymbolTable.lookupHierarchy(fCurrentSymbolTable, tupleName);
+                if(variable.getTupleSymbolTable() != null)
+                {
+                    fTypeTable.setNodeType(node, Type.TUPLE);
+                    
+                    // check if identifier part of tuple's schema
+
+                }
+                else
+                {
+                    puts("Error: Type mismatch: " + tupleName + " is not a tuple, at line: "+ simpleLvalue.getIdentifier().getLine());
+                    System.exit(-1);
+                }
+            }
+        }
+        else
+        {
+            puts("Error: Wrong format for keep expression.");
+        }        
         outAKeepManyExp(node);
     }
 
@@ -2395,6 +2416,44 @@ public class TypeChecker extends DepthFirstAdapter
                 e.apply(this);
             }
         }
+        
+        if(fTypeTable.containsNode(node.getLeft()))
+        {
+            if(fTypeTable.getNodeType(node.getLeft()) == Type.TUPLE)
+            {
+                fTypeTable.setNodeType(node, Type.TUPLE);
+            }
+            else
+            {
+                puts("Error: Type mismatch: Left side of removemany expression is not a tuple.");
+                System.exit(-1);
+            }
+        }
+        else if(node.getLeft() instanceof ALvalueExp)
+        {
+            ALvalueExp lvalueExp = (ALvalueExp) node.getLeft();
+            if(lvalueExp.getLvalue() instanceof ASimpleLvalue)
+            {
+                ASimpleLvalue simpleLvalue = (ASimpleLvalue) lvalueExp.getLvalue();
+                String tupleName = simpleLvalue.getIdentifier().getText().trim();
+                SVariable variable = (SVariable) SymbolTable.lookupHierarchy(fCurrentSymbolTable, tupleName);
+                if(variable.getTupleSymbolTable() != null)
+                {
+                    fTypeTable.setNodeType(node, Type.TUPLE);
+                }
+                else
+                {
+                    puts("Error: Type mismatch: " + tupleName + " is not a tuple, at line: "+ simpleLvalue.getIdentifier().getLine());
+                    System.exit(-1);
+                }
+            }
+        }
+        else
+        {
+            puts("Error(23): Type table does not contain entries for required nodes!");
+            System.exit(-1);
+        }
+
         outARemoveManyExp(node);
     }
 
@@ -2433,7 +2492,7 @@ public class TypeChecker extends DepthFirstAdapter
         else
         {
             puts("Error(19): Type table does not contain entries for required nodes!");
-            //System.exit(-1);
+            System.exit(-1);
         }
         outANotExp(node);
     }
