@@ -554,7 +554,7 @@ Abstract Syntax Tree
         | {neg} [left]:exp
         | {default} [left]:exp
         | {lvalue} lvalue
-        | {call} identifier exp*gi
+        | {call} identifier exp*
         | {int} P.intconst
         | {true} true
         | {false} false

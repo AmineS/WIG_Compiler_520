@@ -294,12 +294,107 @@ public class Weeder extends DepthFirstAdapter
         {
             hasReturnType = true;
         }
+        
         ACompoundstm compoundStatement = (ACompoundstm) node.getCompoundstm();
+        
+        boolean hasReturnStatement;
+   
         if(hasReturnType && (compoundStatement.getStm().isEmpty() || !(compoundStatement.getStm().getLast() instanceof AReturnexpStm)))
         {
-            System.out.println("Error non void function " + node.getIdentifier().getText().trim() + " does not have a return statement at line " + node.getIdentifier().getLine());
-            fErrorPresent = true;
+            LinkedList<PStm> stmList = compoundStatement.getStm();
+            hasReturnStatement = false;
+
+            for (PStm stm: stmList)
+            {
+                /*
+                 * Check if there are return statements in if/ ifelse/ while statements. 
+                 */
+                
+                
+                if (stm instanceof AIfStm)
+                {
+                    AIfStm ifStm = (AIfStm) stm;
+                    if (ifStm.getStm() instanceof ACompStm)
+                    {
+                        ACompStm compStm = (ACompStm) ifStm.getStm();
+                        if (((ACompoundstm)compStm.getCompoundstm()).getStm().getLast() instanceof AReturnexpStm)
+                        {
+                            hasReturnStatement = true;
+                            break;
+                        }                        
+                    }
+                    else if (ifStm.getStm() instanceof AReturnexpStm)
+                    {
+                        hasReturnStatement = true;
+                        break;
+                    }
+                }
+                else if (stm instanceof AIfelseStm)
+                {
+                    AIfelseStm ifelseStm = (AIfelseStm) stm;
+                    
+                    // check thenstm
+                    if (ifelseStm.getThenStm() instanceof AReturnexpStm)
+                    {
+                        hasReturnStatement = true;
+                        break;
+                    }
+                    else if (ifelseStm.getThenStm() instanceof ACompStm)
+                    {
+                        ACompStm thenComp = (ACompStm) ifelseStm.getThenStm();
+                        if (((ACompoundstm)thenComp.getCompoundstm()).getStm().getLast() instanceof AReturnexpStm)
+                        {
+                            hasReturnStatement = true;
+                            break;
+                        }
+                    }
+                    
+                    // now check elsestm
+                    if (ifelseStm.getElseStm() instanceof AReturnexpStm)
+                    {
+                        hasReturnStatement = true;
+                        break;
+                    }
+                    else if (ifelseStm.getElseStm() instanceof ACompStm)
+                    {
+                        ACompStm thenComp = (ACompStm) ifelseStm.getElseStm();
+                        if (((ACompoundstm)thenComp.getCompoundstm()).getStm().getLast() instanceof AReturnexpStm)
+                        {
+                            hasReturnStatement = true;
+                            break;
+                        }
+                    }
+                }
+                else if (stm instanceof AWhileStm)
+                {
+                    AWhileStm whileStm = (AWhileStm) stm;
+                    if (whileStm.getStm() instanceof ACompStm)
+                    {
+                        ACompStm compStm = (ACompStm) whileStm.getStm();
+                        if (((ACompoundstm)compStm.getCompoundstm()).getStm().getLast() instanceof AReturnexpStm)
+                        {
+                            hasReturnStatement = true;
+                            break;
+                        }     
+                    }
+                    else if (whileStm.getStm() instanceof AReturnexpStm)
+                    {
+                        hasReturnStatement = true;
+                        break;
+                    }               
+                }
+            }
         }
+        else
+        {
+            hasReturnStatement = true;
+        }
+        
+        if (!hasReturnStatement)
+        {
+            System.out.println("Error: Function " + node.getIdentifier().getText().trim() + "does not have a return type. Line no:" + node.getIdentifier().getLine());
+        }
+        
     }
     
     /**

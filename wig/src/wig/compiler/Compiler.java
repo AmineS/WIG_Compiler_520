@@ -134,7 +134,6 @@ public class Compiler
         // if type pretty printing was requested, then print the type of each expression
         if (commandLine.hasOption("tp"))
         {
-            System.out.println("\n..............................................................\nPretty Print:\n");
             SymbolCollector symCollector = new SymbolCollector();
             symCollector.collect(tree);
             
@@ -144,6 +143,7 @@ public class Compiler
             TypeChecker typeChecker = new TypeChecker(symCollector.getServiceTable());
             typeChecker.typeCheck(tree);
 
+            System.out.println("\n..............................................................\nPretty Print:\n");
             TypePrettyPrinter tpp = new TypePrettyPrinter(typeChecker.getTypeTable());
             
             tpp.print(tree);

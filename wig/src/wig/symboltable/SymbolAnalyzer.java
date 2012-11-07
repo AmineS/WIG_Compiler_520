@@ -6,6 +6,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 import wig.analysis.DepthFirstAdapter;
+import wig.node.AArgument;
 import wig.node.ACallExp;
 import wig.node.ACompStm;
 import wig.node.ACompoundstm;
@@ -23,6 +24,7 @@ import wig.node.ASession;
 import wig.node.AShowStm;
 import wig.node.ASimpleLvalue;
 import wig.node.Node;
+import wig.node.PExp;
 import wig.node.PHtmlbody;
 import wig.node.PInput;
 import wig.node.PPlug;
@@ -282,8 +284,26 @@ public class SymbolAnalyzer extends DepthFirstAdapter
             puts("Function name " + name + " undefined. Line no: " + node.getIdentifier().getLine() );
             System.exit(1);
         }
+        
+        node.getIdentifier().apply(this);
+        
+        LinkedList<PExp> expList = node.getExp();
+        for (PExp pe: expList)
+        {
+            pe.apply(this);
+        }
     }
 
+    public void caseAArgument(AArgument node)
+    {
+        String name = node.getIdentifier().getText().trim();
+        if(SymbolTable.lookupHierarchy(currentSymbolTable, name) == null)
+        {
+            puts("Argument name " + name + " undefined. Line no: " + node.getIdentifier().getLine() );
+            System.exit(1);
+        }
+    }
+    
     public void caseASimpleLvalue(ASimpleLvalue node)
     {                   
         String name = node.getIdentifier().toString().trim();
