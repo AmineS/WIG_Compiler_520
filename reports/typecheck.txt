@@ -1,0 +1,62 @@
+-----------------------------------------------------------------------------------------
+Type
+Is an enum that specifies the different types that are used throughout the type checking package. This enum provides types INT, BOOL, STRING, VOID, TUPLE that are used as values returned for given Node keys in the Type Table Hash Table.
+
+-----------------------------------------------------------------------------------------
+Type Table 
+
+The class TypeTable is a wrapper around a HashTable which maps Nodes to Types. TypeTable provides methods getNodeType, setNodeType and containsNode, which can be used to get a Node’s Type from the TypeTable, set a Node’s Type in the TypeTable and check if a Node is already in the TypeTable respectively. TypeTable is used by the TypeChecker.
+
+-----------------------------------------------------------------------------------------
+Type Checker
+
+The TypeChecker implements the DepthFirstAdapter. It has a TypeTable and SymbolTable. The TypeChecker goes through nodes by calling node.apply(this) until a leaf node is reached. The leaf nodes are put in the TypeTable with their respective Types. Then, the TypeChecker checks the Nodes above the leaf nodes and applies the required TypeRules. The SymbolTable is used to check for Symbols not defined in the current scope and get those symbol’s nodes. For example: for a function call, we need to get the function’s return type and parameters’ types so that we can check if the function call is being made with the arguments of the correct types or being assigned to a variable which matches the return type of the function.
+
+-----------------------------------------------------------------------------------------
+Type Rules
+These are type rules that are applied to at each relevant visit in the Type Checker. These essentially take the expected types for each rule and programmatically applies their type rule logic. It returns a boolean indicating if the rule works or not. Some rules were combined into one because they possessed the same logic (such as <, >, == … were combined into intComparison). Type Rules in prose are listed: 
+
+
+ - plus: 1) e1 + e2 of type int, then both e1 and e2 are of type int 
+ 2) e1 + e2 of type string, then both e1 and e2 are of type string
+ 3)  e1 + e2 of type string, if e1 is of type int and e2 is of type string 
+ 4) e1 + e2 of type string, if e1 is of type string and e2 is of type int 
+
+ - minus: e1 - e2 is of type int, then both e1 and e2 are of type int
+ - mult: e1 * e2 is of type int, then both e1 and e2 are of type int
+ - div: e1 / e2 is of type int, then both e1 and e2 are of type int
+ - mod: e1 % e2 is of type int, then both e1 and e2 are of type int
+ - neg: -e1 is of type int, then e1 is of type int
+
+ - lt: e1 < e2 is of type bool, then e1 and e2 are of type int
+ - gt: e1 > e2 is of type bool, then e1 and e2 are of type int
+ - lteq: e1 <= e2 is of type bool, then e1 and e2 are of type int
+ - gteq: e1 >= e2 is of type bool, then e1 and e2 are of type int
+
+ - not: ! e1 is of type bool, then e1 must be of type bool
+ - or: e1 || e2 is of type bool, then e1 and e2 must be of type bool
+ - and: e1 && e2 is of type bool, then e1 and e2 must be of type bool
+
+ - eq: e1 == e2 is of type bool, then e1 and e2 must be of same type
+ - neq: e1 != e2 is of type bool, then e1 and e2 must be of same type 
+
+ - assign: x=e1 is of type tau: then x is of type tau, e1 is of type sigma and sigma is assignable
+     to tau.
+
+ - If statement: if (e) S: e is of type bool, S is well-formed
+ - If Else statement: if (e) S1 else S2: e must be of type bool, S1 and S2 must be well-formed
+ - While statement: while(e) S:  e must be of type bool, S must be well-formed
+
+ - field value: e1.x = e2.x is of type tau, then e1.x is of type tau, e2.x is of type tau
+- function call: f(e1,e2,...,en) is of type tau. Check if the types of the e’is match the types of the parameters the function has.  Check if f is a function which has return type tau.
+
+ - keep: e \+ x is of type T, then e is of type t1, x is of type a, e.x is of type a.
+
+ - remove: e \- x is of type T, then e is of type t1, x is of type a, e.x is of type a
+
+ - keep_many: e \+ (x1,x2,x3...) is of type T, then e is of type t1, if xi of type a, then e.xi is of type a.
+
+ - remove_many: e \- (x1,x2,x3...) is of type T, then e is of type t1, if xi of type a, then e.xi is of type a.
+
+ - join: e1 << e2 is of type tau, then e1 and e2 must be type tuple, e1 and e2 must agree with the attributes they have in common. The resultant tuple of type tau must have a union of
+ﬁelds from e1 and e2. When two ﬁelds in e1 and e2 are the same we check if they have the same basic type. If both the ﬁelds are the same we choose the ﬁeld from e2.

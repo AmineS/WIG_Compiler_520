@@ -2881,6 +2881,13 @@ public class TypeChecker extends DepthFirstAdapter
         
         SVariable symbol = (SVariable) SymbolTable.lookupHierarchy(fCurrentSymbolTable, node.getLeft().getText());
         TupleSymbolTable tupleSymbolTable = symbol.getTupleSymbolTable();
+        
+        if (tupleSymbolTable==null)
+        {
+            puts("Error: Left side of  a qualified value not a tuple. Line no.:" + node.getLeft().getLine());
+            System.exit(-1);
+        }
+        
         SField field = (SField) tupleSymbolTable.getSymbol(node.getRight().getText());
         
         if(field == null)

@@ -131,25 +131,6 @@ public class Compiler
             System.out.println("\n\n..............................................................");
         }              
         
-        // if type pretty printing was requested, then print the type of each expression
-        if (commandLine.hasOption("tp"))
-        {
-            SymbolCollector symCollector = new SymbolCollector();
-            symCollector.collect(tree);
-            
-            SymbolAnalyzer symAnalyzer = new SymbolAnalyzer(symCollector.getServiceTable());
-            symAnalyzer.analyze(tree);
-            
-            TypeChecker typeChecker = new TypeChecker(symCollector.getServiceTable());
-            typeChecker.typeCheck(tree);
-
-            System.out.println("\n..............................................................\nPretty Print:\n");
-            TypePrettyPrinter tpp = new TypePrettyPrinter(typeChecker.getTypeTable());
-            
-            tpp.print(tree);
-            System.out.println("\n\n..............................................................");
-        }
-        
         // if symbol table phase was requested, perform symbol table phase
         if(commandLine.hasOption("st") || commandLine.hasOption("pst"))
         {
@@ -177,9 +158,9 @@ public class Compiler
             System.out.println("\nSymbol Table Phase Done.");
             System.out.println("..............................................................");
         }
-        
+
         // if type checking was requested, perform type checking
-        if (commandLine.hasOption("tc"))
+        if (commandLine.hasOption("tc")  || commandLine.hasOption("tp"))
         {
             System.out.println("\n..............................................................");
             System.out.println("Type Checking Phase:");
@@ -193,6 +174,15 @@ public class Compiler
             
             System.out.println("\nType Checking Phase Done.");
             System.out.println("..............................................................");
+
+            // if pretty printing with types was requested, pretty print with types
+            if (commandLine.hasOption("tp"))
+            {
+                System.out.println("\n..............................................................\nPretty Print with Types:\n");
+                TypePrettyPrinter tpp = new TypePrettyPrinter(typeChecker.getTypeTable());
+                tpp.print(tree);
+                System.out.println("\n\n..............................................................");
+            }
         }
     }
 }
