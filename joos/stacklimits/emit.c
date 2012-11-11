@@ -45,7 +45,8 @@ void localmem(char *opcode, int offset)
 
 int limitCODE(CODE *c)
 {
-    int *stack_change = 0; 
+    CODE *code = c; 
+    int *stack_change = 0;
     int *stack_affected = 0; 
     int *stack_used = 0; 
 
@@ -53,26 +54,28 @@ int limitCODE(CODE *c)
     int stack_limit = 1;    
     int analysis_valid = 0;
 
-    while(c->next != NULL)
+    while(code != NULL)
     {
         /* this implementation over estimates the stack limit because 
          * it doesn't take into account the cases where 
          * there is a goto, comparison, label or return 
          */
 
-        analysis_valid = stack_effect(c, stack_change, stack_affected, stack_used);
+         analysis_valid = stack_effect(c, stack_change, stack_affected, stack_used);
         
         /*  need to deal with in valid analysis here */
         
         /* add the stack to the stack limit */
-        stack_limit += *stack_change; 
+/*        stack_limit += *stack_change; */
 
         /* re-initialize variables */
-        *stack_change = 0;
+/*        *stack_change = 0;
         *stack_affected = 0; 
-        *stack_used = 0; 
+        *stack_used = 0; */
+        code = code->next;
     }
 
+    printf("the stack limit is %d\n", stack_limit);
     return stack_limit;
 }
 

@@ -1,0 +1,22 @@
+import joos.lib.*;
+
+public class Hello 
+{
+	public Hello() { super(); }
+
+	public static void main(String argv[])
+	{ 
+		JoosIO f;
+		int i; 
+		i = 0; 
+  		f = new JoosIO();
+
+		f.println("Incremented!");
+		
+		i++;
+		//for (int i=0; i<10; i=i+1)
+		//{
+	  		f.println("Hello world");
+		//}
+	}
+}
