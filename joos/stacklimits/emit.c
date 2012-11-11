@@ -19,6 +19,8 @@ FILE *emitFILE;
 
 LABEL *emitlabels;
 
+void printCODE(CODE *);
+
 char *emitname(char *name)
 { int i,j;
   char *e;
@@ -46,12 +48,13 @@ void localmem(char *opcode, int offset)
 int limitCODE(CODE *c)
 {
     CODE *code = c; 
-    int *stack_change = 0;
-    int *stack_affected = 0; 
-    int *stack_used = 0; 
+    int stack_change = 0;
+    int stack_affected = 0; 
+    int stack_used = 0; 
 
     /* stack limit initializes with 1 to account for "this" */
-    int stack_limit = 1;    
+    int stack_limit = 0;    
+    int max_stack_limit = 0; 
     int analysis_valid = 0;
 
     while(code != NULL)
@@ -60,23 +63,230 @@ int limitCODE(CODE *c)
          * it doesn't take into account the cases where 
          * there is a goto, comparison, label or return 
          */
+        if(!code->visited)
+        {
+            /*printCODE(code);*/
+            analysis_valid = stack_effect(code, &stack_change, &stack_affected, &stack_used);
+          
+          /*  need to deal with in valid analysis here */
+          
+          /* add the stack to the stack limit */            
+            stack_limit += stack_change; 
+            max_stack_limit = stack_limit > max_stack_limit ? stack_limit : max_stack_limit;
 
-         analysis_valid = stack_effect(c, stack_change, stack_affected, stack_used);
-        
-        /*  need to deal with in valid analysis here */
-        
-        /* add the stack to the stack limit */
-/*        stack_limit += *stack_change; */
+            /*printf("The stack limit at this point is %d\n", stack_limit);
+            printf("The max stack limit at this point is %d\n", max_stack_limit);*/
+            code->visited = 1;
+      }
 
         /* re-initialize variables */
-/*        *stack_change = 0;
-        *stack_affected = 0; 
-        *stack_used = 0; */
+        stack_change = 0;
+        stack_affected = 0; 
+        stack_used = 0; 
         code = code->next;
-    }
+      }
 
-    printf("the stack limit is %d\n", stack_limit);
-    return stack_limit;
+    printf("the final stack limit is %d\n", max_stack_limit);
+    return max_stack_limit;
+}
+
+void printCODE(CODE *c)
+{
+  if (c == NULL) return; 
+
+     switch(c->kind) 
+     {
+       case nopCK:
+            printf("nop");
+            printf("\n");
+            break;
+       case i2cCK:
+            printf("i2c");
+            printf("\n");
+            break;
+       case newCK:
+            printf("new %s",c->val.newC);
+            printf("\n");
+            break;
+       case instanceofCK:
+            printf("instanceof %s",c->val.instanceofC);
+            printf("\n");
+            break;
+       case checkcastCK:
+            printf("checkcast %s",c->val.checkcastC);
+            printf("\n");
+            break;
+       case imulCK:
+            printf("imul");
+            printf("\n");
+            break;
+       case inegCK:
+            printf("ineg");
+            printf("\n");
+            break;
+       case iremCK:
+            printf("irem");
+            printf("\n");
+            break;
+       case isubCK:
+            printf("isub");
+            printf("\n");
+            break;
+       case idivCK:
+            printf("idiv");
+            printf("\n");
+            break;
+       case iaddCK:
+            printf("iadd");
+            printf("\n");
+            break;
+       case iincCK:
+            printf("iinc %i %i",c->val.iincC.offset,c->val.iincC.amount);
+            printf("\n");
+            break;
+       case labelCK:
+            emitLABEL(c->val.labelC);
+            printf(":");
+            printf("\n");
+            break;
+       case gotoCK:
+            printf("goto ");
+            emitLABEL(c->val.gotoC);
+            printf("\n");
+            break;
+       case ifeqCK:
+            printf("ifeq ");
+            emitLABEL(c->val.ifeqC);
+            printf("\n");
+            break;
+       case ifneCK:
+            printf("ifne ");
+            emitLABEL(c->val.ifneC);
+            printf("\n");
+            break;
+       case if_acmpeqCK:
+            printf("if_acmpeq ");
+            emitLABEL(c->val.if_acmpeqC);
+            printf("\n");
+            break;
+       case if_acmpneCK:
+            printf("if_acmpne ");
+            emitLABEL(c->val.if_acmpneC);
+            printf("\n");
+            break;
+       case ifnullCK:
+            printf("ifnull ");
+            emitLABEL(c->val.ifnullC);
+            printf("\n");
+            break;
+       case ifnonnullCK:
+            printf("ifnonnull ");
+            emitLABEL(c->val.ifnonnullC);
+            printf("\n");
+            break;
+       case if_icmpeqCK:
+            printf("if_icmpeq ");
+            emitLABEL(c->val.if_icmpeqC);
+            printf("\n");
+            break;
+       case if_icmpgtCK:
+            printf("if_icmpgt ");
+            emitLABEL(c->val.if_icmpgtC);
+            printf("\n");
+            break;
+       case if_icmpltCK:
+            printf("if_icmplt ");
+            emitLABEL(c->val.if_icmpltC);
+            printf("\n");
+            break;
+       case if_icmpleCK:
+            printf("if_icmple ");
+            emitLABEL(c->val.if_icmpleC);
+            printf("\n");
+            break;
+       case if_icmpgeCK:
+            printf("if_icmpge ");
+            emitLABEL(c->val.if_icmpgeC);
+            printf("\n");
+            break;
+       case if_icmpneCK:
+            printf("if_icmpne ");
+            emitLABEL(c->val.if_icmpneC);
+            printf("\n");
+            break;
+       case ireturnCK:
+            printf("ireturn");
+            printf("\n");
+            break;
+       case areturnCK:
+            printf("areturn");
+            printf("\n");
+            break;
+       case returnCK:
+            printf("return");
+            printf("\n");
+            break;
+       case aloadCK:
+            localmem("aload",c->val.aloadC);
+            printf("\n");
+            break;
+       case astoreCK:
+            localmem("astore",c->val.astoreC);
+            printf("\n");
+            break;
+       case iloadCK:
+            localmem("iload",c->val.iloadC);
+            printf("\n");
+            break;
+       case istoreCK:
+            localmem("istore",c->val.istoreC);
+            printf("\n");
+            break;
+       case dupCK:
+            printf("dup");
+            printf("\n");
+            break;
+       case popCK:
+            printf("pop");
+            printf("\n");
+            break;
+       case swapCK:
+            printf("swap");
+            printf("\n");
+            break;
+       case ldc_intCK:
+            if (c->val.ldc_intC >= 0 && c->val.ldc_intC <= 5) {
+               printf("iconst_%i",c->val.ldc_intC);
+            } else {
+               printf("ldc %i",c->val.ldc_intC);
+            }
+            printf("\n");
+            break;
+       case ldc_stringCK:
+            printf("ldc \"%s\"",c->val.ldc_stringC);
+            printf("\n");
+            break;
+       case aconst_nullCK:
+            printf("aconst_null");
+            printf("\n");
+            break;
+       case getfieldCK:
+            printf("getfield %s",c->val.getfieldC);
+            printf("\n");
+            break;
+       case putfieldCK:
+            printf("putfield %s",c->val.putfieldC);
+            printf("\n");
+            break;
+       case invokevirtualCK:
+            printf("invokevirtual %s",c->val.invokevirtualC);
+            printf("\n");
+            break;
+       case invokenonvirtualCK:
+            printf("invokenonvirtual %s",c->val.invokenonvirtualC);
+            printf("\n");
+            break;
+      }
 }
 
 void emitCODE(CODE *c)
