@@ -18,3 +18,5 @@ void optiCLASS(CLASS *c);
 void optiCONSTRUCTOR(CONSTRUCTOR *c);
 void optiMETHOD(METHOD *m);
 void optiCODE(CODE **c);
+
+int stack_effect(CODE *, int *, int *, int *); 

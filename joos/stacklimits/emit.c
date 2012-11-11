@@ -14,7 +14,7 @@
 #include <string.h>
 #include "memory.h"
 #include "emit.h"
-
+#include "optimize.h" 
 FILE *emitFILE;
 
 LABEL *emitlabels;
@@ -44,7 +44,36 @@ void localmem(char *opcode, int offset)
 }
 
 int limitCODE(CODE *c)
-{ return 25;
+{
+    int *stack_change = 0; 
+    int *stack_affected = 0; 
+    int *stack_used = 0; 
+
+    /* stack limit initializes with 1 to account for "this" */
+    int stack_limit = 1;    
+    int analysis_valid = 0;
+
+    while(c->next != NULL)
+    {
+        /* this implementation over estimates the stack limit because 
+         * it doesn't take into account the cases where 
+         * there is a goto, comparison, label or return 
+         */
+
+        analysis_valid = stack_effect(c, stack_change, stack_affected, stack_used);
+        
+        /*  need to deal with in valid analysis here */
+        
+        /* add the stack to the stack limit */
+        stack_limit += *stack_change; 
+
+        /* re-initialize variables */
+        *stack_change = 0;
+        *stack_affected = 0; 
+        *stack_used = 0; 
+    }
+
+    return stack_limit;
 }
 
 void emitCODE(CODE *c)
