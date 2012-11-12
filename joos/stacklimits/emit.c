@@ -45,6 +45,42 @@ void localmem(char *opcode, int offset)
   }
 }
 
+int  getBranchLimit(CODE *c)
+{
+  if(code->kind==labelCK && code->val==next_label)
+  {
+     max_branch_limit = max_branch_stack_limit > max_branch_limit ? max_branch_stack_limit : max_branch_limit;
+     branch_stack_limit = 0;
+     max_branch_stack_limit = 0;
+
+     next_label = getBranchLabel(code);
+     if( next_label != -1)
+     {
+       branch = 1; 
+     }
+  }
+
+  if(code->kind==labelCK && code->val==last_label)
+  {
+    branch = 0;
+    max_branch_limit = max_branch_stack_limit > max_branch_limit ? max_branch_stack_limit : max_branch_limit;
+    stack_limit += 
+    code = code->next; 
+    continue;          
+  }            
+
+      analysis_valid = stack_effect(code, &stack_change, &stack_affected, &stack_used);        
+
+      branch_stack_limit += stack_change;
+      max_branch_stack_limit = branch_stack_limit > max_branch_stack_limit ? branch_stack_limit : max_branch_stack_limit;
+
+      stack_change = 0;
+      stack_affected = 0; 
+      stack_used = 0; 
+      code->visited = 1;
+      code = code->next;             
+}
+
 int limitCODE(CODE *c)
 {
     CODE *code = c; 
@@ -57,37 +93,62 @@ int limitCODE(CODE *c)
     int max_stack_limit = 0; 
     int analysis_valid = 0;
 
+    int branch_stack_limit = 0; 
+    int max_branch_stack_limit = 0; 
+    int max_branch_limit = 0; 
+
+    int branch = 0; 
+    int next_label = -1;
+    int last_label = -1;
+
     while(code != NULL)
     {
-        /* this implementation over estimates the stack limit because 
-         * it doesn't take into account the cases where 
-         * there is a goto, comparison, label or return 
-         */
-        if(!code->visited)
-        {
-            /*printCODE(code);*/
-            analysis_valid = stack_effect(code, &stack_change, &stack_affected, &stack_used);
-          
-          /*  need to deal with in valid analysis here */
-          
-          /* add the stack to the stack limit */            
-            stack_limit += stack_change; 
-            max_stack_limit = stack_limit > max_stack_limit ? stack_limit : max_stack_limit;
+      if(!code->visited)
+      {
+          /*printCODE(code);*/
+          analysis_valid = stack_effect(code, &stack_change, &stack_affected, &stack_used);
+        
+        /*  need to deal with in valid analysis here */
+        
+        /* add the stack to the stack limit */            
+          stack_limit += stack_change; 
+          max_stack_limit = stack_limit > max_stack_limit ? stack_limit : max_stack_limit;
 
-            /*printf("The stack limit at this point is %d\n", stack_limit);
-            printf("The max stack limit at this point is %d\n", max_stack_limit);*/
-            code->visited = 1;
+          /*printf("The stack limit at this point is %d\n", stack_limit);
+          printf("The max stack limit at this point is %d\n", max_stack_limit);*/
+          code->visited = 1;
       }
 
-        /* re-initialize variables */
-        stack_change = 0;
-        stack_affected = 0; 
-        stack_used = 0; 
-        code = code->next;
-      }
+      /* re-initialize variables */
+      stack_change = 0;
+      stack_affected = 0; 
+      stack_used = 0; 
+      code = code->next;        
+
+      // check if we've entered a branch 
+      if(!code->visited && getBranchLabel(code) != -1)
+      {
+          stack_limit += getBranchLimit(code);
+      }      
+    }
 
     printf("the final stack limit is %d\n", max_stack_limit);
     return max_stack_limit;
+}
+
+int hasBranches(CODE *c)
+{
+
+
+}
+
+int iscomparison(CODE *c)
+{
+    switch(c-kind)
+    {
+
+    
+    }
 }
 
 void printCODE(CODE *c)
