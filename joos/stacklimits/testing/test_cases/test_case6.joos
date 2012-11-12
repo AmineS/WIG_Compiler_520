@@ -1,0 +1,37 @@
+import joos.lib.*;
+
+public class Hello 
+{
+	public Hello() { super(); }
+
+	public static void main(String argv[])
+	{ 
+		JoosIO f;
+		int i; 
+        int j;
+		int k;
+		i = 0; 
+		if(i == 0)
+		{
+            i=6;            
+            if(i==2)
+            {
+                    i = 5; 
+            }
+            else
+            {
+                    i = 7; 
+            }
+			j = 3;
+		}
+		else
+		{
+			k = 4;
+		}
+		i = 1;
+		while(i <= 2)
+		{
+			i = i + 1;
+		}
+	}
+}
