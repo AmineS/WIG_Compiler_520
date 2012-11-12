@@ -21,6 +21,11 @@ LABEL *emitlabels;
 
 void printCODE(CODE *);
 
+int getBranchLabel(CODE *);
+int isAnIfStament(CODE *);
+int ifStatementValue(CODE *);
+int getStopLabel(CODE *);
+
 char *emitname(char *name)
 { int i,j;
   char *e;
@@ -34,7 +39,7 @@ char *emitname(char *name)
 }
 
 void emitLABEL(int label)
-{ fprintf(emitFILE,"%s_%i",emitlabels[label].name,label);
+{. fprintf(emitFILE,"%s_%i",emitlabels[label].name,label);
 }
 
 void localmem(char *opcode, int offset)
@@ -90,6 +95,133 @@ int limitCODE(CODE *c)
     return max_stack_limit;
 }
 
+int getBranchLabel(CODE *c)
+{
+  CODE *code = c;
+  int stopLabel = 0;
+
+  if(code != NULL && isAnIfStament(code) != 0)
+  {
+    code = code->next;
+    if(code != NULL && code->kind == ldc_intCK && code->val.ldc_intC == 0)
+    {
+      code = code->next;
+      if(code != NULL && code->kind == gotoCK)
+      {
+        stopLabel = code->val.gotoC;
+        code = code->next;
+        if(code != NULL && code->kind == labelCK)
+        {
+          code = code->next;
+          if(code != NULL && code->kind == ldc_intCK && code->val.ldc_intC == 1)
+          {
+            code = code->next;
+            if(code != NULL && code->kind == labelCK && code->val.labelC == stopLabel)
+            {
+              code = code->next;
+              if(code != NULL && isAnIfStament(code) != 0)
+              {
+                return ifStatementValue(code);
+              }
+            }
+            else
+            {
+              return -1;
+            }
+          }
+          else
+          {
+            return -1;
+          }
+        }
+        else
+        {
+          return -1;
+        }
+      }
+      else
+      {
+        return -1;
+      }
+    }
+    else
+    {
+      return -1;
+    }
+  }
+  else
+  {
+    return -1;
+  }
+}
+
+int getStopLabel(CODE *c)
+{
+  int branchLabel = getBranchLabel(c);
+  while(code != NULL)
+  {
+    if(code->kind == labelCK && code->next->val.labelC == branchLabel)
+    {
+      return code->val.labelC;
+    }
+    code = code->next;
+  }
+}
+
+int isAnIfStament(CODE *c)
+{
+  switch(c->kind)
+  {
+      case ifeqCK:
+      case ifneCK:
+      case if_acmpeqCK:
+      case if_acmpneCK:
+      case ifnullCK:
+      case ifnonnullCK:
+      case if_icmpeqCK:
+      case if_icmpgtCK:
+      case if_icmpltCK:
+      case if_icmpleCK:
+      case if_icmpgeCK:
+      case if_icmpneCK:
+          return 1;
+      default: 
+          return 0;
+  }
+}
+
+int ifStatementValue(CODE *c)
+{
+  switch(c->kind)
+  {
+      case ifeqCK:
+        return c->val.ifeqC;
+      case ifneCK:
+        return c->val.ifneC;
+      case if_acmpeqCK:
+        return c->val.if_acmpeqC;
+      case if_acmpneCK:
+        return c->val.if_acmpneC;
+      case ifnullCK:
+        return c->val.ifnullC;
+      case ifnonnullCK:
+        return c->val.ifnonnullC;
+      case if_icmpeqCK:
+        return c->val.if_icmpeqC;
+      case if_icmpgtCK:
+        return c->val.if_icmpgtC;
+      case if_icmpltCK:
+        return c->val.if_icmpltC;
+      case if_icmpleCK:
+        return c->val.if_icmpleC;
+      case if_icmpgeCK:
+        return c->val.if_icmpgeC;
+      case if_icmpneCK:
+        return c->val.if_icmpneC;
+      default: 
+          return 0;
+  }
+}
 void printCODE(CODE *c)
 {
   if (c == NULL) return; 

@@ -9,14 +9,20 @@ public class Hello
 		JoosIO f;
 		int i; 
 		i = 0; 
-  		f = new JoosIO();
-
-		f.println("Incremented!");
-		
-		i++;
-		//for (int i=0; i<10; i=i+1)
-		//{
-	  		f.println("Hello world");
-		//}
+		if(i == 0)
+		{
+			int j;
+			j = 3;
+		}
+		else
+		{
+			int k;
+			k = 4;
+		}
+		i = 1;
+		if(i == 1)
+		{
+			i = 5;
+		}
 	}
 }
