@@ -21,6 +21,11 @@ LABEL *emitlabels;
 
 void printCODE(CODE *);
 
+int getBranchLabel(CODE *);
+int isAnIfStament(CODE *);
+int ifStatementValue(CODE *);
+int getStopLabel(CODE *);
+
 char *emitname(char *name)
 { int i,j;
   char *e;
@@ -37,6 +42,11 @@ void emitLABEL(int label)
 { fprintf(emitFILE,"%s_%i",emitlabels[label].name,label);
 }
 
+void emitPrintLabel(int label)
+{
+  printf("%s_%i", emitlabels[label].name, label);
+}
+
 void localmem(char *opcode, int offset)
 { if (offset >=0 && offset <=3) {
      fprintf(emitFILE,"%s_%i",opcode,offset);
@@ -47,27 +57,32 @@ void localmem(char *opcode, int offset)
 
 int  getBranchLimit(CODE *c)
 {
-  if(code->kind==labelCK && code->val==next_label)
-  {
-     max_branch_limit = max_branch_stack_limit > max_branch_limit ? max_branch_stack_limit : max_branch_limit;
-     branch_stack_limit = 0;
-     max_branch_stack_limit = 0;
+  CODE *code = c; 
+  int branch_stack_limit = 0; 
+  int max_branch_stack_limit = 0; 
+  int max_branch_limit = 0;
 
-     next_label = getBranchLabel(code);
-     if( next_label != -1)
-     {
-       branch = 1; 
-     }
+  int stack_change = 0;
+  int stack_affected = 0; 
+  int stack_used = 0;
+
+  int next_label = getBranchLabel(code);
+  int last_label = getStopLabel(code);
+  int analysis_valid = 0;
+
+  while(code->visited) 
+  {
+    code = code->next;
   }
 
-  if(code->kind==labelCK && code->val==last_label)
+  while(code != NULL && !(code->kind==labelCK && code->val.labelC==last_label) && !code->visited)
   {
-    branch = 0;
-    max_branch_limit = max_branch_stack_limit > max_branch_limit ? max_branch_stack_limit : max_branch_limit;
-    stack_limit += 
-    code = code->next; 
-    continue;          
-  }            
+    if(code->kind==labelCK && code->val.labelC==next_label && !isAnIfStament(code))
+    {
+       max_branch_limit = max_branch_stack_limit > max_branch_limit ? max_branch_stack_limit : max_branch_limit;
+       branch_stack_limit = 0;
+       max_branch_stack_limit = 0;
+    }
 
       analysis_valid = stack_effect(code, &stack_change, &stack_affected, &stack_used);        
 
@@ -78,7 +93,17 @@ int  getBranchLimit(CODE *c)
       stack_affected = 0; 
       stack_used = 0; 
       code->visited = 1;
-      code = code->next;             
+      code = code->next;       
+  }
+
+  max_branch_limit = max_branch_stack_limit > max_branch_limit ? max_branch_stack_limit : max_branch_limit;
+
+  if(code != NULL)
+  {
+    code->visited = 1;
+  }
+
+  return max_branch_limit;       
 }
 
 int limitCODE(CODE *c)
@@ -87,28 +112,28 @@ int limitCODE(CODE *c)
     int stack_change = 0;
     int stack_affected = 0; 
     int stack_used = 0; 
+    int branch_limit = 0;
 
     /* stack limit initializes with 1 to account for "this" */
     int stack_limit = 0;    
     int max_stack_limit = 0; 
-    int analysis_valid = 0;
-
-    int branch_stack_limit = 0; 
-    int max_branch_stack_limit = 0; 
-    int max_branch_limit = 0; 
-
-    int branch = 0; 
-    int next_label = -1;
-    int last_label = -1;
+    int analysis_invalid = 0;
 
     while(code != NULL)
     {
+
+      /* check if we've entered a branch */
+      if(!code->visited && getBranchLabel(code) != -1)
+      {          
+          analysis_invalid = stack_effect(code, &stack_change, &stack_affected, &stack_used);
+          stack_limit += stack_change; 
+          branch_limit = getBranchLimit(code);
+          max_stack_limit = stack_limit + branch_limit > max_stack_limit ? stack_limit + branch_limit : max_stack_limit;
+      }
+
       if(!code->visited)
       {
-          /*printCODE(code);*/
-          analysis_valid = stack_effect(code, &stack_change, &stack_affected, &stack_used);
-        
-        /*  need to deal with in valid analysis here */
+          analysis_invalid = stack_effect(code, &stack_change, &stack_affected, &stack_used);
         
         /* add the stack to the stack limit */            
           stack_limit += stack_change; 
@@ -124,31 +149,124 @@ int limitCODE(CODE *c)
       stack_affected = 0; 
       stack_used = 0; 
       code = code->next;        
-
-      // check if we've entered a branch 
-      if(!code->visited && getBranchLabel(code) != -1)
-      {
-          stack_limit += getBranchLimit(code);
-      }      
     }
-
-    printf("the final stack limit is %d\n", max_stack_limit);
     return max_stack_limit;
 }
 
-int hasBranches(CODE *c)
+int getBranchLabel(CODE *c)
 {
+  CODE *code = c;
+  int stopLabel = 0;
 
-
+  if(code != NULL && isAnIfStament(code) != 0)
+  {
+    code->visited=1;
+    code = code->next;
+    if(code != NULL && code->kind == ldc_intCK && code->val.ldc_intC == 0)
+    {
+      code->visited=1;
+      code = code->next;
+      if(code != NULL && code->kind == gotoCK)
+      {
+        stopLabel = code->val.gotoC;
+        code->visited=1;
+        code = code->next;
+        if(code != NULL && code->kind == labelCK)
+        {
+          code->visited=1;
+          code = code->next;
+          if(code != NULL && code->kind == ldc_intCK && code->val.ldc_intC == 1)
+          {
+            code->visited=1;
+            code = code->next;
+            if(code != NULL && code->kind == labelCK && code->val.labelC == stopLabel)
+            {
+              code->visited=1;
+              code = code->next;              
+              if(code != NULL && isAnIfStament(code) != 0)
+              {
+                return ifStatementValue(code);
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  return -1;
 }
 
-int iscomparison(CODE *c)
+int getStopLabel(CODE *c)
 {
-    switch(c-kind)
+  CODE *code = c;
+  int branchLabel = getBranchLabel(c);
+  CODE *prev;
+  while(code != NULL)
+  {
+    if(code->kind == labelCK && code->val.labelC == branchLabel)
     {
-
-    
+      return prev->val.labelC;
     }
+    prev = code;
+    code = code->next;
+  }
+
+  return -1;
+}
+
+int isAnIfStament(CODE *c)
+{
+  switch(c->kind)
+  {
+      case ifeqCK:
+      case ifneCK:
+      case if_acmpeqCK:
+      case if_acmpneCK:
+      case ifnullCK:
+      case ifnonnullCK:
+      case if_icmpeqCK:
+      case if_icmpgtCK:
+      case if_icmpltCK:
+      case if_icmpleCK:
+      case if_icmpgeCK:
+      case if_icmpneCK:
+          return 1;
+      default: 
+          return 0;
+  }
+}
+
+int ifStatementValue(CODE *c)
+{
+  switch(c->kind)
+  {
+      case ifeqCK:
+        return c->val.ifeqC;
+      case ifneCK:
+        return c->val.ifneC;
+      case if_acmpeqCK:
+        return c->val.if_acmpeqC;
+      case if_acmpneCK:
+        return c->val.if_acmpneC;
+      case ifnullCK:
+        return c->val.ifnullC;
+      case ifnonnullCK:
+        return c->val.ifnonnullC;
+      case if_icmpeqCK:
+        return c->val.if_icmpeqC;
+      case if_icmpgtCK:
+        return c->val.if_icmpgtC;
+      case if_icmpltCK:
+        return c->val.if_icmpltC;
+      case if_icmpleCK:
+        return c->val.if_icmpleC;
+      case if_icmpgeCK:
+        return c->val.if_icmpgeC;
+      case if_icmpneCK:
+        return c->val.if_icmpneC;
+      default: 
+          return 0;
+  }
 }
 
 void printCODE(CODE *c)
@@ -206,73 +324,73 @@ void printCODE(CODE *c)
             printf("\n");
             break;
        case labelCK:
-            emitLABEL(c->val.labelC);
+            emitPrintLabel(c->val.gotoC);
             printf(":");
             printf("\n");
             break;
        case gotoCK:
             printf("goto ");
-            emitLABEL(c->val.gotoC);
+            emitPrintLabel(c->val.gotoC);
             printf("\n");
             break;
        case ifeqCK:
             printf("ifeq ");
-            emitLABEL(c->val.ifeqC);
+            emitPrintLabel(c->val.gotoC);
             printf("\n");
             break;
        case ifneCK:
             printf("ifne ");
-            emitLABEL(c->val.ifneC);
+            emitPrintLabel(c->val.gotoC);
             printf("\n");
             break;
        case if_acmpeqCK:
             printf("if_acmpeq ");
-            emitLABEL(c->val.if_acmpeqC);
+            emitPrintLabel(c->val.gotoC);
             printf("\n");
             break;
        case if_acmpneCK:
             printf("if_acmpne ");
-            emitLABEL(c->val.if_acmpneC);
+            emitPrintLabel(c->val.gotoC);
             printf("\n");
             break;
        case ifnullCK:
             printf("ifnull ");
-            emitLABEL(c->val.ifnullC);
+            emitPrintLabel(c->val.gotoC);
             printf("\n");
             break;
        case ifnonnullCK:
             printf("ifnonnull ");
-            emitLABEL(c->val.ifnonnullC);
+            emitPrintLabel(c->val.gotoC);
             printf("\n");
             break;
        case if_icmpeqCK:
             printf("if_icmpeq ");
-            emitLABEL(c->val.if_icmpeqC);
+            emitPrintLabel(c->val.gotoC);
             printf("\n");
             break;
        case if_icmpgtCK:
             printf("if_icmpgt ");
-            emitLABEL(c->val.if_icmpgtC);
+            emitPrintLabel(c->val.gotoC);
             printf("\n");
             break;
        case if_icmpltCK:
             printf("if_icmplt ");
-            emitLABEL(c->val.if_icmpltC);
+            emitPrintLabel(c->val.gotoC);
             printf("\n");
             break;
        case if_icmpleCK:
             printf("if_icmple ");
-            emitLABEL(c->val.if_icmpleC);
+            emitPrintLabel(c->val.gotoC);
             printf("\n");
             break;
        case if_icmpgeCK:
             printf("if_icmpge ");
-            emitLABEL(c->val.if_icmpgeC);
+            emitPrintLabel(c->val.gotoC);
             printf("\n");
             break;
        case if_icmpneCK:
             printf("if_icmpne ");
-            emitLABEL(c->val.if_icmpneC);
+            emitPrintLabel(c->val.gotoC);
             printf("\n");
             break;
        case ireturnCK:

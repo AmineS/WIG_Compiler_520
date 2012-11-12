@@ -8,15 +8,30 @@ public class Hello
 	{ 
 		JoosIO f;
 		int i; 
+        int j;
+		int k;
 		i = 0; 
-  		f = new JoosIO();
-
-		f.println("Incremented!");
-		
-		i++;
-		//for (int i=0; i<10; i=i+1)
-		//{
-	  		f.println("Hello world");
-		//}
+		if(i == 0)
+		{
+            i=6;            
+            if(i==2)
+            {
+                    i = 5; 
+            }
+            else
+            {
+                    i = 7; 
+            }
+			j = 3;
+		}
+		else
+		{
+			k = 4;
+		}
+		i = 1;
+		if(i == 1)
+		{
+			i = 5;
+		}
 	}
 }
