@@ -46,7 +46,7 @@ def run():
 		try:
 			subprocess.call([joos_compiler,joos_libs + "appletlib.joos",joos_libs + "awtlib.joos", joos_libs + "BigDecimal.joos", joos_libs + "javalib.joos", joos_libs + "jooslib.joos", joos_libs + "netlib.joos",testing_dir+"group_h_output/"+filee])
 		except Exception:
-			print "Grouph's compiler crashed. File " + filee
+			print "Group-h's compiler crashed. File " + filee
 
 	# compare the output
 	compareOutput(testing_dir + "group_h_output/", testing_dir+"joos_aplus_output/")
