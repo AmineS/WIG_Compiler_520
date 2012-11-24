@@ -93,6 +93,161 @@ int simplify_goto_goto(CODE **c)
   return 0;
 }
 
+/** ADDED **/
+
+/* dup
+ * istore x
+ * pop
+ * -------->
+ * istore x
+ */
+int simplify_istore(CODE **c)
+{ int x;
+  if (is_dup(*c) &&
+      is_istore(next(*c),&x) &&
+      is_pop(next(next(*c)))) {
+     return replace(c,3,makeCODEistore(x,NULL));
+  }
+  return 0;
+}
+
+/* iload x
+ * ldc k   (0<=k<=127)
+ * isub
+ * istore x
+ * --------->
+ * iinc x -k
+ */ 
+int negative_increment(CODE **c)
+{ int x,y,k;
+  if (is_iload(*c,&x) &&
+      is_ldc_int(next(*c),&k) &&
+      is_isub(next(next(*c))) &&
+      is_istore(next(next(next(*c))),&y) &&
+      x==y && 0<=k && k<=127) {
+     return replace(c,4,makeCODEiinc(x,-k,NULL));
+  }
+  return 0;
+}
+
+/* ldc x 
+ * ldc y
+ * iadd
+ * ------->
+ * ldc x+y
+ */
+int const_addition(CODE **c)
+{
+	int x,y;
+	if (is_ldc_int(*c, &x) &&
+		is_ldc_int(next(*c), &y) &&
+		is_iadd(next(next(*c)))) {
+		return replace(c, 3, makeCODEldc_int(x+y, NULL));
+	}
+	return 0;
+}
+
+/* ldc x 
+ * ldc y
+ * isub
+ * ------->
+ * ldc x-y
+ */
+int const_subtraction(CODE **c)
+{
+	int x,y;
+	if (is_ldc_int(*c, &x) &&
+		is_ldc_int(next(*c), &y) &&
+		is_isub(next(next(*c)))) {
+		return replace(c, 3, makeCODEldc_int(x-y, NULL));
+	}
+	return 0;
+}
+
+/* ldc x 
+ * ldc y
+ * imul
+ * ------->
+ * ldc x*y
+ */
+int const_multiplication(CODE **c)
+{
+	int x,y;
+	if (is_ldc_int(*c, &x) &&
+		is_ldc_int(next(*c), &y) &&
+		is_imul(next(next(*c)))) {
+		return replace(c, 3, makeCODEldc_int(x*y, NULL));
+	}
+	return 0;
+}
+
+/* ldc x 
+ * ldc y
+ * idiv
+ * ------->
+ * ldc x/y
+ */
+int const_division(CODE **c)
+{
+	int x,y;
+	if (is_ldc_int(*c, &x) &&
+		is_ldc_int(next(*c), &y) &&
+		is_idiv(next(next(*c)))) {
+		return replace(c, 3, makeCODEldc_int(x/y, NULL));
+	}
+	return 0;
+}
+
+/*
+  iconst_0
+  dup
+  aload_0
+  swap
+  putfield Hello/f I
+  pop
+------>
+  aload_0
+  iconst_0
+  putfield Hello/f I
+*/
+int assign_intconst_to_field(CODE **c)
+{
+	int x, y;
+	char * a;
+	if (is_ldc_int(*c, &x) &&
+		is_dup(next(*c)) &&
+		is_aload(next(next(*c)),&y) &&
+		is_swap(next(next(next(*c)))) &&
+		is_putfield(next(next(next(next(*c)))), &a) &&
+		is_pop(next(next(next(next(next(*c)))))))
+	{
+		printf("Found the pattern - now replace");
+	}
+	return 0;
+}
+
+/* 
+  new joos/lib/JoosIO
+  dup
+  invokenonvirtual joos/lib/JoosIO/<init>()V
+  dup
+  aload_0
+  swap
+  putfield Hello/f Ljoos/lib/JoosIO;
+  pop
+  ----------------------->
+  new joos/lib/JoosIO
+  dup
+  invokenonvirtual joos/lib/JoosIO/<init>()V
+  aload_0
+  swap
+  putfield Hello/f Ljoos/lib/JoosIO;
+*/
+int assign_object_to_field(CODE **c)
+{
+	return 0;
+} 
+
 /******  Old style - still works, but better to use new style. 
 #define OPTS 4
 
@@ -109,5 +264,13 @@ int init_patterns()
     ADD_PATTERN(simplify_astore);
     ADD_PATTERN(positive_increment);
     ADD_PATTERN(simplify_goto_goto);
-    return 1;
+
+	ADD_PATTERN(simplify_istore);
+	ADD_PATTERN(negative_increment);
+	ADD_PATTERN(const_addition);
+	ADD_PATTERN(const_subtraction);
+	ADD_PATTERN(const_multiplication);
+	ADD_PATTERN(const_division);	
+	ADD_PATTERN(assign_intconst_to_field);
+	return 1;
   }
