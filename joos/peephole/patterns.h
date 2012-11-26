@@ -400,6 +400,16 @@ int simplify_condition_ne(CODE **c)
   return 0;
  } 
 
+ int simplify_duplicate_ldc(CODE **c)
+ {
+  int i, j;
+  if(is_ldc_int(*c, &i) && is_ldc_int(next(*c), &j) && (i == j))
+  {
+    return replace(c, 2, makeCODEldc_int(i, makeCODEdup(NULL)));
+  }
+  return 0;
+ }
+
 /* dup
  * istore x
  * pop
@@ -593,6 +603,7 @@ int init_patterns()
     ADD_PATTERN(simplify_const0_condition_ne);
     ADD_PATTERN(simplify_const0_condition_eq);
     ADD_PATTERN(simplify_nop);
+    ADD_PATTERN(simplify_duplicate_ldc);
   /*
 
   */
