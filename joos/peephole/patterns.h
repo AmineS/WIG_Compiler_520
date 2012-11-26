@@ -531,6 +531,42 @@ int assign_intconst_to_field(CODE **c)
 	return 0;
 }
 
+
+/*
+  iload_0
+  dup
+  aload_0
+  swap
+  putfield Hello/f I
+  pop
+------>
+  aload_0
+  iload_0
+  putfield Hello/f I
+*/
+int assign_iload_to_field(CODE **c)
+{
+  int x, y; 
+  char *a;
+  CODE *code = c;
+
+  if(
+    is_iload(*c, &x) &&
+    is_dup(nextby(*c, 1)) &&
+    is_aload(nextby(*c, 2),&y) &&
+    is_swap(nextby(*c, 3)) && 
+    is_putfield(nextby(*c, 4), &a) &&
+    is_pop(nextby(*c,5)))
+  {
+
+    CODE *c1 = makeCODEputfield(a, NULL);
+    CODE *c2 = makeCODEiload(x, c1);
+    CODE *c3 = makeCODEaload(y, c2);
+
+    return replace(c, 6, c3);
+  }
+}
+
 /* 
   new joos/lib/JoosIO
   dup
@@ -550,8 +586,38 @@ int assign_intconst_to_field(CODE **c)
 */
 int assign_object_to_field(CODE **c)
 {
+  int x, y; 
+  char *a; 
+
 	return 0;
 } 
+
+/*
+  ldc [anystring]
+  dup
+  ifnull null_2
+  goto stop_3
+  null_2
+  pop
+  ldc "null"
+  stop_3:
+------------------------------------------------------>
+  ldc [anystring]
+
+*/
+
+  /*
+     iload_1 iload_2 swap => iload_2 iload_1 
+     int_const1 aload swap = > aload intconst1
+    
+    can't do alod iload swap => iload aload (unsafe)
+
+  */
+
+
+
+
+
 
 /******  Old style - still works, but better to use new style. 
 #define OPTS 4
@@ -578,6 +644,7 @@ int init_patterns()
 	  ADD_PATTERN(const_multiplication);
 	  ADD_PATTERN(const_division);	
 	  ADD_PATTERN(assign_intconst_to_field);
+    ADD_PATTERN(assign_iload_to_field);
     ADD_PATTERN(simplify_store_load);
     ADD_PATTERN(simplify_load_store);
     ADD_PATTERN(simplify_ineg_iadd);
