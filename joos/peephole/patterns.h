@@ -93,7 +93,7 @@ int simplify_goto_goto(CODE **c)
   return 0;
 }
 
-/** ADDED **/
+/** ADDED ******************************************************************/
 
 /*
  * swap
@@ -492,7 +492,9 @@ int assign_intconst_to_field(CODE **c)
 		is_putfield(next(next(next(next(*c)))), &a) &&
 		is_pop(next(next(next(next(next(*c)))))))
 	{
-		printf("Found the pattern - now replace");
+    return replace(c, 6, makeCODEaload(y, 
+                           makeCODEldc_int(x, 
+                            makeCODEputfield(a, NULL))));
 	}
 	return 0;
 }
@@ -513,10 +515,30 @@ int assign_intconst_to_field(CODE **c)
   aload_0
   swap
   putfield Hello/f Ljoos/lib/JoosIO;
-*/
+*/  
 int assign_object_to_field(CODE **c)
-{
-	return 0;
+{ int y;
+  char * putfield;
+  char * neww;
+  char * invocation;
+  if (is_new(*c, &neww) &&
+    is_dup(next(*c)) &&
+    is_invokenonvirtual(next(next(*c)), &invocation) &&
+    is_dup(next(next(next(*c)))) &&
+    is_aload(next(next(next(next(*c)))),&y) &&
+    is_swap(next(next(next(next(next(*c)))))) &&
+    is_putfield(next(next(next(next(next(next(*c)))))), &putfield) &&
+    is_pop(next(next(next(next(next(next(next(*c))))))))
+    )
+  {
+    return replace(c, 8, makeCODEnew(neww, 
+                          makeCODEdup(
+                            makeCODEinvokenonvirtual(invocation, 
+                              makeCODEaload(y, 
+                                makeCODEswap(
+                                  makeCODEputfield(putfield, NULL)))))));
+  }
+  return 0;
 } 
 
 /******  Old style - still works, but better to use new style. 
@@ -543,7 +565,12 @@ int init_patterns()
 	ADD_PATTERN(const_multiplication);
 	ADD_PATTERN(const_division);	
 	ADD_PATTERN(assign_intconst_to_field);
-  ADD_PATTERN(simplify_swap_swap);
+  ADD_PATTERN(assign_object_to_field);
+  ADD_PATTERN(simplify_store_store);
+  ADD_PATTERN(simplify_condition_lt);
+  ADD_PATTERN(simplify_condition_le);
+  
+  /*ADD_PATTERN(simplify_swap_swap);
   ADD_PATTERN(simplify_dup_swap);
   ADD_PATTERN(simplify_store_load);
   ADD_PATTERN(simplify_load_store);
@@ -555,6 +582,6 @@ int init_patterns()
   ADD_PATTERN(simplify_condition_ge);
   ADD_PATTERN(simplify_condition_eq);
   ADD_PATTERN(simplify_condition_ne);
-  ADD_PATTERN(simplify_const0_condition_ne);
+  ADD_PATTERN(simplify_const0_condition_ne);*/
 	return 1;
   }
