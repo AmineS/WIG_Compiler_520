@@ -216,9 +216,9 @@ int simplify_condition_lt(CODE **c)
 {
   int l1, l2, l1d, l2d, l3;
   int x, y;
-  if(is_if_icmplt(*c, &l1) && is_iload(next(*c), &x) && (x == 0)
+  if(is_if_icmplt(*c, &l1) && is_ldc_int(next(*c), &x) && (x == 0)
      && is_goto(next(next(*c)), &l2) && is_label(next(next(next(*c))), &l1d)
-     && (l1 == l1d) && is_iload(next(next(next(next(*c)))), &y) && (y == 1)
+     && (l1 == l1d) && is_ldc_int(next(next(next(next(*c)))), &y) && (y == 1)
      && is_label(next(next(next(next(next(*c))))), &l2d) && (l2 == l2d)
      && is_ifeq(next(next(next(next(next(next(*c)))))), &l3))
   {
@@ -241,9 +241,9 @@ int simplify_condition_le(CODE **c)
 {
   int l1, l2, l1d, l2d, l3;
   int x, y;
-  if(is_if_icmple(*c, &l1) && is_iload(next(*c), &x) && (x == 0)
+  if(is_if_icmple(*c, &l1) && is_ldc_int(next(*c), &x) && (x == 0)
      && is_goto(next(next(*c)), &l2) && is_label(next(next(next(*c))), &l1d)
-     && (l1 == l1d) && is_iload(next(next(next(next(*c)))), &y) && (y == 1)
+     && (l1 == l1d) && is_ldc_int(next(next(next(next(*c)))), &y) && (y == 1)
      && is_label(next(next(next(next(next(*c))))), &l2d) && (l2 == l2d)
      && is_ifeq(next(next(next(next(next(next(*c)))))), &l3))
   {
@@ -266,9 +266,9 @@ int simplify_condition_gt(CODE **c)
 {
   int l1, l2, l1d, l2d, l3;
   int x, y;
-  if(is_if_icmpgt(*c, &l1) && is_iload(next(*c), &x) && (x == 0)
+  if(is_if_icmpgt(*c, &l1) && is_ldc_int(next(*c), &x) && (x == 0)
      && is_goto(next(next(*c)), &l2) && is_label(next(next(next(*c))), &l1d)
-     && (l1 == l1d) && is_iload(next(next(next(next(*c)))), &y) && (y == 1)
+     && (l1 == l1d) && is_ldc_int(next(next(next(next(*c)))), &y) && (y == 1)
      && is_label(next(next(next(next(next(*c))))), &l2d) && (l2 == l2d)
      && is_ifeq(next(next(next(next(next(next(*c)))))), &l3))
   {
@@ -278,7 +278,7 @@ int simplify_condition_gt(CODE **c)
 }
 
 /*
- * if-icmpgt true_1
+ * if-icmpge true_1
  * iconst_0
  * goto stop_2 -----> if_icmplt stop_0
  * true_1:            
@@ -290,9 +290,9 @@ int simplify_condition_ge(CODE **c)
 {
   int l1, l2, l1d, l2d, l3;
   int x, y;
-  if(is_if_icmpge(*c, &l1) && is_iload(next(*c), &x) && (x == 0)
+  if(is_if_icmpge(*c, &l1) && is_ldc_int(next(*c), &x) && (x == 0)
      && is_goto(next(next(*c)), &l2) && is_label(next(next(next(*c))), &l1d)
-     && (l1 == l1d) && is_iload(next(next(next(next(*c)))), &y) && (y == 1)
+     && (l1 == l1d) && is_ldc_int(next(next(next(next(*c)))), &y) && (y == 1)
      && is_label(next(next(next(next(next(*c))))), &l2d) && (l2 == l2d)
      && is_ifeq(next(next(next(next(next(next(*c)))))), &l3))
   {
@@ -314,9 +314,9 @@ int simplify_condition_eq(CODE **c)
 {
   int l1, l2, l1d, l2d, l3;
   int x, y;
-  if(is_if_icmpeq(*c, &l1) && is_iload(next(*c), &x) && (x == 0)
+  if(is_if_icmpeq(*c, &l1) && is_ldc_int(next(*c), &x) && (x == 0)
      && is_goto(next(next(*c)), &l2) && is_label(next(next(next(*c))), &l1d)
-     && (l1 == l1d) && is_iload(next(next(next(next(*c)))), &y) && (y == 1)
+     && (l1 == l1d) && is_ldc_int(next(next(next(next(*c)))), &y) && (y == 1)
      && is_label(next(next(next(next(next(*c))))), &l2d) && (l2 == l2d)
      && is_ifeq(next(next(next(next(next(next(*c)))))), &l3))
   {
@@ -338,9 +338,9 @@ int simplify_condition_ne(CODE **c)
 {
   int l1, l2, l1d, l2d, l3;
   int x, y;
-  if(is_if_icmpne(*c, &l1) && is_iload(next(*c), &x) && (x == 0)
+  if(is_if_icmpne(*c, &l1) && is_ldc_int(next(*c), &x) && (x == 0)
      && is_goto(next(next(*c)), &l2) && is_label(next(next(next(*c))), &l1d)
-     && (l1 == l1d) && is_iload(next(next(next(next(*c)))), &y) && (y == 1)
+     && (l1 == l1d) && is_ldc_int(next(next(next(next(*c)))), &y) && (y == 1)
      && is_label(next(next(next(next(next(*c))))), &l2d) && (l2 == l2d)
      && is_ifeq(next(next(next(next(next(next(*c)))))), &l3))
   {
@@ -365,6 +365,40 @@ int simplify_condition_ne(CODE **c)
   return 0;
  }
 
+/*
+ * iconst_0
+ * if_icmpeq stop_0
+ * --------->
+ * ifeq stop_0
+ */
+ int simplify_const0_condition_eq(CODE **c)
+ {
+  int x, l1;
+  if(is_ldc_int(*c, &x) && (x == 0) && is_if_icmpeq(next(*c), &l1))
+  {
+    return replace(c, 2, makeCODEifeq(l1, NULL));
+  }
+  return 0;
+ }
+
+/*
+ * !label
+ * nop
+ * ------->
+ * !label
+ */ 
+ int simplify_nop(CODE **c)
+ {
+  int i;
+  if(!is_label(*c, &i) && is_nop(next(*c)))
+  {
+    CODE *c2 = NULL;
+    c2 = nextby(*c, 2);
+    (*c)->next = c2;
+    return 1;
+  }
+  return 0;
+ } 
 
 /* dup
  * istore x
@@ -377,7 +411,7 @@ int simplify_istore(CODE **c)
   if (is_dup(*c) &&
       is_istore(next(*c),&x) &&
       is_pop(next(next(*c)))) {
-     return replace(c,3,makeCODEistore(x,NULL));
+     return replace(c, 3, makeCODEistore(x, NULL));
   }
   return 0;
 }
@@ -499,6 +533,41 @@ int assign_intconst_to_field(CODE **c)
 	return 0;
 }
 
+
+/*
+  iload_0
+  dup
+  aload_0
+  swap
+  putfield Hello/f I
+  pop
+------>
+  aload_0
+  iload_0
+  putfield Hello/f I
+*/
+int assign_iload_to_field(CODE **c)
+{
+  int x, y; 
+  char *a;
+  CODE *code = c;
+
+  if(
+    is_iload(*c, &x) &&
+    is_dup(nextby(*c, 1)) &&
+    is_aload(nextby(*c, 2),&y) &&
+    is_swap(nextby(*c, 3)) && 
+    is_putfield(nextby(*c, 4), &a) &&
+    is_pop(nextby(*c,5)))
+  {
+    CODE *c1 = makeCODEputfield(a, NULL);
+    CODE *c2 = makeCODEiload(x, c1);
+    CODE *c3 = makeCODEaload(y, c2);
+
+    return replace(c, 6, c3);
+  }
+}
+
 /* 
   new joos/lib/JoosIO
   dup
@@ -541,6 +610,33 @@ int assign_object_to_field(CODE **c)
   return 0;
 } 
 
+/*
+  ldc [anystring]
+  dup
+  ifnull null_2
+  goto stop_3
+  null_2
+  pop
+  ldc "null"
+  stop_3:
+------------------------------------------------------>
+  ldc [anystring]
+
+*/
+
+  /*
+     iload_1 iload_2 swap => iload_2 iload_1 
+     int_const1 aload swap = > aload intconst1
+    
+    can't do alod iload swap => iload aload (unsafe)
+
+  */
+
+
+
+
+
+
 /******  Old style - still works, but better to use new style. 
 #define OPTS 4
 
@@ -553,35 +649,35 @@ OPTI optimization[OPTS] = {simplify_multiplication_right,
 /* new style for giving patterns */
 
 int init_patterns()
-  { ADD_PATTERN(simplify_multiplication_right);
+  {
+    ADD_PATTERN(simplify_multiplication_right);
     ADD_PATTERN(simplify_astore);
     ADD_PATTERN(positive_increment);
     ADD_PATTERN(simplify_goto_goto);
 
-	ADD_PATTERN(simplify_istore);
-	ADD_PATTERN(negative_increment);
-	ADD_PATTERN(const_addition);
-	ADD_PATTERN(const_subtraction);
-	ADD_PATTERN(const_multiplication);
-	ADD_PATTERN(const_division);	
-	ADD_PATTERN(assign_intconst_to_field);
-  ADD_PATTERN(assign_object_to_field);
-  ADD_PATTERN(simplify_store_store);
-  ADD_PATTERN(simplify_condition_lt);
-  ADD_PATTERN(simplify_condition_le);
-  
-  /*ADD_PATTERN(simplify_swap_swap);
-  ADD_PATTERN(simplify_dup_swap);
-  ADD_PATTERN(simplify_store_load);
-  ADD_PATTERN(simplify_load_store);
-  ADD_PATTERN(simplify_ineg_iadd);
-  ADD_PATTERN(simplify_store_store);
-  ADD_PATTERN(simplify_condition_lt);
-  ADD_PATTERN(simplify_condition_le);
-  ADD_PATTERN(simplify_condition_gt);
-  ADD_PATTERN(simplify_condition_ge);
-  ADD_PATTERN(simplify_condition_eq);
-  ADD_PATTERN(simplify_condition_ne);
-  ADD_PATTERN(simplify_const0_condition_ne);*/
-	return 1;
+	  ADD_PATTERN(simplify_istore);
+	  ADD_PATTERN(negative_increment);
+	  ADD_PATTERN(const_addition);
+	  ADD_PATTERN(const_subtraction);
+	  ADD_PATTERN(const_multiplication);
+	  ADD_PATTERN(const_division);	
+	  ADD_PATTERN(assign_intconst_to_field);
+    ADD_PATTERN(assign_object_to_field);
+    /*ADD_PATTERN(assign_iload_to_field);*/
+    ADD_PATTERN(simplify_store_load);
+    ADD_PATTERN(simplify_load_store);
+    ADD_PATTERN(simplify_ineg_iadd);
+    ADD_PATTERN(simplify_swap_swap);
+    ADD_PATTERN(simplify_dup_swap);
+    ADD_PATTERN(simplify_store_store);
+    ADD_PATTERN(simplify_condition_lt);
+    ADD_PATTERN(simplify_condition_le);
+    ADD_PATTERN(simplify_condition_gt);
+    ADD_PATTERN(simplify_condition_ge);
+    ADD_PATTERN(simplify_condition_eq);
+    ADD_PATTERN(simplify_condition_ne);
+    ADD_PATTERN(simplify_const0_condition_ne);
+    ADD_PATTERN(simplify_const0_condition_eq);
+    ADD_PATTERN(simplify_nop);
+	  return 1;
   }
