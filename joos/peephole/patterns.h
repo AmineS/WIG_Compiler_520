@@ -789,7 +789,7 @@ int simplify_consecutive_iincs(CODE **c)
   }
   else if (is_if(c, &initialGoTo))
   {
- /*   if (is_label((next(destination(initialGoTo))), &label1))
+    if (is_label((next(destination(initialGoTo))), &label1))
     {
       droplabel(initialGoTo);
       copylabel(label1);
@@ -857,7 +857,7 @@ int simplify_consecutive_iincs(CODE **c)
       }
 
       return 1;
-    }*/
+    }
   }
   return 0;
  }
@@ -947,7 +947,7 @@ int init_patterns()
 	  ADD_PATTERN(assign_intconst_to_field);
     ADD_PATTERN(assign_object_to_field);
     
-    /*ADD_PATTERN(simplify_store_load);*/
+    ADD_PATTERN(simplify_store_load);
     ADD_PATTERN(simplify_load_store);
     ADD_PATTERN(simplify_ineg_iadd);
     ADD_PATTERN(simplify_swap_swap);
