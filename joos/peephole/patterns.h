@@ -760,6 +760,16 @@ int simplify_consecutive_iincs(CODE **c)
       return 1;
     }
   }
+  else if (is_if(c, &initialGoTo))
+  {
+    if (is_label((next(destination(initialGoTo))), &label1))
+    {
+      droplabel(initialGoTo);
+      copylabel(label1);
+      replace(c, 1, makeCODEgoto(label1, NULL));
+      return 1;
+    }
+  }
   return 0;
  }
 
@@ -834,7 +844,6 @@ int init_patterns()
     ADD_PATTERN(simplify_nop);
 
     ADD_PATTERN(simplify_duplicate_ldc);
-
 
     ADD_PATTERN(simplify_consecutive_iincs);
     ADD_PATTERN(simplify_loads_swap);
