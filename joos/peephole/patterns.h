@@ -793,7 +793,69 @@ int simplify_consecutive_iincs(CODE **c)
     {
       droplabel(initialGoTo);
       copylabel(label1);
-      replace(c, 1, makeCODEgoto(label1, NULL));
+      
+      
+      if (is_ifeq(*c, &initialGoTo))
+      {
+            replace(c, 1, makeCODEifeq(label1, NULL));
+
+      } 
+      else if (is_ifne(*c, &initialGoTo)) 
+      {
+            replace(c, 1, makeCODEifne(label1, NULL));
+
+      }
+      else if (is_if_acmpeq(*c, &initialGoTo))
+      {
+            replace(c, 1, makeCODEif_acmpeq(label1, NULL));
+
+      }
+      else if (is_if_acmpne(*c, &initialGoTo))
+      {
+            replace(c, 1, makeCODEif_acmpne(label1, NULL));
+
+      }
+      else if (is_ifnull(*c, &initialGoTo))
+      {
+            replace(c, 1, makeCODEifnull(label1, NULL));
+
+      }
+      else if (is_ifnonnull(*c, &initialGoTo))
+      {
+            replace(c, 1, makeCODEifnonnull(label1, NULL));
+
+      } 
+      else if (is_if_icmpeq(*c, &initialGoTo))
+      {
+            replace(c, 1, makeCODEif_icmpeq(label1, NULL));
+
+      }
+      else if (is_if_icmpgt(*c, &initialGoTo))
+      {
+            replace(c, 1, makeCODEif_icmpgt(label1, NULL));
+
+      }
+      else if (is_if_icmplt(*c, &initialGoTo))
+      {
+            replace(c, 1, makeCODEif_icmplt(label1, NULL));
+
+      }
+      else if(is_if_icmple(*c, &initialGoTo))
+      {
+            replace(c, 1, makeCODEif_icmple(label1, NULL));
+
+      }
+      else if (is_if_icmpge(*c, &initialGoTo))
+      {
+            replace(c, 1, makeCODEif_icmpge(label1, NULL));
+
+      }
+      else if (is_if_icmpne(*c, &initialGoTo))
+      {
+            replace(c, 1, makeCODEif_icmpne(label1, NULL));
+
+      }
+
       return 1;
     }*/
   }
@@ -900,18 +962,14 @@ int init_patterns()
     ADD_PATTERN(simplify_const0_condition_ne);
     ADD_PATTERN(simplify_const0_condition_eq);
     ADD_PATTERN(simplify_nop);
-
     ADD_PATTERN(simplify_duplicate_ldc);
     ADD_PATTERN(simplify_condition_null);
-
-
     ADD_PATTERN(simplify_consecutive_iincs);
     ADD_PATTERN(simplify_loads_swap);
     ADD_PATTERN(simplify_null_string);
     ADD_PATTERN(assign_iload_to_field);
     ADD_PATTERN(switch_labels);
     ADD_PATTERN(replace_goto_by_return);
-
     ADD_PATTERN(remove_unused_labels);
 	  return 1;
   }
