@@ -335,6 +335,23 @@ int simplify_condition_eq(CODE **c)
   return 0;
 }
 
+int simplify_condition_aeq(CODE **c)
+{
+  int l1, l2, l1d, l2d, l3;
+  int x, y;
+  if(is_if_acmpeq(*c, &l1) && is_ldc_int(next(*c), &x) && (x == 0)
+     && is_goto(next(next(*c)), &l2) && is_label(next(next(next(*c))), &l1d)
+     && (l1 == l1d) && is_ldc_int(next(next(next(next(*c)))), &y) && (y == 1)
+     && is_label(next(next(next(next(next(*c))))), &l2d) && (l2 == l2d)
+     && is_ifeq(next(next(next(next(next(next(*c)))))), &l3) && uniquelabel(l1d) && uniquelabel(l2d))
+  {
+    droplabel(l1d);
+    droplabel(l2d);
+    return replace(c, 7, makeCODEif_acmpne(l3, NULL));
+  }
+  return 0;
+}
+
 int simplify_condition_null(CODE **c)
 {
   int l1, l2, l3;
@@ -350,6 +367,7 @@ int simplify_condition_null(CODE **c)
   }
   return 0;
 }
+
 
 /*
  * if-icmpne true_1
@@ -373,6 +391,23 @@ int simplify_condition_ne(CODE **c)
     droplabel(l1d);
     droplabel(l2d);
     return replace(c, 7, makeCODEif_icmpeq(l3, NULL));
+  }
+  return 0;
+}
+
+int simplify_condition_ane(CODE **c)
+{
+  int l1, l2, l1d, l2d, l3;
+  int x, y;
+  if(is_if_acmpne(*c, &l1) && is_ldc_int(next(*c), &x) && (x == 0)
+     && is_goto(next(next(*c)), &l2) && is_label(next(next(next(*c))), &l1d)
+     && (l1 == l1d) && is_ldc_int(next(next(next(next(*c)))), &y) && (y == 1)
+     && is_label(next(next(next(next(next(*c))))), &l2d) && (l2 == l2d)
+     && is_ifeq(next(next(next(next(next(next(*c)))))), &l3) && uniquelabel(l1d) && uniquelabel(l2d)) 
+  {
+    droplabel(l1d);
+    droplabel(l2d);
+    return replace(c, 7, makeCODEif_acmpeq(l3, NULL));
   }
   return 0;
 }
@@ -954,11 +989,14 @@ int init_patterns()
     ADD_PATTERN(simplify_swap_swap);
     ADD_PATTERN(simplify_dup_swap);
     ADD_PATTERN(simplify_store_store);
+    ADD_PATTERN(simplify_if_equal0);
     ADD_PATTERN(simplify_condition_lt);
     ADD_PATTERN(simplify_condition_le);
     ADD_PATTERN(simplify_condition_gt);
     ADD_PATTERN(simplify_condition_ge);
     ADD_PATTERN(simplify_condition_eq);
+    ADD_PATTERN(simplify_condition_aeq);
+    ADD_PATTERN(simplify_condition_ane);
     ADD_PATTERN(simplify_condition_ne);
     ADD_PATTERN(simplify_const0_condition_ne);
     ADD_PATTERN(simplify_const0_condition_eq);
