@@ -1021,8 +1021,8 @@ int init_patterns()
     ADD_PATTERN(simplify_condition_gt);
     ADD_PATTERN(simplify_condition_ge);
     ADD_PATTERN(simplify_condition_eq);
-   /* ADD_PATTERN(simplify_condition_aeq);
-    ADD_PATTERN(simplify_condition_ane);*/
+    ADD_PATTERN(simplify_condition_aeq);
+    ADD_PATTERN(simplify_condition_ane);
     ADD_PATTERN(simplify_condition_ne);
     ADD_PATTERN(simplify_const0_condition_ne);
     ADD_PATTERN(simplify_const0_condition_eq);
