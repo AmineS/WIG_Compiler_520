@@ -325,6 +325,27 @@ int simplify_condition_eq(CODE **c)
   return 0;
 }
 
+
+/*&& (x == 0)
+     && is_goto(next(next(*c)), &l2) && is_label(next(next(next(*c))), &l1d)
+     && (l1 == l1d) && is_ldc_int(next(next(next(next(*c)))), &y) && (y == 1)
+     && is_label(next(next(next(next(next(*c))))), &l2d) && (l2 == l2d)
+     && is_ifeq(next(next(next(next(next(next(*c)))))), &l3) && uniquelabel(l1d) && uniquelabel(l2d))*/
+
+int simplify_condition_null(CODE **c)
+{
+  int l1, l2, l3;
+  int x, y;
+
+  if(is_ifnull(*c, &l1) && 
+    is_goto(nextby(*c,1), &l2) &&
+    is_label(nextby(*c,2), &l3))
+  {
+    return replace(c, 3, makeCODEifnonnull(l2, NULL));
+  }
+  return 0;
+}
+
 /*
  * if-icmpne true_1
  * iconst_0
@@ -834,7 +855,7 @@ int init_patterns()
     ADD_PATTERN(simplify_nop);
 
     ADD_PATTERN(simplify_duplicate_ldc);
-
+    ADD_PATTERN(simplify_condition_null);
 
     ADD_PATTERN(simplify_consecutive_iincs);
     ADD_PATTERN(simplify_loads_swap);
