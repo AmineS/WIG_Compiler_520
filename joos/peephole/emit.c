@@ -108,49 +108,50 @@ int  getBranchLimit(CODE *c)
 
 int limitCODE(CODE *c)
 {
-    CODE *code = c; 
-    int stack_change = 0;
-    int stack_affected = 0; 
-    int stack_used = 0; 
-    int branch_limit = 0;
-
-    /* stack limit initializes with 1 to account for "this" */
-    int stack_limit = 0;    
-    int max_stack_limit = 0; 
-    int analysis_invalid = 0;
-
-    while(code != NULL)
-    {
-
-      /* check if we've entered a branch */
-      if(!code->visited && getBranchLabel(code) != -1)
-      {          
-          analysis_invalid = stack_effect(code, &stack_change, &stack_affected, &stack_used);
-          stack_limit += stack_change; 
-          branch_limit = getBranchLimit(code);
-          max_stack_limit = stack_limit + branch_limit > max_stack_limit ? stack_limit + branch_limit : max_stack_limit;
-      }
-
-      if(!code->visited)
-      {
-          analysis_invalid = stack_effect(code, &stack_change, &stack_affected, &stack_used);
-        
-        /* add the stack to the stack limit */            
-          stack_limit += stack_change; 
-          max_stack_limit = stack_limit > max_stack_limit ? stack_limit : max_stack_limit;
-
-          /*printf("The stack limit at this point is %d\n", stack_limit);
-          printf("The max stack limit at this point is %d\n", max_stack_limit);*/
-          code->visited = 1;
-      }
-
-      /* re-initialize variables */
-      stack_change = 0;
-      stack_affected = 0; 
-      stack_used = 0; 
-      code = code->next;        
-    }
-    return max_stack_limit;
+    return 25;
+//    CODE *code = c; 
+//    int stack_change = 0;
+//    int stack_affected = 0; 
+//    int stack_used = 0; 
+//    int branch_limit = 0;
+//
+//    /* stack limit initializes with 1 to account for "this" */
+//    int stack_limit = 0;    
+//    int max_stack_limit = 0; 
+//    int analysis_invalid = 0;
+//
+//    while(code != NULL)
+//    {
+//
+//      /* check if we've entered a branch */
+//      if(!code->visited && getBranchLabel(code) != -1)
+//      {          
+//          analysis_invalid = stack_effect(code, &stack_change, &stack_affected, &stack_used);
+//          stack_limit += stack_change; 
+//          branch_limit = getBranchLimit(code);
+//          max_stack_limit = stack_limit + branch_limit > max_stack_limit ? stack_limit + branch_limit : max_stack_limit;
+//      }
+//
+//      if(!code->visited)
+//      {
+//          analysis_invalid = stack_effect(code, &stack_change, &stack_affected, &stack_used);
+//        
+//        /* add the stack to the stack limit */            
+//          stack_limit += stack_change; 
+//          max_stack_limit = stack_limit > max_stack_limit ? stack_limit : max_stack_limit;
+//
+//          /*printf("The stack limit at this point is %d\n", stack_limit);
+//          printf("The max stack limit at this point is %d\n", max_stack_limit);*/
+//          code->visited = 1;
+//      }
+//
+//      /* re-initialize variables */
+//      stack_change = 0;
+//      stack_affected = 0; 
+//      stack_used = 0; 
+//      code = code->next;        
+//    }
+//    return max_stack_limit; 
 }
 
 int getBranchLabel(CODE *c)

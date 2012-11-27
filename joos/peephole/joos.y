@@ -69,7 +69,7 @@ extern CLASSFILE *theclassfile;
 %type <statement> ifthenstatement whilestatement forstatement expressionstatement 
 %type <statement> ifthenelsestatement returnstatement statementnoshortif 
 %type <statement> ifthenelsestatementnoshortif whilestatementnoshortif 
-%type <statement> declaration
+%type <statement> declaration forstatementnoshortif
 %type <exp> statementexpression assignment methodinvocation
 %type <exp> classinstancecreation returnexpression expression orexpression 
 %type <exp> andexpression eqexpression relexpression addexpression 
@@ -318,6 +318,8 @@ statementnoshortif : simplestatement
                      {$$ = $1;}
                    | whilestatementnoshortif
                      {$$ = $1;}
+                   | forstatementnoshortif
+                     {$$ = $1;}
 ;
 
 ifthenelsestatementnoshortif : tIF '(' expression ')' statementnoshortif
@@ -333,9 +335,13 @@ whilestatementnoshortif : tWHILE '(' expression ')' statementnoshortif
                           {$$ = makeSTATEMENTwhile($3,$5);}
 ;
 
-forstatement : tFOR '(' expression ';' expression ';' expression ')' '{'  statements '}'
-               {$$ = makeSTATEMENTsequence(makeSTATEMENTexp($3), makeSTATEMENTwhile($5, makeSTATEMENTsequence($10, makeSTATEMENTexp($7))));}
+forstatement : tFOR '(' expression ';' expression ';' expression ')' statement
+               {$$ = makeSTATEMENTsequence(makeSTATEMENTexp($3), makeSTATEMENTwhile($5, makeSTATEMENTsequence($9, makeSTATEMENTexp($7))));}
 ;
+
+forstatementnoshortif : tFOR '(' expression ';' expression ';' expression ')' statementnoshortif
+               {$$ = makeSTATEMENTsequence(makeSTATEMENTexp($3), makeSTATEMENTwhile($5, makeSTATEMENTsequence($9, makeSTATEMENTexp($7))));}
+;                                                                             
 
 expressionstatement : statementexpression ';'
                       {$$ = makeSTATEMENTexp($1);}

@@ -6,7 +6,7 @@ YACCOPTS = bison -y -d
 
 # Select the first one when compiling on a real unix sytem,  second one 
 # when using gcc under Windows
-CFLAGS = -Wall -ansi -pedantic -g
+CFLAGS = -Wall -ansi -pedantic -g -std=c99
 #CFLAGS = 
 
 # IMPORTANT: You have to modify the my_home path

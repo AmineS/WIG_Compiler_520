@@ -93,7 +93,7 @@ int simplify_goto_goto(CODE **c)
   return 0;
 }
 
-/** ADDED **/
+/** ADDED ******************************************************************/
 
 /*
  * swap
@@ -220,7 +220,7 @@ int simplify_condition_lt(CODE **c)
      && is_goto(next(next(*c)), &l2) && is_label(next(next(next(*c))), &l1d)
      && (l1 == l1d) && is_ldc_int(next(next(next(next(*c)))), &y) && (y == 1)
      && is_label(next(next(next(next(next(*c))))), &l2d) && (l2 == l2d)
-     && is_ifeq(next(next(next(next(next(next(*c)))))), &l3))
+     && is_ifeq(next(next(next(next(next(next(*c)))))), &l3) && uniquelabel(l1d) && uniquelabel(l2d))
   {
     return replace(c, 7, makeCODEif_icmpge(l3, NULL));
   }
@@ -245,7 +245,7 @@ int simplify_condition_le(CODE **c)
      && is_goto(next(next(*c)), &l2) && is_label(next(next(next(*c))), &l1d)
      && (l1 == l1d) && is_ldc_int(next(next(next(next(*c)))), &y) && (y == 1)
      && is_label(next(next(next(next(next(*c))))), &l2d) && (l2 == l2d)
-     && is_ifeq(next(next(next(next(next(next(*c)))))), &l3))
+     && is_ifeq(next(next(next(next(next(next(*c)))))), &l3) && uniquelabel(l1d) && uniquelabel(l2d))
   {
     return replace(c, 7, makeCODEif_icmpgt(l3, NULL));
   }
@@ -270,7 +270,7 @@ int simplify_condition_gt(CODE **c)
      && is_goto(next(next(*c)), &l2) && is_label(next(next(next(*c))), &l1d)
      && (l1 == l1d) && is_ldc_int(next(next(next(next(*c)))), &y) && (y == 1)
      && is_label(next(next(next(next(next(*c))))), &l2d) && (l2 == l2d)
-     && is_ifeq(next(next(next(next(next(next(*c)))))), &l3))
+     && is_ifeq(next(next(next(next(next(next(*c)))))), &l3) && uniquelabel(l1d) && uniquelabel(l2d))
   {
     return replace(c, 7, makeCODEif_icmple(l3, NULL));
   }
@@ -294,7 +294,7 @@ int simplify_condition_ge(CODE **c)
      && is_goto(next(next(*c)), &l2) && is_label(next(next(next(*c))), &l1d)
      && (l1 == l1d) && is_ldc_int(next(next(next(next(*c)))), &y) && (y == 1)
      && is_label(next(next(next(next(next(*c))))), &l2d) && (l2 == l2d)
-     && is_ifeq(next(next(next(next(next(next(*c)))))), &l3))
+     && is_ifeq(next(next(next(next(next(next(*c)))))), &l3) && uniquelabel(l1d) && uniquelabel(l2d))
   {
     return replace(c, 7, makeCODEif_icmplt(l3, NULL));
   }
@@ -318,7 +318,7 @@ int simplify_condition_eq(CODE **c)
      && is_goto(next(next(*c)), &l2) && is_label(next(next(next(*c))), &l1d)
      && (l1 == l1d) && is_ldc_int(next(next(next(next(*c)))), &y) && (y == 1)
      && is_label(next(next(next(next(next(*c))))), &l2d) && (l2 == l2d)
-     && is_ifeq(next(next(next(next(next(next(*c)))))), &l3))
+     && is_ifeq(next(next(next(next(next(next(*c)))))), &l3) && uniquelabel(l1d) && uniquelabel(l2d))
   {
     return replace(c, 7, makeCODEif_icmpne(l3, NULL));
   }
@@ -342,7 +342,7 @@ int simplify_condition_ne(CODE **c)
      && is_goto(next(next(*c)), &l2) && is_label(next(next(next(*c))), &l1d)
      && (l1 == l1d) && is_ldc_int(next(next(next(next(*c)))), &y) && (y == 1)
      && is_label(next(next(next(next(next(*c))))), &l2d) && (l2 == l2d)
-     && is_ifeq(next(next(next(next(next(next(*c)))))), &l3))
+     && is_ifeq(next(next(next(next(next(next(*c)))))), &l3) && uniquelabel(l1d) && uniquelabel(l2d)) 
   {
     return replace(c, 7, makeCODEif_icmpeq(l3, NULL));
   }
@@ -536,10 +536,14 @@ int assign_intconst_to_field(CODE **c)
 		is_putfield(next(next(next(next(*c)))), &a) &&
 		is_pop(next(next(next(next(next(*c)))))))
 	{
-		printf("Found the pattern - now replace");
+    return replace(c, 6, makeCODEaload(y, 
+                           makeCODEldc_int(x, 
+                            makeCODEputfield(a, NULL))));
 	}
 	return 0;
 }
+
+
 
 /* 
   new joos/lib/JoosIO
@@ -557,11 +561,234 @@ int assign_intconst_to_field(CODE **c)
   aload_0
   swap
   putfield Hello/f Ljoos/lib/JoosIO;
-*/
+*/  
 int assign_object_to_field(CODE **c)
-{
-	return 0;
+{ int y;
+  char * putfield;
+  char * neww;
+  char * invocation;
+  if (is_new(*c, &neww) &&
+    is_dup(next(*c)) &&
+    is_invokenonvirtual(next(next(*c)), &invocation) &&
+    is_dup(next(next(next(*c)))) &&
+    is_aload(next(next(next(next(*c)))),&y) &&
+    is_swap(next(next(next(next(next(*c)))))) &&
+    is_putfield(next(next(next(next(next(next(*c)))))), &putfield) &&
+    is_pop(next(next(next(next(next(next(next(*c))))))))
+    )
+  {
+    return replace(c, 8, makeCODEnew(neww, 
+                          makeCODEdup(
+                            makeCODEinvokenonvirtual(invocation, 
+                              makeCODEaload(y, 
+                                makeCODEswap(
+                                  makeCODEputfield(putfield, NULL)))))));
+  }
+  return 0;
 } 
+
+/*
+  iload_0
+  dup
+  aload_0
+  swap
+  putfield Hello/f I
+  pop
+------>
+  aload_0
+  iload_0
+  putfield Hello/f I
+*/
+int assign_iload_to_field(CODE **c)
+{
+  int x, y; 
+  char *a;
+
+  if(
+    is_iload(*c, &x) &&
+    is_dup(nextby(*c, 1)) &&
+    is_aload(nextby(*c, 2),&y) &&
+    is_swap(nextby(*c, 3)) && 
+    is_putfield(nextby(*c, 4), &a) &&
+    is_pop(nextby(*c,5)))
+  {
+    CODE *c1 = makeCODEputfield(a, NULL);
+    CODE *c2 = makeCODEiload(x, c1);
+    CODE *c3 = makeCODEaload(y, c2);
+
+    return replace(c, 6, c3);
+  }
+  return 0;
+}
+
+/*
+  ldc [anystring]
+  dup
+  ifnull null_2
+  goto stop_3
+  null_2:
+  pop
+  ldc "null"
+  stop_3:
+------------------------------------------------------>
+  ldc [anystring]
+
+*/
+int simplify_null_string(CODE **c)
+{
+  char * anystring;
+  char * nulll;
+  int ifNullLabel, gotoLabel, label;
+
+  if (
+    is_ldc_string(*c, &anystring) &&
+    is_dup(nextby(*c, 1)) &&
+    is_ifnull(nextby(*c, 2), &ifNullLabel) &&
+    is_goto(nextby(*c, 3), &gotoLabel) &&
+    is_label(nextby(*c, 4), &label) && uniquelabel(label) &&
+    is_pop(nextby(*c,5)) &&
+    is_ldc_string(nextby(*c,6), &nulll) &&
+    is_label(nextby(*c,7), &label) && uniquelabel(label))
+  {
+    return replace(c, 8, makeCODEldc_string(anystring,NULL));
+  }
+  return 0;
+}
+
+/*
+ * load_1
+ * load_2 
+ * swap 
+ * --------------------> 
+ * load_2 
+ * load_1
+
+ *  OR
+ 
+ * int_const1 
+ * load 
+ * swap 
+ * ----------> 
+ * load 
+ * intconst1
+ */
+int simplify_loads_swap(CODE **c)
+{
+  int l1, l2;
+  if (
+    is_aload(*c, &l1) &&
+    is_aload(next(*c), &l2) &&
+    is_swap(nextby(*c,2)))
+  {
+    return replace(c, 3, makeCODEaload(l2, makeCODEaload(l1, NULL)));
+  }
+  else if (
+    is_iload(*c, &l1) &&
+    is_iload(next(*c), &l2) &&
+    is_swap(nextby(*c,2)))
+  {
+    return replace(c, 3, makeCODEiload(l2, makeCODEiload(l1, NULL)));
+  }
+  else if (
+    is_ldc_int(*c, &l1) &&
+    is_aload(next(*c), &l2) &&
+    is_swap(nextby(*c, 2)))
+  {
+    return replace(c, 3, makeCODEaload(l2, makeCODEldc_int(l1, NULL)));
+  }
+  else if (
+    is_ldc_int(*c, &l1) &&
+    is_iload(next(*c), &l2) &&
+    is_swap(nextby(*c, 2)))
+  {
+    return replace(c, 3, makeCODEiload(l2, makeCODEldc_int(l1, NULL)));
+  }
+  else if (
+    is_aload(*c, &l2) &&
+    is_ldc_int(next(*c), &l1) &&
+    is_swap(nextby(*c, 2)))
+  {
+    return replace(c, 3, makeCODEldc_int(l1, makeCODEaload(l2, NULL)));
+  }
+  else if (
+    is_iload(*c, &l2) &&
+    is_ldc_int(next(*c), &l1) &&
+    is_swap(nextby(*c, 2)))
+  {
+    return replace(c, 3, makeCODEldc_int(l1, makeCODEiload(l2, NULL)));
+  }
+  else
+  {
+    return 0;
+  }
+}
+
+/*
+ *    iinc x y
+ *   iinc x y'
+ *   --------->
+ *   iinc x y+y'
+ */
+int simplify_consecutive_iincs(CODE **c)
+{
+  int off1, off2, amt1, amt2;
+  if(
+    is_iinc(*c, &off1, &amt1) &&
+    is_iinc(next(*c), &off2, &amt2) &&
+    (off1 == off2))
+  {
+    return replace(c, 2, makeCODEiinc(off1, amt1 + amt2, NULL));
+  }
+  return 0;
+}
+
+/*
+ *
+ *
+ *
+ */
+ int switch_labels(CODE **c)
+ {
+  int initialGoTo, label1;
+  if (is_goto(*c, &initialGoTo))
+  {
+    if (is_label((next(destination(initialGoTo))), &label1))
+    {
+      droplabel(initialGoTo);
+      copylabel(label1);
+      replace(c, 1, makeCODEgoto(label1, NULL));
+      return 1;
+    }
+  }
+  return 0;
+ }
+
+ /*
+ *
+ */
+ int remove_unused_labels(CODE **c)
+ {
+  int label;
+  if (is_label(*c, &label) && deadlabel(label))
+  {
+    return replace(c, 1, makeCODEnop(NULL));
+  }
+  return 0;
+ }
+
+/*
+ * Start at goto, go to label, if label has a return after it, replace goto by a return
+ */
+int replace_goto_by_return(CODE **c)
+{
+  int label;
+  if ((is_goto(*c, &label)) && (is_return(next(destination(label)))))
+  {
+    droplabel(label);
+    return replace(c, 1, makeCODEreturn(NULL)); 
+  }
+  return 0;
+}
 
 /******  Old style - still works, but better to use new style. 
 #define OPTS 4
@@ -588,7 +815,9 @@ int init_patterns()
 	  ADD_PATTERN(const_multiplication);
 	  ADD_PATTERN(const_division);	
 	  ADD_PATTERN(assign_intconst_to_field);
-    ADD_PATTERN(simplify_store_load);
+    ADD_PATTERN(assign_object_to_field);
+    
+    /*ADD_PATTERN(simplify_store_load);*/
     ADD_PATTERN(simplify_load_store);
     ADD_PATTERN(simplify_ineg_iadd);
     ADD_PATTERN(simplify_swap_swap);
@@ -603,9 +832,17 @@ int init_patterns()
     ADD_PATTERN(simplify_const0_condition_ne);
     ADD_PATTERN(simplify_const0_condition_eq);
     ADD_PATTERN(simplify_nop);
-    ADD_PATTERN(simplify_duplicate_ldc);
-  /*
 
-  */
-	return 1;
+    ADD_PATTERN(simplify_duplicate_ldc);
+
+
+    ADD_PATTERN(simplify_consecutive_iincs);
+    ADD_PATTERN(simplify_loads_swap);
+    ADD_PATTERN(simplify_null_string);
+    ADD_PATTERN(assign_iload_to_field);
+    ADD_PATTERN(switch_labels);
+    ADD_PATTERN(replace_goto_by_return);
+
+    ADD_PATTERN(remove_unused_labels);
+	  return 1;
   }
