@@ -338,7 +338,6 @@ int simplify_condition_eq(CODE **c)
 int simplify_condition_null(CODE **c)
 {
   int l1, l2, l3;
-  int x, y;
 
   if(is_ifnull(*c, &l1) && 
     is_goto(nextby(*c,1), &l2) &&
@@ -790,13 +789,13 @@ int simplify_consecutive_iincs(CODE **c)
   }
   else if (is_if(c, &initialGoTo))
   {
-    if (is_label((next(destination(initialGoTo))), &label1))
+ /*   if (is_label((next(destination(initialGoTo))), &label1))
     {
       droplabel(initialGoTo);
       copylabel(label1);
       replace(c, 1, makeCODEgoto(label1, NULL));
       return 1;
-    }
+    }*/
   }
   return 0;
  }
