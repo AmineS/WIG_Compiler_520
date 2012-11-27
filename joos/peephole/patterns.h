@@ -332,7 +332,9 @@ int simplify_condition_null(CODE **c)
 
   if(is_ifnull(*c, &l1) && 
     is_goto(nextby(*c,1), &l2) &&
-    is_label(nextby(*c,2), &l3))
+    is_label(nextby(*c,2), &l3) && 
+    uniquelabel(l3) && 
+    l1 == l3)
   {
     return replace(c, 3, makeCODEifnonnull(l2, NULL));
   }
