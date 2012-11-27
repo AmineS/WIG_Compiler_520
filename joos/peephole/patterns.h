@@ -355,7 +355,7 @@ int simplify_condition_aeq(CODE **c)
 int simplify_condition_null(CODE **c)
 {
   int l1, l2, l3;
-  int x, y;
+
 
   if(is_ifnull(*c, &l1) && 
     is_goto(nextby(*c,1), &l2) &&
@@ -956,6 +956,33 @@ int simplify_if_equal0(CODE **c)
   return 0;
 }
 
+/*
+ aconst_null
+if_acmpne stop_0
+---------------------->
+if_notnull stop_0:
+
+*/
+int simplify_check_if_notnull(CODE **c)
+{
+  int label;
+  if (is_aconst_null(*c) && is_if_acmpne(next(*c), &label))
+  {
+    return replace(c, 2, makeCODEifnull(label,NULL));
+  }
+  return 0;
+}
+
+int simplify_check_if_null(CODE **c)
+{
+  int label;
+  if (is_aconst_null(*c) && is_if_acmpeq(next(*c), &label))
+  {
+    return replace(c, 2, makeCODEifnonnull(label,NULL));
+  }
+  return 0;
+}
+
 /******  Old style - still works, but better to use new style. 
 #define OPTS 4
 
@@ -1009,6 +1036,7 @@ int init_patterns()
     ADD_PATTERN(assign_iload_to_field);
     ADD_PATTERN(switch_labels);
     ADD_PATTERN(replace_goto_by_return);
+    ADD_PATTERN(simplify_check_if_notnull);
     ADD_PATTERN(remove_unused_labels);
 	  return 1;
   }
