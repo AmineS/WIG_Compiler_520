@@ -1,12 +1,14 @@
 package wig.symboltable;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
 import wig.analysis.DepthFirstAdapter;
 import wig.node.AArgument;
+import wig.node.AAssignExp;
 import wig.node.ACallExp;
 import wig.node.ACompStm;
 import wig.node.ACompoundstm;
@@ -15,11 +17,17 @@ import wig.node.AFunction;
 import wig.node.AHtml;
 import wig.node.AIdDocument;
 import wig.node.AInput;
+import wig.node.AJoinExp;
+import wig.node.AKeepExp;
+import wig.node.AKeepManyExp;
+import wig.node.ALvalueExp;
 import wig.node.APlug;
 import wig.node.APlugDocument;
 import wig.node.APlugs;
 import wig.node.AQualifiedLvalue;
 import wig.node.AReceive;
+import wig.node.ARemoveExp;
+import wig.node.ARemoveManyExp;
 import wig.node.ASession;
 import wig.node.AShowStm;
 import wig.node.ASimpleLvalue;
@@ -30,6 +38,7 @@ import wig.node.PInput;
 import wig.node.PPlug;
 import wig.node.PStm;
 import wig.node.PVariable;
+import wig.node.TIdentifier;
 import wig.symboltable.symbols.SVariable;
 import wig.symboltable.symbols.Symbol;
 
@@ -37,7 +46,8 @@ public class SymbolAnalyzer extends DepthFirstAdapter
 {
     SymbolTable serviceSymbolTable;
     SymbolTable currentSymbolTable;
-
+    SVariable currentTuple;
+    
     public void analyze(Node node)
     {
         node.apply(this);
@@ -308,17 +318,22 @@ public class SymbolAnalyzer extends DepthFirstAdapter
     {                   
         String name = node.getIdentifier().toString().trim();
         Symbol symbol;
-        
-        symbol = SymbolTable.getSymbol(currentSymbolTable, name);
-        
+        symbol = SymbolTable.lookupHierarchy(currentSymbolTable, name);            
         if(symbol == null)
         {
-            symbol = SymbolTable.lookupHierarchy(currentSymbolTable, name);            
-            if(symbol == null)
+            puts("Error: Symbol " + name + " not defined. Line no:" + node.getIdentifier().getLine());
+            System.exit(1);
+        }  
+        else
+        {
+            SVariable tup;
+            tup = (SVariable) SymbolTable.lookupHierarchy(currentSymbolTable, name);
+            if (tup != null && currentTuple != null)
             {
-                puts("Error: Symbol " + name + " not defined. Line no:" + node.getIdentifier().getLine());
-                System.exit(1);
-            }            
+                // a tuple                
+                tup.setTupleSymbolTable(new TupleSymbolTable((HashMap<String, Symbol>) currentTuple.getTupleSymbolTable().getHashMap().clone()));
+                currentTuple = null;
+            }
         }
     }
 
@@ -365,4 +380,429 @@ public class SymbolAnalyzer extends DepthFirstAdapter
         System.out.print(s + "\n");
         System.out.flush();
     }            
+    
+    @SuppressWarnings("unchecked")
+    public void caseAKeepExp(AKeepExp node)
+    {
+        if(node.getLeft() != null)
+        {
+            node.getLeft().apply(this);
+        }
+        if(node.getIdentifier() != null)
+        {
+            node.getIdentifier().apply(this);
+        }
+
+        if(node.getLeft() instanceof ALvalueExp)
+        {
+            ALvalueExp lvalueExp = (ALvalueExp) node.getLeft();
+            if(lvalueExp.getLvalue() instanceof ASimpleLvalue)
+            {
+                ASimpleLvalue simpleLvalue = (ASimpleLvalue) lvalueExp.getLvalue();
+                String tupleName = simpleLvalue.getIdentifier().getText().trim();
+                
+                SVariable firstTup;
+                firstTup = (SVariable) SymbolTable.lookupHierarchy(currentSymbolTable, tupleName);
+                TupleSymbolTable tst = firstTup.getTupleSymbolTable();
+                
+                currentTuple = new SVariable();
+                        
+                TupleSymbolTable tstTemp = new TupleSymbolTable((HashMap<String, Symbol>) tst.getHashMap().clone());
+                
+                currentTuple.setTupleSymbolTable(tstTemp);
+                
+                tst = currentTuple.getTupleSymbolTable();
+
+                if(tst != null)
+                {
+                    // check if identifier part of tuple's schema
+                    String key = node.getIdentifier().getText().trim();
+                    if (tst.defSymbol(key))
+                    {
+                        tst.keep(key);
+                    }
+                    else
+                    {
+                        puts("Error: " + key + " is not part of that Tuple. Line no:" + node.getIdentifier().getLine());
+                        System.exit(-1);
+                    }
+                }
+                else
+                {
+                    puts("Error: Tuple does not have fields");
+                    System.exit(-1);
+                }
+            }
+        }
+        else if(currentTuple != null)
+        {
+            TupleSymbolTable tst = currentTuple.getTupleSymbolTable();
+            if(tst != null)
+            {
+                // check if identifier part of tuple's schema
+                String key = node.getIdentifier().getText().trim();
+                if (tst.defSymbol(key))
+                {
+                    tst.keep(key);
+                }
+                else
+                {
+                    puts("Error: " + key + " is not part of that Tuple. Line no:" + node.getIdentifier().getLine());
+                    System.exit(-1);
+                }
+            }
+            else
+            {
+                puts("Error: Not a tuple.");
+                System.exit(-1);
+            }
+        }
+        else
+        {
+            puts("Error: Wrong format for keep expression.");
+        }
+    }
+    
+    @SuppressWarnings("unchecked")
+    public void caseARemoveExp(ARemoveExp node)
+    {
+        if(node.getLeft() != null)
+        {
+            node.getLeft().apply(this);
+        }
+        if(node.getIdentifier() != null)
+        {
+            node.getIdentifier().apply(this);
+        }
+
+        if(node.getLeft() instanceof ALvalueExp)
+        {
+            ALvalueExp lvalueExp = (ALvalueExp) node.getLeft();
+            if(lvalueExp.getLvalue() instanceof ASimpleLvalue)
+            {
+                ASimpleLvalue simpleLvalue = (ASimpleLvalue) lvalueExp.getLvalue();
+                String tupleName = simpleLvalue.getIdentifier().getText().trim();
+                
+                SVariable firstTup;
+                firstTup = (SVariable) SymbolTable.lookupHierarchy(currentSymbolTable, tupleName);
+                TupleSymbolTable tst = firstTup.getTupleSymbolTable();
+                
+                currentTuple = new SVariable();
+                        
+                TupleSymbolTable tstTemp = new TupleSymbolTable((HashMap<String, Symbol>) tst.getHashMap().clone());
+                
+                currentTuple.setTupleSymbolTable(tstTemp);
+                
+                tst = currentTuple.getTupleSymbolTable();
+                
+                if(tst != null)
+                {
+                    // check if identifier part of tuple's schema
+                    String key = node.getIdentifier().getText().trim();
+                    if (tst.defSymbol(key))
+                    {
+                        tst.remove(key);
+                    }
+                    else
+                    {
+                        puts("Error: " + key + " is not part of that Tuple. Line no:" + node.getIdentifier().getLine());
+                        System.exit(-1);
+                    }
+                }
+                else
+                {
+                    puts("Error: Tuple does not have fields");
+                    System.exit(-1);
+                }
+            }
+        }
+        else if(currentTuple != null)
+        {
+            TupleSymbolTable tst = currentTuple.getTupleSymbolTable();
+            if(tst != null)
+            {
+                // check if identifier part of tuple's schema
+                String key = node.getIdentifier().getText().trim();
+                if (tst.defSymbol(key))
+                {
+                    tst.remove(key);
+                }
+                else
+                {
+                    puts("Error: " + key + " is not part of that Tuple. Line no:" + node.getIdentifier().getLine());
+                    System.exit(-1);
+                }
+            }
+            else
+            {
+                puts("Error: Not a tuple.");
+                System.exit(-1);
+            }
+        }
+        else
+        {
+            puts("Error: Wrong format for keep expression.");
+        }
+    }
+    
+    
+    
+    public void caseARemoveManyExp(ARemoveManyExp node)
+    {
+        if(node.getLeft() != null)
+        {
+            node.getLeft().apply(this);
+        }
+        if(node.getIdentifier() != null)
+        {
+            for (TIdentifier ti: node.getIdentifier())
+            {
+                ti.apply(this);
+            }
+        }
+
+        if(node.getLeft() instanceof ALvalueExp)
+        {
+            ALvalueExp lvalueExp = (ALvalueExp) node.getLeft();
+            if(lvalueExp.getLvalue() instanceof ASimpleLvalue)
+            {
+                ASimpleLvalue simpleLvalue = (ASimpleLvalue) lvalueExp.getLvalue();
+                String tupleName = simpleLvalue.getIdentifier().getText().trim();
+                
+                SVariable firstTup;
+                firstTup = (SVariable) SymbolTable.lookupHierarchy(currentSymbolTable, tupleName);
+                TupleSymbolTable tst = firstTup.getTupleSymbolTable();
+                
+                currentTuple = new SVariable();
+                        
+                @SuppressWarnings("unchecked")
+                TupleSymbolTable tstTemp = new TupleSymbolTable((HashMap<String, Symbol>) tst.getHashMap().clone());
+                
+                currentTuple.setTupleSymbolTable(tstTemp);
+                
+                tst = currentTuple.getTupleSymbolTable();
+                
+                if(tst != null)
+                {
+                    for (TIdentifier ti: node.getIdentifier())
+                    {
+                        String key = ti.getText().trim();
+                        if (tst.defSymbol(key))
+                        {
+                            tst.remove(key);
+                        }
+                        else
+                        {
+                            puts("Error: " + key + " is not part of that Tuple. Line no:" + ti.getLine());
+                            System.exit(-1);
+                        }
+                    }
+                }
+                else
+                {
+                    puts("Error: Tuple does not have fields");
+                    System.exit(-1);
+                }
+            }
+        }
+        else if(currentTuple != null)
+        {
+            TupleSymbolTable tst = currentTuple.getTupleSymbolTable();
+            if(tst != null)
+            {
+                for (TIdentifier ti: node.getIdentifier())
+                {
+                    String key = ti.getText().trim();
+                    if (tst.defSymbol(key))
+                    {
+                        tst.remove(key);
+                    }
+                    else
+                    {
+                        puts("Error: " + key + " is not part of that Tuple. Line no:" + ti.getLine());
+                        System.exit(-1);
+                    }
+                }
+            }
+            else
+            {
+                puts("Error: Not a tuple.");
+                System.exit(-1);
+            }
+        }
+        else
+        {
+            puts("Error: Wrong format for keep expression.");
+        }
+    }
+    
+    
+    public void caseAKeepManyExp(AKeepManyExp node)
+    {
+        if(node.getLeft() != null)
+        {
+            node.getLeft().apply(this);
+        }
+        if(node.getIdentifier() != null)
+        {
+            for (TIdentifier ti: node.getIdentifier())
+            {
+                ti.apply(this);
+            }
+        }
+
+        if(node.getLeft() instanceof ALvalueExp)
+        {
+            ALvalueExp lvalueExp = (ALvalueExp) node.getLeft();
+            if(lvalueExp.getLvalue() instanceof ASimpleLvalue)
+            {
+                ASimpleLvalue simpleLvalue = (ASimpleLvalue) lvalueExp.getLvalue();
+                String tupleName = simpleLvalue.getIdentifier().getText().trim();
+                
+                SVariable firstTup;
+                firstTup = (SVariable) SymbolTable.lookupHierarchy(currentSymbolTable, tupleName);
+                TupleSymbolTable tst = firstTup.getTupleSymbolTable();
+                
+                currentTuple = new SVariable();
+                        
+                @SuppressWarnings("unchecked")
+                TupleSymbolTable tstTemp = new TupleSymbolTable((HashMap<String, Symbol>) tst.getHashMap().clone());
+                
+                currentTuple.setTupleSymbolTable(tstTemp);
+                
+                tst = currentTuple.getTupleSymbolTable();
+                  
+                if(tst != null)
+                {
+                    ArrayList<String> keys = new ArrayList<String>();
+                    
+                    for (TIdentifier ti: node.getIdentifier())
+                    {
+                        String key = ti.getText().trim();
+                        if (tst.defSymbol(key))
+                        {
+                            keys.add(key);
+                        }
+                        else
+                        {
+                            puts("Error: " + key + " is not part of that Tuple. Line no:" + ti.getLine());
+                            System.exit(-1);
+                        }
+                    }
+                    tst.keepMany(keys.toArray());
+                }
+                else
+                {
+                    puts("Error: Not a tuple.Line no: " + simpleLvalue.getIdentifier().getLine());
+                    System.exit(-1);
+                }
+            }
+        }
+        else if(currentTuple != null)
+        {
+            TupleSymbolTable tst = currentTuple.getTupleSymbolTable();
+            if(tst != null)
+            {
+                ArrayList<String> keys = new ArrayList<String>();
+                
+                for (TIdentifier ti: node.getIdentifier())
+                {
+                    String key = ti.getText().trim();
+                    if (tst.defSymbol(key))
+                    {
+                        keys.add(key);
+                    }
+                    else
+                    {
+                        puts("Error: " + key + " is not part of that Tuple. Line no:" + ti.getLine());
+                        System.exit(-1);
+                    }
+                }
+                tst.keepMany(keys.toArray());
+            }
+            else
+            {
+                puts("Error: Not a tuple.");
+                System.exit(-1);
+            }
+        }
+        else
+        {
+            puts("Error: Wrong format for keep expression.");
+        }
+    }
+    
+    public void caseAJoinExp(AJoinExp node)
+    {
+        if(node.getLeft() != null)
+        {
+            node.getLeft().apply(this);
+        }
+        if(node.getRight() != null)
+        {
+            node.getRight().apply(this);        
+        }
+
+        if(node.getLeft() instanceof ALvalueExp)
+        {
+            ALvalueExp lvalueExp = (ALvalueExp) node.getLeft();
+            if(lvalueExp.getLvalue() instanceof ASimpleLvalue)
+            {
+                ASimpleLvalue simpleLvalue = (ASimpleLvalue) lvalueExp.getLvalue();
+                String tupleName = simpleLvalue.getIdentifier().getText().trim();
+                currentTuple = (SVariable) SymbolTable.lookupHierarchy(currentSymbolTable, tupleName);
+                TupleSymbolTable tst = currentTuple.getTupleSymbolTable();
+                SVariable rightTuple = null;
+                
+                if (node.getRight() instanceof ALvalueExp)
+                {
+                    ALvalueExp lvalueExp2 = (ALvalueExp) node.getRight();
+                    ASimpleLvalue simpleLvalue2 = (ASimpleLvalue) lvalueExp2.getLvalue();
+                    String tupleName2 = simpleLvalue2.getIdentifier().getText().trim();
+                    rightTuple = (SVariable) SymbolTable.lookupHierarchy(currentSymbolTable, tupleName2);
+                }
+                
+                if(tst != null && rightTuple.getTupleSymbolTable() != null)
+                {
+                    tst.merge(rightTuple.getTupleSymbolTable());
+                }
+                else
+                {
+                    puts("Error: Not a tuple.Line no: " + simpleLvalue.getIdentifier().getLine());
+                    System.exit(-1);
+                }
+            }
+        }
+        else if(currentTuple != null)
+        {
+            TupleSymbolTable tst = currentTuple.getTupleSymbolTable();
+            SVariable rightTuple = null;
+            
+            if (node.getRight() instanceof ALvalueExp)
+            {
+                ALvalueExp lvalueExp2 = (ALvalueExp) node.getRight();
+                ASimpleLvalue simpleLvalue2 = (ASimpleLvalue) lvalueExp2.getLvalue();
+                String tupleName2 = simpleLvalue2.getIdentifier().getText().trim();
+                rightTuple = (SVariable) SymbolTable.lookupHierarchy(currentSymbolTable, tupleName2);
+            }
+            
+            if(tst != null && rightTuple.getTupleSymbolTable() != null)
+            {
+                tst.merge(rightTuple.getTupleSymbolTable());
+            }
+            else
+            {
+                puts("Error: Not a tuple.");
+                System.exit(-1);
+            }
+        }    
+    }
+    
+    
+    public void caseAAssignExp(AAssignExp node)
+    {
+        node.getRight().apply(this);
+        node.getLvalue().apply(this);
+
+    }    
 }

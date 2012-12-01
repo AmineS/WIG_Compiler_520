@@ -17,14 +17,7 @@ public class SVariable extends Symbol
     
     public TupleSymbolTable getTupleSymbolTable()
     {
-        if(fVariable.getType() instanceof ATupleType)
-        {
-            return fTupleSymbolTable;
-        }
-        else
-        {
-            return null;
-        }
+        return fTupleSymbolTable;
     }
 
     public void setVariable(AVariable fVariable)
