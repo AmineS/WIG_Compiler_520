@@ -12,24 +12,31 @@ public class Emitter extends DepthFirstAdapter
 {
     SymbolTable serviceSymbolTable;
     SymbolTable currentSymbolTable;
+    StringBuilder phpCode;
     
     public void emit(Node node)
     {
         node.apply(this);
+        printPhpCode();
     }   
     
     public Emitter(SymbolTable symbolTable)
     {
         serviceSymbolTable = symbolTable;
         currentSymbolTable= serviceSymbolTable;
+        phpCode = new StringBuilder();
     }
     
     private void puts(String s)
     {
-        System.out.print(s);
-        System.out.flush();
+        phpCode.append(s);
     }
 
+    private void printPhpCode()
+    {
+        System.out.println(phpCode.toString());
+    }
+    
     public void defaultIn(@SuppressWarnings("unused") Node node)
     {
         // Do nothing
