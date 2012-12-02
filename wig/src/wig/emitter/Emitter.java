@@ -4,10 +4,12 @@ package wig.emitter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Set;
 
 import wig.analysis.DepthFirstAdapter;
 import wig.node.*;
 import wig.symboltable.SymbolTable;
+import wig.symboltable.symbols.SSession;
 import wig.symboltable.symbols.SVariable;
 import wig.symboltable.symbols.Symbol;
 
@@ -17,6 +19,7 @@ public class Emitter extends DepthFirstAdapter
     SymbolTable currentSymbolTable;
     StringBuilder phpCode;
     HashMap<String, String> globalVariablesMap = new HashMap<String, String>();
+    HashMap<String, HashMap<String, String>> localVariableMaps = new HashMap<String, HashMap<String, String>>();
     
     public void emit(Node node)
     {
@@ -67,6 +70,59 @@ public class Emitter extends DepthFirstAdapter
     			}
     		}
     	}
+    }
+    
+    public void  initializeSymbolVariablesMap()
+    {
+        localVariableMaps.clear();
+        Set<String> symbolNames = serviceSymbolTable.getTable().keySet();
+        for(String symbolName : symbolNames)
+        {
+            Symbol currSymbol = SymbolTable.getSymbol(serviceSymbolTable, symbolName);
+            if(currSymbol instanceof SSession)
+            {
+                localVariableMaps.put(symbolName, getSessionSymbolVariableMap((SSession)currSymbol));
+            }
+        }
+    }
+    
+    private HashMap<String,String>  getSessionSymbolVariableMap(SSession session)
+    {
+        SymbolTable sessionSymbolTable = session.getSymTable();
+        HashMap<String,String> localSymbolVariableMap = new HashMap<String, String>();        
+        Set<String> symbolNames = sessionSymbolTable.getTable().keySet();
+        
+        for(String symbolName : symbolNames)
+        {
+            Symbol currSymbol = SymbolTable.getSymbol(sessionSymbolTable, symbolName);
+            if(currSymbol instanceof SVariable)
+            {
+                SVariable currVariable = (SVariable) currSymbol;
+                if(currVariable.getTupleSymbolTable() != null)
+                {
+                    //handle tuple case
+                    String tupStr = tupleToString(currVariable.getTupleSymbolTable().getHashMap());
+                }
+                else
+                {
+                    PType currVariableType = currVariable.getVariable().getType();
+                    if(currVariableType instanceof AIntType)
+                    {
+                        localSymbolVariableMap.put(symbolName, "0");
+                    }
+                    else if(currVariableType instanceof AStringType)
+                    {
+                        localSymbolVariableMap.put(symbolName, "");
+                    }
+                    else if(currVariableType instanceof ABoolType)
+                    {
+                        localSymbolVariableMap.put(symbolName, "false");
+                    }
+                }
+            }
+        }
+        
+        return localSymbolVariableMap;
     }
     
     private String tupleToString(HashMap<String,Symbol> tupleFields)
