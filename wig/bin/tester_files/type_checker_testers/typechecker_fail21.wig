@@ -43,7 +43,7 @@ string messages;
   {
   	
   	int x;
-  	bool b;
+  	//bool b;
    string userMsg;
    string another;
    x=0;
