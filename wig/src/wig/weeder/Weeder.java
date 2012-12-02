@@ -309,8 +309,7 @@ public class Weeder extends DepthFirstAdapter
                 /*
                  * Check if there are return statements in if/ ifelse/ while statements. 
                  */
-                
-                
+                               
                 if (stm instanceof AIfStm)
                 {
                     AIfStm ifStm = (AIfStm) stm;
@@ -419,13 +418,7 @@ public class Weeder extends DepthFirstAdapter
      */
     public void caseAHoleHtmlbody(AHoleHtmlbody node)
     {
-        // check if 2 or more hole variables have the same name
-        if (fHoleVariables.contains(node.getIdentifier().getText()))
-        {
-            //System.out.println("Error: Duplicate hole variable: " + node.getIdentifier().getText() + " at line " + node.getIdentifier().getLine());
-            //fErrorPresent = true;
-        }
-        else
+        if (!fHoleVariables.contains(node.getIdentifier().getText()))
         {        
             fHoleVariables.add(node.getIdentifier().getText());
         }

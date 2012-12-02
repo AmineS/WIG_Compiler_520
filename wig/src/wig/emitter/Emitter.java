@@ -29,6 +29,7 @@ public class Emitter extends DepthFirstAdapter
     {
         node.apply(this);
         printPhpCode();
+        /*
         for(String s : globalVariablesMap.keySet())
         {
         	System.out.println(s + " " + globalVariablesMap.get(s));
@@ -43,7 +44,7 @@ public class Emitter extends DepthFirstAdapter
             {
                 System.out.println("\t" + s + " " + localVariableMap.get(s));
             }
-        }
+        }*/
     }   
     
     public Emitter(SymbolTable symbolTable)
@@ -53,7 +54,7 @@ public class Emitter extends DepthFirstAdapter
         phpCode = new StringBuilder();
         initializeGlobalVariablesMap();
         initializeLocalSymbolVariablesMaps();
-        writeVariablesToFile(globalFname, globalVariablesMap);
+        //writeVariablesToFile(globalFname, globalVariablesMap);
         
     }
     
@@ -694,7 +695,7 @@ public class Emitter extends DepthFirstAdapter
         inANegintIntconst(node);
         if(node.getNegIntconst() != null)
         {
-            node.getNegIntconst().apply(this);
+            puts(node.getNegIntconst().getText());
         }
         outANegintIntconst(node);
     }
@@ -715,7 +716,7 @@ public class Emitter extends DepthFirstAdapter
         inAPosintIntconst(node);
         if(node.getPosIntconst() != null)
         {
-            node.getPosIntconst().apply(this);
+            puts(node.getPosIntconst().getText());
         }
         outAPosintIntconst(node);
     }
@@ -966,25 +967,32 @@ public class Emitter extends DepthFirstAdapter
     public void caseAFunction(AFunction node)
     {
         inAFunction(node);
-        if(node.getType() != null)
-        {
-            node.getType().apply(this);
-        }
+        puts("\nfunction ");
+
         if(node.getIdentifier() != null)
         {
-            node.getIdentifier().apply(this);
+            puts(node.getIdentifier().getText());
         }
+        puts("(");
         {
             List<PArgument> copy = new ArrayList<PArgument>(node.getArgument());
+            int counter = 0;
+            int size = copy.size();
             for(PArgument e : copy)
             {
                 e.apply(this);
+                counter++;
+                if (counter<size)
+                    puts(",");
             }
         }
+        puts(")\n");
+        puts("{\n");
         if(node.getCompoundstm() != null)
         {
             node.getCompoundstm().apply(this);
         }
+        puts("\n}\n\n");
         outAFunction(node);
     }
 
@@ -1026,13 +1034,9 @@ public class Emitter extends DepthFirstAdapter
     public void caseAArgument(AArgument node)
     {
         inAArgument(node);
-        if(node.getType() != null)
-        {
-            node.getType().apply(this);
-        }
         if(node.getIdentifier() != null)
         {
-            node.getIdentifier().apply(this);
+            puts("$" + node.getIdentifier().getText());
         }
         outAArgument(node);
     }
@@ -1159,6 +1163,7 @@ public class Emitter extends DepthFirstAdapter
         inAReturnexpStm(node);
         if(node.getExp() != null)
         {
+            puts("return ");
             node.getExp().apply(this);
         }
         outAReturnexpStm(node);
@@ -1178,14 +1183,19 @@ public class Emitter extends DepthFirstAdapter
     public void caseAIfStm(AIfStm node)
     {
         inAIfStm(node);
+        puts("if");
+        puts(" (");
         if(node.getExp() != null)
         {
             node.getExp().apply(this);
         }
+        puts(")\n");
+        puts("{");
         if(node.getStm() != null)
         {
             node.getStm().apply(this);
         }
+        puts("}\n");
         outAIfStm(node);
     }
 
@@ -1203,18 +1213,26 @@ public class Emitter extends DepthFirstAdapter
     public void caseAIfelseStm(AIfelseStm node)
     {
         inAIfelseStm(node);
+        puts("if");
+        puts("(");
         if(node.getExp() != null)
         {
             node.getExp().apply(this);
         }
+        puts(")\n");
+        puts("{");
         if(node.getThenStm() != null)
         {
             node.getThenStm().apply(this);
         }
+        puts("}\n");
+        puts("else");
+        puts("{");
         if(node.getElseStm() != null)
         {
             node.getElseStm().apply(this);
         }
+        puts("}\n");
         outAIfelseStm(node);
     }
 
@@ -1232,14 +1250,19 @@ public class Emitter extends DepthFirstAdapter
     public void caseAWhileStm(AWhileStm node)
     {
         inAWhileStm(node);
+        puts("while");
+        puts("(");
         if(node.getExp() != null)
         {
             node.getExp().apply(this);
         }
+        puts(")\n");
+        puts("{");
         if(node.getStm() != null)
         {
             node.getStm().apply(this);
         }
+        puts("}");
         outAWhileStm(node);
     }
 
@@ -1257,10 +1280,12 @@ public class Emitter extends DepthFirstAdapter
     public void caseACompStm(ACompStm node)
     {
         inACompStm(node);
+        puts("{");
         if(node.getCompoundstm() != null)
         {
             node.getCompoundstm().apply(this);
         }
+        puts("}");
         outACompStm(node);
     }
 
@@ -1511,10 +1536,12 @@ public class Emitter extends DepthFirstAdapter
         {
             node.getLvalue().apply(this);
         }
+        puts(" = ");
         if(node.getRight() != null)
         {
             node.getRight().apply(this);
         }
+        puts(";");
         outAAssignExp(node);
     }
 
@@ -1532,14 +1559,17 @@ public class Emitter extends DepthFirstAdapter
     public void caseAOrExp(AOrExp node)
     {
         inAOrExp(node);
+        puts("(");
         if(node.getLeft() != null)
         {
             node.getLeft().apply(this);
         }
+        puts("||");
         if(node.getRight() != null)
         {
             node.getRight().apply(this);
         }
+        puts(")");
         outAOrExp(node);
     }
 
@@ -1557,14 +1587,17 @@ public class Emitter extends DepthFirstAdapter
     public void caseAAndExp(AAndExp node)
     {
         inAAndExp(node);
+        puts("(");
         if(node.getLeft() != null)
         {
             node.getLeft().apply(this);
         }
+        puts("&&");
         if(node.getRight() != null)
         {
             node.getRight().apply(this);
         }
+        puts(")");
         outAAndExp(node);
     }
 
@@ -1582,14 +1615,17 @@ public class Emitter extends DepthFirstAdapter
     public void caseAEqExp(AEqExp node)
     {
         inAEqExp(node);
+        puts("(");
         if(node.getLeft() != null)
         {
             node.getLeft().apply(this);
         }
+        puts(" == ");
         if(node.getRight() != null)
         {
             node.getRight().apply(this);
         }
+        puts(")");
         outAEqExp(node);
     }
 
@@ -1607,14 +1643,17 @@ public class Emitter extends DepthFirstAdapter
     public void caseANeqExp(ANeqExp node)
     {
         inANeqExp(node);
+        puts("(");
         if(node.getLeft() != null)
         {
             node.getLeft().apply(this);
         }
+        puts(" != ");
         if(node.getRight() != null)
         {
             node.getRight().apply(this);
         }
+        puts(")");
         outANeqExp(node);
     }
 
@@ -1632,14 +1671,17 @@ public class Emitter extends DepthFirstAdapter
     public void caseALtExp(ALtExp node)
     {
         inALtExp(node);
+        puts("(");
         if(node.getLeft() != null)
         {
             node.getLeft().apply(this);
         }
+        puts(" < ");
         if(node.getRight() != null)
         {
             node.getRight().apply(this);
         }
+        puts(")");
         outALtExp(node);
     }
 
@@ -1657,14 +1699,17 @@ public class Emitter extends DepthFirstAdapter
     public void caseAGtExp(AGtExp node)
     {
         inAGtExp(node);
+        puts("(");
         if(node.getLeft() != null)
         {
             node.getLeft().apply(this);
         }
+        puts(" >= ");
         if(node.getRight() != null)
         {
             node.getRight().apply(this);
         }
+        puts(")");
         outAGtExp(node);
     }
 
@@ -1682,14 +1727,17 @@ public class Emitter extends DepthFirstAdapter
     public void caseALteqExp(ALteqExp node)
     {
         inALteqExp(node);
+        puts("(");
         if(node.getLeft() != null)
         {
             node.getLeft().apply(this);
         }
+        puts(" <= ");
         if(node.getRight() != null)
         {
             node.getRight().apply(this);
         }
+        puts(")");
         outALteqExp(node);
     }
 
@@ -1707,14 +1755,17 @@ public class Emitter extends DepthFirstAdapter
     public void caseAGteqExp(AGteqExp node)
     {
         inAGteqExp(node);
+        puts("(");
         if(node.getLeft() != null)
         {
             node.getLeft().apply(this);
         }
+        puts(" >= ");
         if(node.getRight() != null)
         {
             node.getRight().apply(this);
         }
+        puts(")");
         outAGteqExp(node);
     }
 
@@ -1732,14 +1783,17 @@ public class Emitter extends DepthFirstAdapter
     public void caseAPlusExp(APlusExp node)
     {
         inAPlusExp(node);
+        puts("(");
         if(node.getLeft() != null)
         {
             node.getLeft().apply(this);
         }
+        puts(" + ");
         if(node.getRight() != null)
         {
             node.getRight().apply(this);
         }
+        puts(")");
         outAPlusExp(node);
     }
 
@@ -1783,14 +1837,17 @@ public class Emitter extends DepthFirstAdapter
     public void caseAMultExp(AMultExp node)
     {
         inAMultExp(node);
+        puts("(");
         if(node.getLeft() != null)
         {
             node.getLeft().apply(this);
         }
+        puts(" * ");
         if(node.getRight() != null)
         {
             node.getRight().apply(this);
         }
+        puts(")");
         outAMultExp(node);
     }
 
@@ -1808,14 +1865,17 @@ public class Emitter extends DepthFirstAdapter
     public void caseADivExp(ADivExp node)
     {
         inADivExp(node);
+        puts("(");
         if(node.getLeft() != null)
         {
             node.getLeft().apply(this);
         }
+        puts(" / ");
         if(node.getRight() != null)
         {
             node.getRight().apply(this);
         }
+        puts(")");
         outADivExp(node);
     }
 
@@ -1833,14 +1893,17 @@ public class Emitter extends DepthFirstAdapter
     public void caseAModExp(AModExp node)
     {
         inAModExp(node);
+        puts("(");
         if(node.getLeft() != null)
         {
             node.getLeft().apply(this);
         }
+        puts(" % ");
         if(node.getRight() != null)
         {
             node.getRight().apply(this);
         }
+        puts(")");
         outAModExp(node);
     }
 
@@ -1989,10 +2052,13 @@ public class Emitter extends DepthFirstAdapter
     public void caseANotExp(ANotExp node)
     {
         inANotExp(node);
+        puts("(");
+        puts("!");
         if(node.getLeft() != null)
         {
             node.getLeft().apply(this);
         }
+        puts(")");
         outANotExp(node);
     }
 
@@ -2010,10 +2076,12 @@ public class Emitter extends DepthFirstAdapter
     public void caseANegExp(ANegExp node)
     {
         inANegExp(node);
+        puts("(-");
         if(node.getLeft() != null)
         {
             node.getLeft().apply(this);
         }
+        puts(")");
         outANegExp(node);
     }
 
@@ -2256,7 +2324,7 @@ public class Emitter extends DepthFirstAdapter
         inASimpleLvalue(node);
         if(node.getIdentifier() != null)
         {
-            node.getIdentifier().apply(this);
+            puts(varNameToPhp(node.getIdentifier().getText()));
         }
         outASimpleLvalue(node);
     }
@@ -2392,18 +2460,7 @@ public class Emitter extends DepthFirstAdapter
     {
         
     }
-    public void caseTInt(TInt node)
-    {
-        //puts(node.getText());
-    }
-    public void caseTBool(TBool node)
-    {
-        //puts(node.getText());
-    }
-    public void caseTString(TString node)
-    {
-        //puts(node.getText());
-    }
+
     public void caseTVoid(TVoid node)
     {
         
@@ -2592,7 +2649,7 @@ public class Emitter extends DepthFirstAdapter
     }
     public void caseTIdentifier(TIdentifier node)
     {
-    	//puts("$"+node.getText()+"\n");
+    	//puts(varNameToPhp(node.getText()));
     }
     public void caseTStringconst(TStringconst node)
     {
@@ -2605,6 +2662,18 @@ public class Emitter extends DepthFirstAdapter
     public void caseEOF(EOF node)
     {
         //puts(node.getText());
+    }
+    
+    public String varNameToPhp(String varName)
+    {
+        if (globalVariablesMap.get(varName) != null)
+        {
+            return "GLOBALS[\""+varName+"\"]";
+        }
+        else
+        {
+            return "LOCALS[\""+varName+"\"]";
+        }
     }
     
 }
