@@ -6,10 +6,12 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Set;
 
 import wig.analysis.DepthFirstAdapter;
 import wig.node.*;
 import wig.symboltable.SymbolTable;
+import wig.symboltable.symbols.SSession;
 import wig.symboltable.symbols.SField;
 import wig.symboltable.symbols.SVariable;
 import wig.symboltable.symbols.Symbol;
@@ -20,6 +22,7 @@ public class Emitter extends DepthFirstAdapter
     SymbolTable currentSymbolTable;
     StringBuilder phpCode;
     HashMap<String, String> globalVariablesMap = new HashMap<String, String>();
+    HashMap<String, HashMap<String, String>> localVariableMaps = new HashMap<String, HashMap<String, String>>();
     private final String globalFname = "global.txt";
     
     public void emit(Node node)
@@ -30,6 +33,17 @@ public class Emitter extends DepthFirstAdapter
         {
         	System.out.println(s + " " + globalVariablesMap.get(s));
         }
+        
+        for(String session: localVariableMaps.keySet())
+        {
+            HashMap<String, String> localVariableMap = localVariableMaps.get(session);
+            
+            System.out.println("Session " + session + ":");
+            for(String s : localVariableMap.keySet())
+            {
+                System.out.println("\t" + s + " " + localVariableMap.get(s));
+            }
+        }
     }   
     
     public Emitter(SymbolTable symbolTable)
@@ -38,7 +52,9 @@ public class Emitter extends DepthFirstAdapter
         currentSymbolTable= serviceSymbolTable;
         phpCode = new StringBuilder();
         initializeGlobalVariablesMap();
-        writeGlobalsToFile(globalFname);
+        initializeLocalSymbolVariablesMaps();
+        writeVariablesToFile(globalFname, globalVariablesMap);
+        
     }
     
     public void initializeGlobalVariablesMap()
@@ -75,6 +91,60 @@ public class Emitter extends DepthFirstAdapter
     	}
     }
     
+    public void  initializeLocalSymbolVariablesMaps()
+    {
+        localVariableMaps.clear();
+        Set<String> symbolNames = serviceSymbolTable.getTable().keySet();
+        for(String symbolName : symbolNames)
+        {
+            Symbol currSymbol = SymbolTable.getSymbol(serviceSymbolTable, symbolName);
+            if(currSymbol instanceof SSession)
+            {
+                localVariableMaps.put(symbolName, getSessionSymbolVariableMap((SSession)currSymbol));
+            }
+        }
+    }
+    
+    private HashMap<String,String>  getSessionSymbolVariableMap(SSession session)
+    {
+        SymbolTable sessionSymbolTable = session.getSymTable();
+        HashMap<String,String> localSymbolVariableMap = new HashMap<String, String>();        
+        Set<String> symbolNames = sessionSymbolTable.getTable().keySet();
+        
+        for(String symbolName : symbolNames)
+        {
+            Symbol currSymbol = SymbolTable.getSymbol(sessionSymbolTable, symbolName);
+            if(currSymbol instanceof SVariable)
+            {
+                SVariable currVariable = (SVariable) currSymbol;
+                if(currVariable.getTupleSymbolTable() != null)
+                {
+                    //handle tuple case
+                    String tupStr = tupleToString(currVariable.getTupleSymbolTable().getHashMap());
+                    localSymbolVariableMap.put(symbolName, tupStr);
+                }
+                else
+                {
+                    PType currVariableType = currVariable.getVariable().getType();
+                    if(currVariableType instanceof AIntType)
+                    {
+                        localSymbolVariableMap.put(symbolName, "0");
+                    }
+                    else if(currVariableType instanceof AStringType)
+                    {
+                        localSymbolVariableMap.put(symbolName, "");
+                    }
+                    else if(currVariableType instanceof ABoolType)
+                    {
+                        localSymbolVariableMap.put(symbolName, "false");
+                    }
+                }
+            }
+        }
+        
+        return localSymbolVariableMap;
+    }
+    
     private String tupleToString(HashMap<String,Symbol> tupleFields)
     {
     	String tupStr = "";
@@ -82,7 +152,6 @@ public class Emitter extends DepthFirstAdapter
     	int size = tupleFields.size();
     	for (String k: tupleFields.keySet())
     	{
-    		//System.out.println(k + " " + tupleFields.get(k));
     		SField sv = (SField) tupleFields.get(k);
     		PType ptyp = sv.getField().getType();
     		
@@ -106,14 +175,14 @@ public class Emitter extends DepthFirstAdapter
     	return tupStr;
     }
     
-    private void writeGlobalsToFile(String fname)
+    private void writeVariablesToFile(String fname, HashMap<String,String> variablesMap)
     {
     	try 
     	{
 			FileWriter fw = new FileWriter(fname);
-			for (String s: globalVariablesMap.keySet())
+			for (String s: variablesMap.keySet())
 			{
-				fw.write(s + " " + globalVariablesMap.get(s) + "\n");
+				fw.write(s + " " + variablesMap.get(s) + "\n");
 			}
 			fw.close();
 		} 
