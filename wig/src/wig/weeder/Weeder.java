@@ -121,7 +121,7 @@ public class Weeder extends DepthFirstAdapter
             {
                 if(fHtmlsTuplesGlobalVariablesNames.contains(identifier.getText()))
                 {
-                    System.out.println("Error: Duplicate variable: " + identifier.getText() + " at line " + identifier.getLine());
+                    System.out.println("Error: Duplicate global variable: " + identifier.getText() + " at line " + identifier.getLine());
                     fErrorPresent = true;
                 }
                 else
@@ -245,7 +245,7 @@ public class Weeder extends DepthFirstAdapter
         {
             node.getCompoundstm().apply(this);
         }
-
+        outASession(node);
     }
     
     /**
@@ -394,7 +394,7 @@ public class Weeder extends DepthFirstAdapter
         {
             System.out.println("Error: Function " + node.getIdentifier().getText().trim() + "does not have a return type. Line no:" + node.getIdentifier().getLine());
         }
-        
+        outAFunction(node);
     }
     
     /**
@@ -738,6 +738,12 @@ public class Weeder extends DepthFirstAdapter
           {
               stm_iter.next().apply(this);
           }
+          outACompoundstm(node);
+      }
+      
+      public void outACompoundstm(ACompoundstm node)
+      {
+          fCurrentLocalVariableNames.clear();
       }
 
       
