@@ -689,11 +689,30 @@ public class Emitter extends DepthFirstAdapter
     public void caseAStrAttr(AStrAttr node)
     {
         inAStrAttr(node);
-
-        if(node.getStringconst() != null)
+        Node parentNode = node.parent();
+        if(parentNode instanceof AAssignAttribute)
         {
-            htmlStr += HtmlEscape.escape(node.getStringconst().getText().trim());
+            AAssignAttribute assignAttribute = (AAssignAttribute) parentNode;
+            Node leftAttr = assignAttribute.getLeftAttr(); 
+            if(leftAttr instanceof AIdAttr)
+            {
+                AIdAttr tagAttribute = (AIdAttr) assignAttribute.getLeftAttr();
+                if(tagAttribute.getIdentifier().getText().trim().equals("href") && node.getStringconst() != null)
+                {
+                    htmlStr += node.getStringconst().getText().trim();
+                }
+            }
+
         }
+        else
+        {
+            if(node.getStringconst() != null)
+            {
+                htmlStr += HtmlEscape.escape(node.getStringconst().getText().trim());
+            }
+        }
+
+
         outAStrAttr(node);
     }
 
