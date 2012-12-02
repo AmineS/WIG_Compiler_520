@@ -30,6 +30,15 @@ service
 
   const html exitMsg = <html> <center> <h1>See you later</h1> <img src="alligator.jpg" alt="Smiley face" height="200" width="200"> </center> </html>;
 
+
+
+  schema num 
+	{
+    int num1; 
+    int num2;
+    string s;
+  }
+
 string messages;
 
 	int func(int a)
@@ -43,11 +52,16 @@ string messages;
   {
   	
   	int x;
-  	bool b;
+  	tuple num tup;
    string userMsg;
    string another;
    x=0;
-   x = func(b);
+   x = func(x);
+	tup.num1=x;
+	tup.num2=x;
+	tup.s = "aaa";
+	x \+ (num1,num2);
+	
    while (x<10)
   	{
   		show setup receive[userMsg=userMsg];
