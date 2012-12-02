@@ -1,6 +1,8 @@
 package wig.emitter;
 
 
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -18,6 +20,7 @@ public class Emitter extends DepthFirstAdapter
     SymbolTable currentSymbolTable;
     StringBuilder phpCode;
     HashMap<String, String> globalVariablesMap = new HashMap<String, String>();
+    private final String globalFname = "global.txt";
     
     public void emit(Node node)
     {
@@ -35,6 +38,7 @@ public class Emitter extends DepthFirstAdapter
         currentSymbolTable= serviceSymbolTable;
         phpCode = new StringBuilder();
         initializeGlobalVariablesMap();
+        writeGlobalsToFile(globalFname);
     }
     
     public void initializeGlobalVariablesMap()
@@ -100,6 +104,24 @@ public class Emitter extends DepthFirstAdapter
     		
     	}
     	return tupStr;
+    }
+    
+    private void writeGlobalsToFile(String fname)
+    {
+    	try 
+    	{
+			FileWriter fw = new FileWriter(fname);
+			for (String s: globalVariablesMap.keySet())
+			{
+				fw.write(s + " " + globalVariablesMap.get(s) + "\n");
+			}
+			fw.close();
+		} 
+    	catch (IOException e) 
+    	{
+    		System.out.println("Cannot write to file " + fname);
+    		System.exit(-1);
+    	}
     }
     
     private void puts(String s)
