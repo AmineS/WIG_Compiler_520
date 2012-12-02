@@ -8,11 +8,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
 
+import b.HtmlEscape;
+
 import wig.analysis.DepthFirstAdapter;
 import wig.node.*;
 import wig.symboltable.SymbolTable;
-import wig.symboltable.symbols.SSession;
 import wig.symboltable.symbols.SField;
+import wig.symboltable.symbols.SSession;
 import wig.symboltable.symbols.SVariable;
 import wig.symboltable.symbols.Symbol;
 
@@ -24,26 +26,28 @@ public class Emitter extends DepthFirstAdapter
     HashMap<String, String> globalVariablesMap = new HashMap<String, String>();
     HashMap<String, HashMap<String, String>> localVariableMaps = new HashMap<String, HashMap<String, String>>();
     private final String globalFname = "global.txt";
+    private String htmlStr = "";
     
     public void emit(Node node)
     {
         node.apply(this);
         printPhpCode();
-        for(String s : globalVariablesMap.keySet())
-        {
-        	System.out.println(s + " " + globalVariablesMap.get(s));
-        }
-        
-        for(String session: localVariableMaps.keySet())
-        {
-            HashMap<String, String> localVariableMap = localVariableMaps.get(session);
-            
-            System.out.println("Session " + session + ":");
-            for(String s : localVariableMap.keySet())
-            {
-                System.out.println("\t" + s + " " + localVariableMap.get(s));
-            }
-        }
+//        for(String s : globalVariablesMap.keySet())
+//        {
+//        	System.out.println(s + " " + globalVariablesMap.get(s));
+//        }
+//        
+//        for(String session: localVariableMaps.keySet())
+//        {
+//            HashMap<String, String> localVariableMap = localVariableMaps.get(session);
+//            
+//            System.out.println("Session " + session + ":");
+//            for(String s : localVariableMap.keySet())
+//            {
+//                System.out.println("\t" + s + " " + localVariableMap.get(s));
+//            }
+//        }
+
     }   
     
     public Emitter(SymbolTable symbolTable)
@@ -271,15 +275,14 @@ public class Emitter extends DepthFirstAdapter
     public void outAHtml(AHtml node)
     {
         currentSymbolTable = currentSymbolTable.getNext();
+        System.out.println("HTML STR FUNCTIONS \n" + htmlStr);
+        htmlStr = "";
     }    
     @Override
     public void caseAHtml(AHtml node)
     {
         inAHtml(node);
-        if(node.getIdentifier() != null)
-        {
-            node.getIdentifier().apply(this);
-        }
+        htmlStr += "function "+ node.getIdentifier().getText().trim() +" ($holes){ \n$html = \"<html>";
         {
             List<PHtmlbody> copy = new ArrayList<PHtmlbody>(node.getHtmlbody());
             for(PHtmlbody e : copy)
@@ -287,6 +290,7 @@ public class Emitter extends DepthFirstAdapter
                 e.apply(this);
             }
         }
+        htmlStr += "</html>\";\nreturn $html;\n}\n";
         outAHtml(node);
     }
 
@@ -302,10 +306,7 @@ public class Emitter extends DepthFirstAdapter
     public void caseATagStartHtmlbody(ATagStartHtmlbody node)
     {
         inATagStartHtmlbody(node);
-        if(node.getIdentifier() != null)
-        {
-            node.getIdentifier().apply(this);
-        }
+        htmlStr += "<"+node.getIdentifier().getText().trim();
         {
             List<PAttribute> copy = new ArrayList<PAttribute>(node.getAttribute());
             for(PAttribute e : copy)
@@ -313,6 +314,7 @@ public class Emitter extends DepthFirstAdapter
                 e.apply(this);
             }
         }
+        htmlStr += ">";
         outATagStartHtmlbody(node);
     }
 
@@ -328,10 +330,7 @@ public class Emitter extends DepthFirstAdapter
     public void caseATagEndHtmlbody(ATagEndHtmlbody node)
     {
         inATagEndHtmlbody(node);
-        if(node.getIdentifier() != null)
-        {
-            node.getIdentifier().apply(this);
-        }
+         htmlStr += "</"+node.getIdentifier().getText().trim()+">";
         outATagEndHtmlbody(node);
     }
 
@@ -347,10 +346,7 @@ public class Emitter extends DepthFirstAdapter
     public void caseAHoleHtmlbody(AHoleHtmlbody node)
     {
         inAHoleHtmlbody(node);
-        if(node.getIdentifier() != null)
-        {
-            node.getIdentifier().apply(this);
-        }
+        htmlStr += "\".$holes[\""+ node.getIdentifier().getText().trim() +"\"].\"";
         outAHoleHtmlbody(node);
     }
 
@@ -404,10 +400,8 @@ public class Emitter extends DepthFirstAdapter
     public void caseAInputHtmlbody(AInputHtmlbody node)
     {
         inAInputHtmlbody(node);
-        if(node.getInput() != null)
-        {
-            node.getInput().apply(this);
-        }
+
+        htmlStr += "<"  + node.getInput().getText() + " ";
         {
             List<PInputattr> copy = new ArrayList<PInputattr>(node.getInputattr());
             for(PInputattr e : copy)
@@ -415,6 +409,7 @@ public class Emitter extends DepthFirstAdapter
                 e.apply(this);
             }
         }
+        htmlStr += "/>";
         outAInputHtmlbody(node);
     }
     
@@ -434,6 +429,9 @@ public class Emitter extends DepthFirstAdapter
         {
             node.getSelectTag().apply(this);
         }
+        
+        htmlStr += "<"  + node.getSelectTag().getText().trim();
+        
         {
             List<PInputattr> copy = new ArrayList<PInputattr>(node.getInputattr());
             for(PInputattr e : copy)
@@ -441,6 +439,9 @@ public class Emitter extends DepthFirstAdapter
                 e.apply(this);
             }
         }
+        
+        htmlStr += ">";
+        
         if(node.getFirstGt() != null)
         {
             node.getFirstGt().apply(this);
@@ -452,6 +453,9 @@ public class Emitter extends DepthFirstAdapter
                 e.apply(this);
             }
         }
+        
+        htmlStr += "</" + node.getSelectTag().getText().trim() +">";
+        
         outASelectHtmlbody(node);
     }
 
@@ -467,14 +471,7 @@ public class Emitter extends DepthFirstAdapter
     public void caseANameInputattr(ANameInputattr node)
     {
         inANameInputattr(node);
-        if(node.getName() != null)
-        {
-            node.getName().apply(this);
-        }
-        if(node.getAttr() != null)
-        {
-            node.getAttr().apply(this);
-        }
+        htmlStr += " " + node.getName().getText().trim() + "=" + HtmlEscape.escape(node.getAttr().toString().trim()) + " ";
         outANameInputattr(node);
     }
 
@@ -572,7 +569,7 @@ public class Emitter extends DepthFirstAdapter
         inAStrtypeInputtype(node);
         if(node.getStringconst() != null)
         {
-            node.getStringconst().apply(this);
+            htmlStr += "type=" +  HtmlEscape.escape(node.getStringconst().getText().trim());
         }
         outAStrtypeInputtype(node);
     }
@@ -633,7 +630,7 @@ public class Emitter extends DepthFirstAdapter
         inAIdAttr(node);
         if(node.getIdentifier() != null)
         {
-            node.getIdentifier().apply(this);
+            htmlStr += " " + node.getIdentifier().getText().trim() + "=";
         }
         outAIdAttr(node);
     }
@@ -650,9 +647,10 @@ public class Emitter extends DepthFirstAdapter
     public void caseAStrAttr(AStrAttr node)
     {
         inAStrAttr(node);
+
         if(node.getStringconst() != null)
         {
-            node.getStringconst().apply(this);
+            htmlStr += HtmlEscape.escape(node.getStringconst().getText().trim());
         }
         outAStrAttr(node);
     }
@@ -2422,7 +2420,7 @@ public class Emitter extends DepthFirstAdapter
     }
     public void caseTMeta(TMeta node)
     {
-        
+        htmlStr += node.getText().trim();
     }
     public void caseTHtmlTagEnd(THtmlTagEnd node)
     {
@@ -2430,7 +2428,7 @@ public class Emitter extends DepthFirstAdapter
     }
     public void caseTInput(TInput node)
     {
-        
+        htmlStr += node.getText().trim();
     }
     public void caseTPosIntconst(TPosIntconst node)
     {
@@ -2600,7 +2598,7 @@ public class Emitter extends DepthFirstAdapter
     }
     public void caseTWhatever(TWhatever node)
     {
-        //puts(node.getText());
+        htmlStr += node.getText().trim();
     }
     public void caseEOF(EOF node)
     {
