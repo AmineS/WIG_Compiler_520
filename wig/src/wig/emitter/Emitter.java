@@ -779,12 +779,13 @@ public class Emitter extends DepthFirstAdapter
 
     public void inAFunction(AFunction node)
     {
-        defaultIn(node);
+        Symbol symbol = SymbolTable.getSymbol(currentSymbolTable, node.getIdentifier().getText());
+        currentSymbolTable = SymbolTable.getScopedSymbolTable(symbol);
     }
-
+    
     public void outAFunction(AFunction node)
     {
-        defaultOut(node);
+        currentSymbolTable = currentSymbolTable.getNext();
     }
 
     @Override
@@ -864,12 +865,13 @@ public class Emitter extends DepthFirstAdapter
 
     public void inASession(ASession node)
     {
-        defaultIn(node);
+        Symbol symbol = SymbolTable.getSymbol(currentSymbolTable, node.getIdentifier().getText());
+        currentSymbolTable = SymbolTable.getScopedSymbolTable(symbol);
     }
 
     public void outASession(ASession node)
     {
-        defaultOut(node);
+        currentSymbolTable = currentSymbolTable.getNext();
     }
 
     @Override
@@ -1182,14 +1184,20 @@ public class Emitter extends DepthFirstAdapter
         outAReceive(node);
     }
 
-    public void inACompoundstm(ACompoundstm node)
+    public void inACompoundStm(ACompoundstm node)
     {
-        defaultIn(node);
+        if(! (node.parent() instanceof AFunction || node.parent() instanceof ASession) )
+        {
+            currentSymbolTable = currentSymbolTable.getCompoundStatementSymbolTable(node);
+        }
     }
-
-    public void outACompoundstm(ACompoundstm node)
+    
+    public void outACompoundStm(ACompoundstm node)
     {
-        defaultOut(node);
+        if(! (node.parent() instanceof AFunction || node.parent() instanceof ASession) )
+        {
+            currentSymbolTable = currentSymbolTable.getNext();
+        }
     }
 
     @Override
