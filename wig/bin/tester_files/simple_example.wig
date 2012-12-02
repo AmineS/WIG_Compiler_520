@@ -10,44 +10,33 @@ service {
     schema player
      {
 		int score;
-		string score;
 	}
 	
 	schema player2
 	{
 		int walou;
 		int blob;
+		int bleurb;
 	}
-	
-  int counter;
-  int hello, hello3;
-  int counter;
-	int dumb1(int arg1, int arg2)
+
+	schema player3
 	{
-		int funcDumb;
-		return 1;
+		int x;
+		int y;
+		int z;
 	}
-	
-	/*
-	haahah
-	*/
+
+	tuple player2 tup0;
+	tuple player tup1;
+	tuple player2 tup2;
+	tuple player3 tup3;
 
   session Access() {
-  counter = 0;
-  	if (counter==0)
-  	{
-		counter = counter + 1;
-  	}
+	int counter;
+	counter = 0;
   	
-  	dumbopo(1, 2);
-    counter = counter + 1;
-    
-    while (counter>2)
-    {
-    	counter = count +1;
-    	counter = counter - 1;
-    }
-    
+  	tup0 = tup0 \- blob \- blob;	
+ 
     exit plug Nikolaj[no = counter];
   }
 }
