@@ -2221,15 +2221,15 @@ public class Emitter extends DepthFirstAdapter
     }
     public void caseTInt(TInt node)
     {
-        puts(node.getText());
+        //puts(node.getText());
     }
     public void caseTBool(TBool node)
     {
-        puts(node.getText());
+        //puts(node.getText());
     }
     public void caseTString(TString node)
     {
-        puts(node.getText());
+        //puts(node.getText());
     }
     public void caseTVoid(TVoid node)
     {
@@ -2419,19 +2419,19 @@ public class Emitter extends DepthFirstAdapter
     }
     public void caseTIdentifier(TIdentifier node)
     {
-        puts("$"+node.getText());
+    	//puts("$"+node.getText()+"\n");
     }
     public void caseTStringconst(TStringconst node)
     {
-        puts(node.getText());
+        //puts(node.getText());
     }
     public void caseTWhatever(TWhatever node)
     {
-        puts(node.getText());
+        //puts(node.getText());
     }
     public void caseEOF(EOF node)
     {
-        puts(node.getText());
+        //puts(node.getText());
     }
     
 }
