@@ -104,6 +104,7 @@ public class Emitter extends DepthFirstAdapter
                 {
                     //handle tuple case
                     String tupStr = tupleToString(currVariable.getTupleSymbolTable().getHashMap());
+                    localSymbolVariableMap.put(symbolName, tupStr);
                 }
                 else
                 {
