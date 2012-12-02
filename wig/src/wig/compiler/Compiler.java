@@ -215,7 +215,7 @@ public class Compiler
             System.out.println("..............................................................");
 
             Emitter em = new Emitter(symAnalyzer.getServiceSymbolTable());
-            em.emit();
+            em.emit(tree);
         }
     }
 }
