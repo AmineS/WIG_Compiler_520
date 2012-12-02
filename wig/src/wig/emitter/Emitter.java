@@ -243,6 +243,7 @@ public class Emitter extends DepthFirstAdapter
             {
                 e.apply(this);
             }
+            printServiceGlobals(copy);
         }
         {
             List<PFunction> copy = new ArrayList<PFunction>(node.getFunction());
@@ -274,7 +275,37 @@ public class Emitter extends DepthFirstAdapter
         }
         outAService(node);
     }
-
+    private void printServiceGlobals(List<PVariable> variables)
+    {
+        puts("$GLOBALS= array();");
+        for(PVariable variable : variables)
+        {
+            AVariable avariable = (AVariable) variable;
+            
+            for(TIdentifier identifier : avariable.getIdentifier())
+            {
+                puts(varNameToPhp(identifier.getText())+"=");
+                if(avariable.getType() instanceof AIntType)
+                {
+                    puts("0");
+                }
+                else if (avariable.getType() instanceof AStringType)
+                {
+                    puts("\"\"");
+                }
+                else if (avariable.getType() instanceof ABoolType)
+                {
+                    puts("FALSE");
+                }
+                else if (avariable.getType() instanceof ATupleType)
+                {
+                    puts ("$schema_" + ((ATupleType)(avariable.getType())).getIdentifier().getText());
+                }
+                puts(";\n");
+            }
+        }
+    }
+    
     public void inAHtml(AHtml node)
     {
         Symbol symbol = SymbolTable.getSymbol(currentSymbolTable, node.getIdentifier().getText());
