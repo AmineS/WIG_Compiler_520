@@ -8,6 +8,7 @@ import java.util.List;
 import wig.analysis.DepthFirstAdapter;
 import wig.node.*;
 import wig.symboltable.SymbolTable;
+import wig.symboltable.symbols.SField;
 import wig.symboltable.symbols.SVariable;
 import wig.symboltable.symbols.Symbol;
 
@@ -48,6 +49,7 @@ public class Emitter extends DepthFirstAdapter
     			{
     				//handle tuple case
     				String tupStr = tupleToString(currVariable.getTupleSymbolTable().getHashMap());
+    				globalVariablesMap.put(symName, tupStr);
     			}
     			else
     			{
@@ -72,30 +74,32 @@ public class Emitter extends DepthFirstAdapter
     private String tupleToString(HashMap<String,Symbol> tupleFields)
     {
     	String tupStr = "";
+    	int counter = 0;
+    	int size = tupleFields.size();
     	for (String k: tupleFields.keySet())
     	{
     		//System.out.println(k + " " + tupleFields.get(k));
-    		SVariable sv = (SVariable) tupleFields.get(k);
-    		PType ptyp = sv.getVariable().getType();
+    		SField sv = (SField) tupleFields.get(k);
+    		PType ptyp = sv.getField().getType();
     		
     		if(ptyp instanceof AIntType)
 			{
-				tupStr += "";
+				tupStr += k + "=0";
 			}
 			else if(ptyp instanceof AStringType)
 			{
-				tupStr += "";
+				tupStr += k + "= ";
 			}
 			else if(ptyp instanceof ABoolType)
 			{
-				tupStr += "";
+				tupStr += k + "=false";
 			} 
+    		counter++;
+    		if (counter < size)
+    			tupStr += ", ";
     		
     	}
-    	
-    	
-    	
-    	return "";
+    	return tupStr;
     }
     
     private void puts(String s)
