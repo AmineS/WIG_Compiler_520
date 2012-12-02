@@ -1,11 +1,14 @@
 package wig.emitter;
 
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 
 import wig.analysis.DepthFirstAdapter;
 import wig.node.*;
-import wig.symboltable.*;
+import wig.symboltable.SymbolTable;
+import wig.symboltable.symbols.SVariable;
 import wig.symboltable.symbols.Symbol;
 
 public class Emitter extends DepthFirstAdapter
@@ -13,11 +16,16 @@ public class Emitter extends DepthFirstAdapter
     SymbolTable serviceSymbolTable;
     SymbolTable currentSymbolTable;
     StringBuilder phpCode;
+    HashMap<String, String> globalVariablesMap = new HashMap<String, String>();
     
     public void emit(Node node)
     {
         node.apply(this);
         printPhpCode();
+        for(String s : globalVariablesMap.keySet())
+        {
+        	System.out.println(s + " " + globalVariablesMap.get(s));
+        }
     }   
     
     public Emitter(SymbolTable symbolTable)
@@ -25,6 +33,69 @@ public class Emitter extends DepthFirstAdapter
         serviceSymbolTable = symbolTable;
         currentSymbolTable= serviceSymbolTable;
         phpCode = new StringBuilder();
+        initializeGlobalVariablesMap();
+    }
+    
+    public void initializeGlobalVariablesMap()
+    {
+    	for(String symName : serviceSymbolTable.getTable().keySet())
+    	{
+    		Symbol currSymbol = SymbolTable.getSymbol(serviceSymbolTable, symName);
+    		if(currSymbol instanceof SVariable)
+    		{
+    			SVariable currVariable = (SVariable) currSymbol;
+    			if(currVariable.getTupleSymbolTable() != null)
+    			{
+    				//handle tuple case
+    				String tupStr = tupleToString(currVariable.getTupleSymbolTable().getHashMap());
+    			}
+    			else
+    			{
+    				PType currVariableType = currVariable.getVariable().getType();
+    				if(currVariableType instanceof AIntType)
+    				{
+    					globalVariablesMap.put(symName, "0");
+    				}
+    				else if(currVariableType instanceof AStringType)
+    				{
+    					globalVariablesMap.put(symName, "");
+    				}
+    				else if(currVariableType instanceof ABoolType)
+    				{
+    					globalVariablesMap.put(symName, "false");
+    				}
+    			}
+    		}
+    	}
+    }
+    
+    private String tupleToString(HashMap<String,Symbol> tupleFields)
+    {
+    	String tupStr = "";
+    	for (String k: tupleFields.keySet())
+    	{
+    		//System.out.println(k + " " + tupleFields.get(k));
+    		SVariable sv = (SVariable) tupleFields.get(k);
+    		PType ptyp = sv.getVariable().getType();
+    		
+    		if(ptyp instanceof AIntType)
+			{
+				tupStr += "";
+			}
+			else if(ptyp instanceof AStringType)
+			{
+				tupStr += "";
+			}
+			else if(ptyp instanceof ABoolType)
+			{
+				tupStr += "";
+			} 
+    		
+    	}
+    	
+    	
+    	
+    	return "";
     }
     
     private void puts(String s)
