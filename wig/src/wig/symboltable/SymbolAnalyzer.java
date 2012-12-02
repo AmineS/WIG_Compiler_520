@@ -39,6 +39,7 @@ import wig.node.PPlug;
 import wig.node.PStm;
 import wig.node.PVariable;
 import wig.node.TIdentifier;
+import wig.symboltable.symbols.SArgument;
 import wig.symboltable.symbols.SVariable;
 import wig.symboltable.symbols.Symbol;
 
@@ -314,6 +315,7 @@ public class SymbolAnalyzer extends DepthFirstAdapter
         }
     }
     
+    @SuppressWarnings("unchecked")
     public void caseASimpleLvalue(ASimpleLvalue node)
     {                   
         String name = node.getIdentifier().toString().trim();
@@ -326,13 +328,18 @@ public class SymbolAnalyzer extends DepthFirstAdapter
         }  
         else
         {
-            SVariable tup;
-            tup = (SVariable) SymbolTable.lookupHierarchy(currentSymbolTable, name);
-            if (tup != null && currentTuple != null)
+            try
             {
-                // a tuple                
-                tup.setTupleSymbolTable(new TupleSymbolTable((HashMap<String, Symbol>) currentTuple.getTupleSymbolTable().getHashMap().clone()));
-                currentTuple = null;
+                SVariable tup = (SVariable) SymbolTable.lookupHierarchy(currentSymbolTable, name);
+                if (tup != null && currentTuple != null)
+                {
+                    // a tuple                
+                    tup.setTupleSymbolTable(new TupleSymbolTable(((HashMap<String, Symbol>) currentTuple.getTupleSymbolTable().getHashMap().clone())));
+                    currentTuple = null;
+                }
+            }
+            catch(ClassCastException e)
+            {
             }
         }
     }

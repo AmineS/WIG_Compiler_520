@@ -290,13 +290,33 @@ public class Weeder extends DepthFirstAdapter
     public void caseAFunction(AFunction node)
     {
         boolean hasReturnType = false;
+        // check if function should have return statement
         if(node.getType() instanceof AIntType || node.getType() instanceof ABoolType || node.getType() instanceof AStringType || node.getType() instanceof ATupleType)
         {
             hasReturnType = true;
         }
         
         ACompoundstm compoundStatement = (ACompoundstm) node.getCompoundstm();
+
+        // check that a function body does not have a show/exit statement
+        LinkedList<PStm> stmL = compoundStatement.getStm();
+        for (PStm ps: stmL)
+        {
+            if (ps instanceof AShowStm)
+            {
+                System.out.println("show statement not allowed in functions!");
+                fErrorPresent = true;
+                System.exit(-1);
+            } 
+            if (ps instanceof AExitStm)
+            {
+                System.out.println("exit statement not allowed in functions!");
+                fErrorPresent = true;
+                System.exit(-1);
+            }
+        }
         
+        // check for return statement
         boolean hasReturnStatement;
    
         if(hasReturnType && (compoundStatement.getStm().isEmpty() || !(compoundStatement.getStm().getLast() instanceof AReturnexpStm)))
@@ -309,8 +329,7 @@ public class Weeder extends DepthFirstAdapter
                 /*
                  * Check if there are return statements in if/ ifelse/ while statements. 
                  */
-                
-                
+                               
                 if (stm instanceof AIfStm)
                 {
                     AIfStm ifStm = (AIfStm) stm;
@@ -419,13 +438,7 @@ public class Weeder extends DepthFirstAdapter
      */
     public void caseAHoleHtmlbody(AHoleHtmlbody node)
     {
-        // check if 2 or more hole variables have the same name
-        if (fHoleVariables.contains(node.getIdentifier().getText()))
-        {
-            //System.out.println("Error: Duplicate hole variable: " + node.getIdentifier().getText() + " at line " + node.getIdentifier().getLine());
-            //fErrorPresent = true;
-        }
-        else
+        if (!fHoleVariables.contains(node.getIdentifier().getText()))
         {        
             fHoleVariables.add(node.getIdentifier().getText());
         }
