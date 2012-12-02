@@ -1,6 +1,8 @@
 package wig.emitter;
 
 
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -21,6 +23,7 @@ public class Emitter extends DepthFirstAdapter
     StringBuilder phpCode;
     HashMap<String, String> globalVariablesMap = new HashMap<String, String>();
     HashMap<String, HashMap<String, String>> localVariableMaps = new HashMap<String, HashMap<String, String>>();
+    private final String globalFname = "global.txt";
     
     public void emit(Node node)
     {
@@ -30,6 +33,17 @@ public class Emitter extends DepthFirstAdapter
         {
         	System.out.println(s + " " + globalVariablesMap.get(s));
         }
+        
+        for(String session: localVariableMaps.keySet())
+        {
+            HashMap<String, String> localVariableMap = localVariableMaps.get(session);
+            
+            System.out.println("Session " + session + ":");
+            for(String s : localVariableMap.keySet())
+            {
+                System.out.println("\t" + s + " " + localVariableMap.get(s));
+            }
+        }
     }   
     
     public Emitter(SymbolTable symbolTable)
@@ -38,6 +52,9 @@ public class Emitter extends DepthFirstAdapter
         currentSymbolTable= serviceSymbolTable;
         phpCode = new StringBuilder();
         initializeGlobalVariablesMap();
+        initializeLocalSymbolVariablesMaps();
+        writeVariablesToFile(globalFname, globalVariablesMap);
+        
     }
     
     public void initializeGlobalVariablesMap()
@@ -74,7 +91,7 @@ public class Emitter extends DepthFirstAdapter
     	}
     }
     
-    public void  initializeSymbolVariablesMap()
+    public void  initializeLocalSymbolVariablesMaps()
     {
         localVariableMaps.clear();
         Set<String> symbolNames = serviceSymbolTable.getTable().keySet();
@@ -157,6 +174,24 @@ public class Emitter extends DepthFirstAdapter
     		
     	}
     	return tupStr;
+    }
+    
+    private void writeVariablesToFile(String fname, HashMap<String,String> variablesMap)
+    {
+    	try 
+    	{
+			FileWriter fw = new FileWriter(fname);
+			for (String s: variablesMap.keySet())
+			{
+				fw.write(s + " " + variablesMap.get(s) + "\n");
+			}
+			fw.close();
+		} 
+    	catch (IOException e) 
+    	{
+    		System.out.println("Cannot write to file " + fname);
+    		System.exit(-1);
+    	}
     }
     
     private void puts(String s)
