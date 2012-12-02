@@ -41,10 +41,17 @@ service
   	string another;
     string userMsg;
 
+	// blabla
+	messages = "hello";
+
   	while (another != "no")
   	{
+
+		// show="show2"
   		show setup receive[userMsg=userMsg];
       	messages = messages + "</br><center><i>" + userMsg + "</center></i>";
+
+
   		show plug Return [allMsg=messages] receive[another=another];
   	}
   	exit exitMsg;
