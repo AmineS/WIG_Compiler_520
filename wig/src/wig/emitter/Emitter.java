@@ -27,6 +27,8 @@ public class Emitter extends DepthFirstAdapter
     HashMap<String, HashMap<String, String>> localVariableMaps = new HashMap<String, HashMap<String, String>>();
     private final String globalFname = "global.txt";
     private String htmlStr = "";
+    private boolean isInFunc = false;
+    String currentSessionName = "";
     
     public void emit(Node node)
     {
@@ -57,7 +59,7 @@ public class Emitter extends DepthFirstAdapter
         phpCode = new StringBuilder();
         initializeGlobalVariablesMap();
         initializeLocalSymbolVariablesMaps();
-        writeVariablesToFile(globalFname, globalVariablesMap);
+        //writeVariablesToFile(globalFname, globalVariablesMap);
         
     }
     
@@ -94,7 +96,7 @@ public class Emitter extends DepthFirstAdapter
     		}
     	}
     }
-    
+  
     public void  initializeLocalSymbolVariablesMaps()
     {
         localVariableMaps.clear();
@@ -107,8 +109,7 @@ public class Emitter extends DepthFirstAdapter
                 localVariableMaps.put(symbolName, getSessionSymbolVariableMap((SSession)currSymbol));
             }
         }
-    }
-    
+    }  
     private HashMap<String,String>  getSessionSymbolVariableMap(SSession session)
     {
         SymbolTable sessionSymbolTable = session.getSymTable();
@@ -148,7 +149,6 @@ public class Emitter extends DepthFirstAdapter
         
         return localSymbolVariableMap;
     }
-    
     private String tupleToString(HashMap<String,Symbol> tupleFields)
     {
     	String tupStr = "";
@@ -196,12 +196,10 @@ public class Emitter extends DepthFirstAdapter
     		System.exit(-1);
     	}
     }
-    
     private void puts(String s)
     {
         phpCode.append(s);
     }
-
     private void printPhpCode()
     {
         System.out.println(phpCode.toString());
@@ -211,7 +209,6 @@ public class Emitter extends DepthFirstAdapter
     {
         // Do nothing
     }
-
     public void defaultOut(@SuppressWarnings("unused") Node node)
     {
         // Do nothing
@@ -237,10 +234,10 @@ public class Emitter extends DepthFirstAdapter
             }
         }
         {
-            List<PSchema> copy = new ArrayList<PSchema>(node.getSchema());
-            for(PSchema e : copy)
+            List<PSchema> schemas = new ArrayList<PSchema>(node.getSchema());
+            for(PSchema schema : schemas)
             {
-                e.apply(this);
+                schema.apply(this);
             }
         }
         {
@@ -249,6 +246,7 @@ public class Emitter extends DepthFirstAdapter
             {
                 e.apply(this);
             }
+            printServiceGlobals(copy);
         }
         {
             List<PFunction> copy = new ArrayList<PFunction>(node.getFunction());
@@ -258,15 +256,59 @@ public class Emitter extends DepthFirstAdapter
             }
         }
         {
-            List<PSession> copy = new ArrayList<PSession>(node.getSession());
-            for(PSession e : copy)
-            {
-                e.apply(this);
+            puts("$WIG_SESSION = $_GET[\"session\"];\n");
+            List<PSession> sessions = new ArrayList<PSession>(node.getSession());
+            for(int i=0; i<sessions.size(); ++i)
+            {                
+                ASession session  = (ASession)sessions.get(i);
+
+                puts("if ($WIG_SESSION == \"" + session.getIdentifier().getText()+"\")\n{\n");
+                
+                session.apply(this);
+                
+                if(i!=sessions.size()-1)
+                {
+                    puts("}\nelse ");
+                }
+                else
+                {
+                    puts("}");
+                }                
             }
         }
         outAService(node);
     }
-
+    private void printServiceGlobals(List<PVariable> variables)
+    {
+        puts("$GLOBALS= array();");
+        for(PVariable variable : variables)
+        {
+            AVariable avariable = (AVariable) variable;
+            
+            for(TIdentifier identifier : avariable.getIdentifier())
+            {
+                puts(varNameToPhp(identifier.getText())+"=");
+                if(avariable.getType() instanceof AIntType)
+                {
+                    puts("0");
+                }
+                else if (avariable.getType() instanceof AStringType)
+                {
+                    puts("\"\"");
+                }
+                else if (avariable.getType() instanceof ABoolType)
+                {
+                    puts("FALSE");
+                }
+                else if (avariable.getType() instanceof ATupleType)
+                {
+                    puts ("$schema_" + ((ATupleType)(avariable.getType())).getIdentifier().getText());
+                }
+                puts(";\n");
+            }
+        }
+    }
+    
     public void inAHtml(AHtml node)
     {
         Symbol symbol = SymbolTable.getSymbol(currentSymbolTable, node.getIdentifier().getText());
@@ -659,12 +701,10 @@ public class Emitter extends DepthFirstAdapter
     {
         defaultIn(node);
     }
-
     public void outAIconstAttr(AIconstAttr node)
     {
         defaultOut(node);
     }
-
     @Override
     public void caseAIconstAttr(AIconstAttr node)
     {
@@ -680,19 +720,17 @@ public class Emitter extends DepthFirstAdapter
     {
         defaultIn(node);
     }
-
     public void outANegintIntconst(ANegintIntconst node)
     {
         defaultOut(node);
     }
-
     @Override
     public void caseANegintIntconst(ANegintIntconst node)
     {
         inANegintIntconst(node);
         if(node.getNegIntconst() != null)
         {
-            node.getNegIntconst().apply(this);
+            puts(node.getNegIntconst().getText());
         }
         outANegintIntconst(node);
     }
@@ -701,19 +739,17 @@ public class Emitter extends DepthFirstAdapter
     {
         defaultIn(node);
     }
-
     public void outAPosintIntconst(APosintIntconst node)
     {
         defaultOut(node);
     }
-
     @Override
     public void caseAPosintIntconst(APosintIntconst node)
     {
         inAPosintIntconst(node);
         if(node.getPosIntconst() != null)
         {
-            node.getPosIntconst().apply(this);
+            puts(node.getPosIntconst().getText());
         }
         outAPosintIntconst(node);
     }
@@ -722,26 +758,47 @@ public class Emitter extends DepthFirstAdapter
     {
         defaultIn(node);
     }
-
     public void outASchema(ASchema node)
     {
         defaultOut(node);
     }
-
     @Override
     public void caseASchema(ASchema node)
     {
         inASchema(node);
         if(node.getIdentifier() != null)
         {
-            node.getIdentifier().apply(this);
+            puts("$schema_"+node.getIdentifier().getText()+"= array(\n");
         }
         {
-            List<PField> copy = new ArrayList<PField>(node.getField());
-            for(PField e : copy)
-            {
-                e.apply(this);
+            List<PField> fields = new ArrayList<PField>(node.getField());
+            boolean first = true;
+            for(PField field : fields)
+            {   
+                AField afield = (AField) field;
+                if(!first) 
+                    puts(",\n");
+                else
+                    first = !first;
+                puts("\""+afield.getIdentifier().getText()+"\"=>");
+                if(afield.getType() instanceof AIntType)
+                {
+                    puts("0");
+                }
+                else if (afield.getType() instanceof AStringType)
+                {
+                    puts("\"\"");
+                }
+                else if (afield.getType() instanceof ABoolType)
+                {
+                    puts("FALSE");
+                }
+                else if (afield.getType() instanceof ATupleType)
+                {
+                    puts ("array()");
+                }                
             }
+            puts("\n)\n");
         }
         outASchema(node);
     }
@@ -750,12 +807,10 @@ public class Emitter extends DepthFirstAdapter
     {
         defaultIn(node);
     }
-
     public void outAField(AField node)
     {
         defaultOut(node);
     }
-
     @Override
     public void caseAField(AField node)
     {
@@ -770,31 +825,42 @@ public class Emitter extends DepthFirstAdapter
         }
         outAField(node);
     }
-
+    
     public void inAVariable(AVariable node)
     {
         defaultIn(node);
     }
-
     public void outAVariable(AVariable node)
     {
         defaultOut(node);
     }
-
     @Override
     public void caseAVariable(AVariable node)
     {
         inAVariable(node);
-        if(node.getType() != null)
         {
-            node.getType().apply(this);
-        }
-        {
-            List<TIdentifier> copy = new ArrayList<TIdentifier>(node.getIdentifier());
-            for(TIdentifier e : copy)
+            /*List<TIdentifier> copy = new ArrayList<TIdentifier>(node.getIdentifier());
+            for(TIdentifier identifier : copy)
             {
-                e.apply(this);
-            }
+                puts("$"+identifier.getText()+"=");
+                if(node.getType() instanceof AIntType)
+                {
+                    puts("0");
+                }
+                else if (node.getType() instanceof AStringType)
+                {
+                    puts("\"\"");
+                }
+                else if (node.getType() instanceof ABoolType)
+                {
+                    puts("FALSE");
+                }
+                else if (node.getType() instanceof ATupleType)
+                {
+                    puts ("array()");
+                }
+                puts(";\n");
+            }*/
         }
         outAVariable(node);
     }
@@ -803,12 +869,10 @@ public class Emitter extends DepthFirstAdapter
     {
         defaultIn(node);
     }
-
     public void outAIdentifiers(AIdentifiers node)
     {
         defaultOut(node);
     }
-
     @Override
     public void caseAIdentifiers(AIdentifiers node)
     {
@@ -827,12 +891,10 @@ public class Emitter extends DepthFirstAdapter
     {
         defaultIn(node);
     }
-
     public void outAIntType(AIntType node)
     {
         defaultOut(node);
     }
-
     @Override
     public void caseAIntType(AIntType node)
     {
@@ -848,12 +910,10 @@ public class Emitter extends DepthFirstAdapter
     {
         defaultIn(node);
     }
-
     public void outABoolType(ABoolType node)
     {
         defaultOut(node);
     }
-
     @Override
     public void caseABoolType(ABoolType node)
     {
@@ -869,12 +929,10 @@ public class Emitter extends DepthFirstAdapter
     {
         defaultIn(node);
     }
-
     public void outAStringType(AStringType node)
     {
         defaultOut(node);
     }
-
     @Override
     public void caseAStringType(AStringType node)
     {
@@ -890,12 +948,10 @@ public class Emitter extends DepthFirstAdapter
     {
         defaultIn(node);
     }
-
     public void outAVoidType(AVoidType node)
     {
         defaultOut(node);
     }
-
     @Override
     public void caseAVoidType(AVoidType node)
     {
@@ -911,12 +967,10 @@ public class Emitter extends DepthFirstAdapter
     {
         defaultIn(node);
     }
-
     public void outASimpleType(ASimpleType node)
     {
         defaultOut(node);
     }
-
     @Override
     public void caseASimpleType(ASimpleType node)
     {
@@ -932,12 +986,10 @@ public class Emitter extends DepthFirstAdapter
     {
         defaultIn(node);
     }
-
     public void outATupleType(ATupleType node)
     {
         defaultOut(node);
     }
-
     @Override
     public void caseATupleType(ATupleType node)
     {
@@ -951,34 +1003,43 @@ public class Emitter extends DepthFirstAdapter
 
     public void inAFunction(AFunction node)
     {
+        isInFunc = true;
         Symbol symbol = SymbolTable.getSymbol(currentSymbolTable, node.getIdentifier().getText());
         currentSymbolTable = SymbolTable.getScopedSymbolTable(symbol);
     }
-    
     public void outAFunction(AFunction node)
     {
         currentSymbolTable = currentSymbolTable.getNext();
+        //currentFunctionVars.clear();
+        isInFunc = false;
     }
-
     @Override
     public void caseAFunction(AFunction node)
     {
         inAFunction(node);
-        if(node.getType() != null)
-        {
-            node.getType().apply(this);
-        }
+        puts("\nfunction ");
+
         if(node.getIdentifier() != null)
         {
-            node.getIdentifier().apply(this);
+            puts(node.getIdentifier().getText());
         }
+        
+        puts("(");
+        
         {
             List<PArgument> copy = new ArrayList<PArgument>(node.getArgument());
+            int counter = 0;
+            int size = copy.size();
             for(PArgument e : copy)
             {
                 e.apply(this);
+                counter++;
+                if (counter<size)
+                    puts(",");
             }
         }
+        
+        puts(")\n");
         if(node.getCompoundstm() != null)
         {
             node.getCompoundstm().apply(this);
@@ -990,12 +1051,10 @@ public class Emitter extends DepthFirstAdapter
     {
         defaultIn(node);
     }
-
     public void outAArguments(AArguments node)
     {
         defaultOut(node);
     }
-
     @Override
     public void caseAArguments(AArguments node)
     {
@@ -1014,23 +1073,18 @@ public class Emitter extends DepthFirstAdapter
     {
         defaultIn(node);
     }
-
     public void outAArgument(AArgument node)
     {
         defaultOut(node);
     }
-
     @Override
     public void caseAArgument(AArgument node)
     {
         inAArgument(node);
-        if(node.getType() != null)
-        {
-            node.getType().apply(this);
-        }
         if(node.getIdentifier() != null)
         {
-            node.getIdentifier().apply(this);
+            puts("$" + node.getIdentifier().getText());
+            //currentFunctionVars.add(node.getIdentifier().getText());
         }
         outAArgument(node);
     }
@@ -1039,13 +1093,15 @@ public class Emitter extends DepthFirstAdapter
     {
         Symbol symbol = SymbolTable.getSymbol(currentSymbolTable, node.getIdentifier().getText());
         currentSymbolTable = SymbolTable.getScopedSymbolTable(symbol);
+        currentSessionName = node.getIdentifier().getText().toUpperCase();
     }
-
+    
     public void outASession(ASession node)
     {
         currentSymbolTable = currentSymbolTable.getNext();
+        currentSessionName = "";
     }
-
+    
     @Override
     public void caseASession(ASession node)
     {
@@ -1065,12 +1121,10 @@ public class Emitter extends DepthFirstAdapter
     {
         defaultIn(node);
     }
-
     public void outAEmptyStm(AEmptyStm node)
     {
         defaultOut(node);
     }
-
     @Override
     public void caseAEmptyStm(AEmptyStm node)
     {
@@ -1082,12 +1136,10 @@ public class Emitter extends DepthFirstAdapter
     {
         defaultIn(node);
     }
-
     public void outAShowStm(AShowStm node)
     {
         defaultOut(node);
     }
-
     @Override
     public void caseAShowStm(AShowStm node)
     {
@@ -1107,12 +1159,10 @@ public class Emitter extends DepthFirstAdapter
     {
         defaultIn(node);
     }
-
     public void outAExitStm(AExitStm node)
     {
         defaultOut(node);
     }
-
     @Override
     public void caseAExitStm(AExitStm node)
     {
@@ -1128,12 +1178,10 @@ public class Emitter extends DepthFirstAdapter
     {
         defaultIn(node);
     }
-
     public void outAReturnStm(AReturnStm node)
     {
         defaultOut(node);
     }
-
     @Override
     public void caseAReturnStm(AReturnStm node)
     {
@@ -1145,19 +1193,19 @@ public class Emitter extends DepthFirstAdapter
     {
         defaultIn(node);
     }
-
     public void outAReturnexpStm(AReturnexpStm node)
     {
         defaultOut(node);
     }
-
     @Override
     public void caseAReturnexpStm(AReturnexpStm node)
     {
         inAReturnexpStm(node);
         if(node.getExp() != null)
         {
+            puts("return ");
             node.getExp().apply(this);
+            puts(";\n");
         }
         outAReturnexpStm(node);
     }
@@ -1166,20 +1214,21 @@ public class Emitter extends DepthFirstAdapter
     {
         defaultIn(node);
     }
-
     public void outAIfStm(AIfStm node)
     {
         defaultOut(node);
     }
-
     @Override
     public void caseAIfStm(AIfStm node)
     {
         inAIfStm(node);
+        puts("if");
+        puts(" (");
         if(node.getExp() != null)
         {
             node.getExp().apply(this);
         }
+        puts(")\n");
         if(node.getStm() != null)
         {
             node.getStm().apply(this);
@@ -1191,24 +1240,26 @@ public class Emitter extends DepthFirstAdapter
     {
         defaultIn(node);
     }
-
     public void outAIfelseStm(AIfelseStm node)
     {
         defaultOut(node);
     }
-
     @Override
     public void caseAIfelseStm(AIfelseStm node)
     {
         inAIfelseStm(node);
+        puts("if");
+        puts("(");
         if(node.getExp() != null)
         {
             node.getExp().apply(this);
         }
+        puts(")\n");
         if(node.getThenStm() != null)
         {
             node.getThenStm().apply(this);
         }
+        puts("else");
         if(node.getElseStm() != null)
         {
             node.getElseStm().apply(this);
@@ -1220,20 +1271,21 @@ public class Emitter extends DepthFirstAdapter
     {
         defaultIn(node);
     }
-
     public void outAWhileStm(AWhileStm node)
     {
         defaultOut(node);
     }
-
     @Override
     public void caseAWhileStm(AWhileStm node)
     {
         inAWhileStm(node);
+        puts("while");
+        puts("(");
         if(node.getExp() != null)
         {
             node.getExp().apply(this);
         }
+        puts(")\n");
         if(node.getStm() != null)
         {
             node.getStm().apply(this);
@@ -1245,12 +1297,10 @@ public class Emitter extends DepthFirstAdapter
     {
         defaultIn(node);
     }
-
     public void outACompStm(ACompStm node)
     {
         defaultOut(node);
     }
-
     @Override
     public void caseACompStm(ACompStm node)
     {
@@ -1266,12 +1316,10 @@ public class Emitter extends DepthFirstAdapter
     {
         defaultIn(node);
     }
-
     public void outAExpStm(AExpStm node)
     {
         defaultOut(node);
     }
-
     @Override
     public void caseAExpStm(AExpStm node)
     {
@@ -1287,12 +1335,10 @@ public class Emitter extends DepthFirstAdapter
     {
         defaultIn(node);
     }
-
     public void outAIdDocument(AIdDocument node)
     {
         defaultOut(node);
     }
-
     @Override
     public void caseAIdDocument(AIdDocument node)
     {
@@ -1308,12 +1354,10 @@ public class Emitter extends DepthFirstAdapter
     {
         defaultIn(node);
     }
-
     public void outAPlugDocument(APlugDocument node)
     {
         defaultOut(node);
     }
-
     @Override
     public void caseAPlugDocument(APlugDocument node)
     {
@@ -1336,12 +1380,10 @@ public class Emitter extends DepthFirstAdapter
     {
         defaultIn(node);
     }
-
     public void outAReceive(AReceive node)
     {
         defaultOut(node);
     }
-
     @Override
     public void caseAReceive(AReceive node)
     {
@@ -1363,7 +1405,6 @@ public class Emitter extends DepthFirstAdapter
             currentSymbolTable = currentSymbolTable.getCompoundStatementSymbolTable(node);
         }
     }
-    
     public void outACompoundStm(ACompoundstm node)
     {
         if(! (node.parent() instanceof AFunction || node.parent() instanceof ASession) )
@@ -1371,17 +1412,23 @@ public class Emitter extends DepthFirstAdapter
             currentSymbolTable = currentSymbolTable.getNext();
         }
     }
-
     @Override
     public void caseACompoundstm(ACompoundstm node)
     {
         inACompoundstm(node);
+        puts("{\n");
         {
-            List<PVariable> copy = new ArrayList<PVariable>(node.getVariable());
-            for(PVariable e : copy)
+            List<PVariable> variables = new ArrayList<PVariable>(node.getVariable());
+            for(PVariable e : variables)
             {
                 e.apply(this);
             }
+            
+            if(node.parent() instanceof ASession)
+            {
+                printSessionLocals((ASession) node.parent(), variables);
+            }
+            
         }
         {
             List<PStm> copy = new ArrayList<PStm>(node.getStm());
@@ -1390,19 +1437,50 @@ public class Emitter extends DepthFirstAdapter
                 e.apply(this);
             }
         }
+        puts("}\n");
         outACompoundstm(node);
     }
 
+    private void printSessionLocals(ASession session, List<PVariable> variables)
+    {
+        String localsArray = "$"+session.getIdentifier().getText().toUpperCase() + "_LOCALS";
+        puts(localsArray+ "= array();\n");
+        
+        for(PVariable variable : variables)
+        {
+            AVariable avariable = (AVariable) variable;
+            
+            for(TIdentifier identifier : avariable.getIdentifier())
+            {
+                puts(localsArray+"[\""+identifier.getText()+"\"]=");
+                if(avariable.getType() instanceof AIntType)
+                {
+                    puts("0");
+                }
+                else if (avariable.getType() instanceof AStringType)
+                {
+                    puts("\"\"");
+                }
+                else if (avariable.getType() instanceof ABoolType)
+                {
+                    puts("FALSE");
+                }
+                else if (avariable.getType() instanceof ATupleType)
+                {
+                    puts ("$schema_" + ((ATupleType)(avariable.getType())).getIdentifier().getText());
+                }
+                puts(";\n");
+            }
+        }
+    }
     public void inAPlugs(APlugs node)
     {
         defaultIn(node);
     }
-
     public void outAPlugs(APlugs node)
     {
         defaultOut(node);
     }
-
     @Override
     public void caseAPlugs(APlugs node)
     {
@@ -1421,12 +1499,10 @@ public class Emitter extends DepthFirstAdapter
     {
         defaultIn(node);
     }
-
     public void outAPlug(APlug node)
     {
         defaultOut(node);
     }
-
     @Override
     public void caseAPlug(APlug node)
     {
@@ -1446,12 +1522,10 @@ public class Emitter extends DepthFirstAdapter
     {
         defaultIn(node);
     }
-
     public void outAInputs(AInputs node)
     {
         defaultOut(node);
     }
-
     @Override
     public void caseAInputs(AInputs node)
     {
@@ -1470,12 +1544,10 @@ public class Emitter extends DepthFirstAdapter
     {
         defaultIn(node);
     }
-
     public void outAInput(AInput node)
     {
         defaultOut(node);
     }
-
     @Override
     public void caseAInput(AInput node)
     {
@@ -1495,12 +1567,10 @@ public class Emitter extends DepthFirstAdapter
     {
         defaultIn(node);
     }
-
     public void outAAssignExp(AAssignExp node)
     {
         defaultOut(node);
     }
-
     @Override
     public void caseAAssignExp(AAssignExp node)
     {
@@ -1509,10 +1579,12 @@ public class Emitter extends DepthFirstAdapter
         {
             node.getLvalue().apply(this);
         }
+        puts(" = ");
         if(node.getRight() != null)
         {
             node.getRight().apply(this);
         }
+        puts(";\n");
         outAAssignExp(node);
     }
 
@@ -1520,12 +1592,10 @@ public class Emitter extends DepthFirstAdapter
     {
         defaultIn(node);
     }
-
     public void outAOrExp(AOrExp node)
     {
         defaultOut(node);
     }
-
     @Override
     public void caseAOrExp(AOrExp node)
     {
@@ -1534,6 +1604,7 @@ public class Emitter extends DepthFirstAdapter
         {
             node.getLeft().apply(this);
         }
+        puts("||");
         if(node.getRight() != null)
         {
             node.getRight().apply(this);
@@ -1545,12 +1616,10 @@ public class Emitter extends DepthFirstAdapter
     {
         defaultIn(node);
     }
-
     public void outAAndExp(AAndExp node)
     {
         defaultOut(node);
     }
-
     @Override
     public void caseAAndExp(AAndExp node)
     {
@@ -1559,6 +1628,7 @@ public class Emitter extends DepthFirstAdapter
         {
             node.getLeft().apply(this);
         }
+        puts("&&");
         if(node.getRight() != null)
         {
             node.getRight().apply(this);
@@ -1570,12 +1640,10 @@ public class Emitter extends DepthFirstAdapter
     {
         defaultIn(node);
     }
-
     public void outAEqExp(AEqExp node)
     {
         defaultOut(node);
     }
-
     @Override
     public void caseAEqExp(AEqExp node)
     {
@@ -1584,6 +1652,7 @@ public class Emitter extends DepthFirstAdapter
         {
             node.getLeft().apply(this);
         }
+        puts(" == ");
         if(node.getRight() != null)
         {
             node.getRight().apply(this);
@@ -1595,12 +1664,10 @@ public class Emitter extends DepthFirstAdapter
     {
         defaultIn(node);
     }
-
     public void outANeqExp(ANeqExp node)
     {
         defaultOut(node);
     }
-
     @Override
     public void caseANeqExp(ANeqExp node)
     {
@@ -1609,6 +1676,7 @@ public class Emitter extends DepthFirstAdapter
         {
             node.getLeft().apply(this);
         }
+        puts(" != ");
         if(node.getRight() != null)
         {
             node.getRight().apply(this);
@@ -1620,12 +1688,10 @@ public class Emitter extends DepthFirstAdapter
     {
         defaultIn(node);
     }
-
     public void outALtExp(ALtExp node)
     {
         defaultOut(node);
     }
-
     @Override
     public void caseALtExp(ALtExp node)
     {
@@ -1634,6 +1700,7 @@ public class Emitter extends DepthFirstAdapter
         {
             node.getLeft().apply(this);
         }
+        puts(" < ");
         if(node.getRight() != null)
         {
             node.getRight().apply(this);
@@ -1645,12 +1712,10 @@ public class Emitter extends DepthFirstAdapter
     {
         defaultIn(node);
     }
-
     public void outAGtExp(AGtExp node)
     {
         defaultOut(node);
     }
-
     @Override
     public void caseAGtExp(AGtExp node)
     {
@@ -1659,6 +1724,7 @@ public class Emitter extends DepthFirstAdapter
         {
             node.getLeft().apply(this);
         }
+        puts(" >= ");
         if(node.getRight() != null)
         {
             node.getRight().apply(this);
@@ -1670,12 +1736,10 @@ public class Emitter extends DepthFirstAdapter
     {
         defaultIn(node);
     }
-
     public void outALteqExp(ALteqExp node)
     {
         defaultOut(node);
     }
-
     @Override
     public void caseALteqExp(ALteqExp node)
     {
@@ -1684,6 +1748,7 @@ public class Emitter extends DepthFirstAdapter
         {
             node.getLeft().apply(this);
         }
+        puts(" <= ");
         if(node.getRight() != null)
         {
             node.getRight().apply(this);
@@ -1695,12 +1760,10 @@ public class Emitter extends DepthFirstAdapter
     {
         defaultIn(node);
     }
-
     public void outAGteqExp(AGteqExp node)
     {
         defaultOut(node);
     }
-
     @Override
     public void caseAGteqExp(AGteqExp node)
     {
@@ -1709,6 +1772,7 @@ public class Emitter extends DepthFirstAdapter
         {
             node.getLeft().apply(this);
         }
+        puts(" >= ");
         if(node.getRight() != null)
         {
             node.getRight().apply(this);
@@ -1720,12 +1784,10 @@ public class Emitter extends DepthFirstAdapter
     {
         defaultIn(node);
     }
-
     public void outAPlusExp(APlusExp node)
     {
         defaultOut(node);
     }
-
     @Override
     public void caseAPlusExp(APlusExp node)
     {
@@ -1734,6 +1796,7 @@ public class Emitter extends DepthFirstAdapter
         {
             node.getLeft().apply(this);
         }
+        puts(" + ");
         if(node.getRight() != null)
         {
             node.getRight().apply(this);
@@ -1745,12 +1808,10 @@ public class Emitter extends DepthFirstAdapter
     {
         defaultIn(node);
     }
-
     public void outAMinusExp(AMinusExp node)
     {
         defaultOut(node);
     }
-
     @Override
     public void caseAMinusExp(AMinusExp node)
     {
@@ -1771,12 +1832,10 @@ public class Emitter extends DepthFirstAdapter
     {
         defaultIn(node);
     }
-
     public void outAMultExp(AMultExp node)
     {
         defaultOut(node);
     }
-
     @Override
     public void caseAMultExp(AMultExp node)
     {
@@ -1785,6 +1844,7 @@ public class Emitter extends DepthFirstAdapter
         {
             node.getLeft().apply(this);
         }
+        puts(" * ");
         if(node.getRight() != null)
         {
             node.getRight().apply(this);
@@ -1796,12 +1856,10 @@ public class Emitter extends DepthFirstAdapter
     {
         defaultIn(node);
     }
-
     public void outADivExp(ADivExp node)
     {
         defaultOut(node);
     }
-
     @Override
     public void caseADivExp(ADivExp node)
     {
@@ -1810,6 +1868,7 @@ public class Emitter extends DepthFirstAdapter
         {
             node.getLeft().apply(this);
         }
+        puts(" / ");
         if(node.getRight() != null)
         {
             node.getRight().apply(this);
@@ -1821,24 +1880,25 @@ public class Emitter extends DepthFirstAdapter
     {
         defaultIn(node);
     }
-
     public void outAModExp(AModExp node)
     {
         defaultOut(node);
     }
-
     @Override
     public void caseAModExp(AModExp node)
     {
         inAModExp(node);
+        puts("(");
         if(node.getLeft() != null)
         {
             node.getLeft().apply(this);
         }
+        puts(" % ");
         if(node.getRight() != null)
         {
             node.getRight().apply(this);
         }
+        puts(")");
         outAModExp(node);
     }
 
@@ -1846,12 +1906,10 @@ public class Emitter extends DepthFirstAdapter
     {
         defaultIn(node);
     }
-
     public void outAJoinExp(AJoinExp node)
     {
         defaultOut(node);
     }
-
     @Override
     public void caseAJoinExp(AJoinExp node)
     {
@@ -1871,12 +1929,10 @@ public class Emitter extends DepthFirstAdapter
     {
         defaultIn(node);
     }
-
     public void outAKeepExp(AKeepExp node)
     {
         defaultOut(node);
     }
-
     @Override
     public void caseAKeepExp(AKeepExp node)
     {
@@ -1896,12 +1952,10 @@ public class Emitter extends DepthFirstAdapter
     {
         defaultIn(node);
     }
-
     public void outARemoveExp(ARemoveExp node)
     {
         defaultOut(node);
     }
-
     @Override
     public void caseARemoveExp(ARemoveExp node)
     {
@@ -1921,12 +1975,10 @@ public class Emitter extends DepthFirstAdapter
     {
         defaultIn(node);
     }
-
     public void outAKeepManyExp(AKeepManyExp node)
     {
         defaultOut(node);
     }
-
     @Override
     public void caseAKeepManyExp(AKeepManyExp node)
     {
@@ -1949,12 +2001,10 @@ public class Emitter extends DepthFirstAdapter
     {
         defaultIn(node);
     }
-
     public void outARemoveManyExp(ARemoveManyExp node)
     {
         defaultOut(node);
     }
-
     @Override
     public void caseARemoveManyExp(ARemoveManyExp node)
     {
@@ -1977,20 +2027,21 @@ public class Emitter extends DepthFirstAdapter
     {
         defaultIn(node);
     }
-
     public void outANotExp(ANotExp node)
     {
         defaultOut(node);
     }
-
     @Override
     public void caseANotExp(ANotExp node)
     {
         inANotExp(node);
+        puts("(");
+        puts("!");
         if(node.getLeft() != null)
         {
             node.getLeft().apply(this);
         }
+        puts(")");
         outANotExp(node);
     }
 
@@ -1998,20 +2049,20 @@ public class Emitter extends DepthFirstAdapter
     {
         defaultIn(node);
     }
-
     public void outANegExp(ANegExp node)
     {
         defaultOut(node);
     }
-
     @Override
     public void caseANegExp(ANegExp node)
     {
         inANegExp(node);
+        puts("(-");
         if(node.getLeft() != null)
         {
             node.getLeft().apply(this);
         }
+        puts(")");
         outANegExp(node);
     }
 
@@ -2019,12 +2070,10 @@ public class Emitter extends DepthFirstAdapter
     {
         defaultIn(node);
     }
-
     public void outADefaultExp(ADefaultExp node)
     {
         defaultOut(node);
     }
-
     @Override
     public void caseADefaultExp(ADefaultExp node)
     {
@@ -2040,12 +2089,10 @@ public class Emitter extends DepthFirstAdapter
     {
         defaultIn(node);
     }
-
     public void outALvalueExp(ALvalueExp node)
     {
         defaultOut(node);
     }
-
     @Override
     public void caseALvalueExp(ALvalueExp node)
     {
@@ -2061,12 +2108,10 @@ public class Emitter extends DepthFirstAdapter
     {
         defaultIn(node);
     }
-
     public void outACallExp(ACallExp node)
     {
         defaultOut(node);
     }
-
     @Override
     public void caseACallExp(ACallExp node)
     {
@@ -2089,12 +2134,10 @@ public class Emitter extends DepthFirstAdapter
     {
         defaultIn(node);
     }
-
     public void outAIntExp(AIntExp node)
     {
         defaultOut(node);
     }
-
     @Override
     public void caseAIntExp(AIntExp node)
     {
@@ -2110,12 +2153,10 @@ public class Emitter extends DepthFirstAdapter
     {
         defaultIn(node);
     }
-
     public void outATrueExp(ATrueExp node)
     {
         defaultOut(node);
     }
-
     @Override
     public void caseATrueExp(ATrueExp node)
     {
@@ -2131,12 +2172,10 @@ public class Emitter extends DepthFirstAdapter
     {
         defaultIn(node);
     }
-
     public void outAFalseExp(AFalseExp node)
     {
         defaultOut(node);
     }
-
     @Override
     public void caseAFalseExp(AFalseExp node)
     {
@@ -2152,12 +2191,10 @@ public class Emitter extends DepthFirstAdapter
     {
         defaultIn(node);
     }
-
     public void outAStringExp(AStringExp node)
     {
         defaultOut(node);
     }
-
     @Override
     public void caseAStringExp(AStringExp node)
     {
@@ -2173,12 +2210,10 @@ public class Emitter extends DepthFirstAdapter
     {
         defaultIn(node);
     }
-
     public void outATupleExp(ATupleExp node)
     {
         defaultOut(node);
     }
-
     @Override
     public void caseATupleExp(ATupleExp node)
     {
@@ -2197,12 +2232,10 @@ public class Emitter extends DepthFirstAdapter
     {
         defaultIn(node);
     }
-
     public void outAParenExp(AParenExp node)
     {
         defaultOut(node);
     }
-
     @Override
     public void caseAParenExp(AParenExp node)
     {
@@ -2218,12 +2251,10 @@ public class Emitter extends DepthFirstAdapter
     {
         defaultIn(node);
     }
-
     public void outAExps(AExps node)
     {
         defaultOut(node);
     }
-
     @Override
     public void caseAExps(AExps node)
     {
@@ -2242,19 +2273,17 @@ public class Emitter extends DepthFirstAdapter
     {
         defaultIn(node);
     }
-
     public void outASimpleLvalue(ASimpleLvalue node)
     {
         defaultOut(node);
     }
-
     @Override
     public void caseASimpleLvalue(ASimpleLvalue node)
     {
         inASimpleLvalue(node);
         if(node.getIdentifier() != null)
         {
-            node.getIdentifier().apply(this);
+            puts(varNameToPhp(node.getIdentifier().getText()));
         }
         outASimpleLvalue(node);
     }
@@ -2263,12 +2292,10 @@ public class Emitter extends DepthFirstAdapter
     {
         defaultIn(node);
     }
-
     public void outAQualifiedLvalue(AQualifiedLvalue node)
     {
         defaultOut(node);
     }
-
     @Override
     public void caseAQualifiedLvalue(AQualifiedLvalue node)
     {
@@ -2288,12 +2315,10 @@ public class Emitter extends DepthFirstAdapter
     {
         defaultIn(node);
     }
-
     public void outAFieldvalues(AFieldvalues node)
     {
         defaultOut(node);
     }
-
     @Override
     public void caseAFieldvalues(AFieldvalues node)
     {
@@ -2312,12 +2337,10 @@ public class Emitter extends DepthFirstAdapter
     {
         defaultIn(node);
     }
-
     public void outAFieldvalue(AFieldvalue node)
     {
         defaultOut(node);
     }
-
     @Override
     public void caseAFieldvalue(AFieldvalue node)
     {
@@ -2390,18 +2413,7 @@ public class Emitter extends DepthFirstAdapter
     {
         
     }
-    public void caseTInt(TInt node)
-    {
-        //puts(node.getText());
-    }
-    public void caseTBool(TBool node)
-    {
-        //puts(node.getText());
-    }
-    public void caseTString(TString node)
-    {
-        //puts(node.getText());
-    }
+
     public void caseTVoid(TVoid node)
     {
         
@@ -2432,11 +2444,11 @@ public class Emitter extends DepthFirstAdapter
     }
     public void caseTPosIntconst(TPosIntconst node)
     {
-        
+        puts(node.getText());
     }
     public void caseTNegIntconst(TNegIntconst node)
     {
-        
+        puts(node.getText());
     }
     public void caseTSelect(TSelect node)
     {
@@ -2550,7 +2562,7 @@ public class Emitter extends DepthFirstAdapter
     {
         puts("!");
     }
-    
+ 
     public void caseTMinus(TMinus node)
     {
         puts("-");
@@ -2590,19 +2602,35 @@ public class Emitter extends DepthFirstAdapter
     }
     public void caseTIdentifier(TIdentifier node)
     {
-    	//puts("$"+node.getText()+"\n");
     }
+
     public void caseTStringconst(TStringconst node)
     {
-        //puts(node.getText());
+        puts(node.getText());
     }
+    
     public void caseTWhatever(TWhatever node)
     {
         htmlStr += node.getText().trim();
     }
+    
     public void caseEOF(EOF node)
     {
-        //puts(node.getText());
     }
     
+    public String varNameToPhp(String varName)
+    {
+        if (globalVariablesMap.get(varName) != null)
+        {
+            return "GLOBALS[\""+varName+"\"]";
+        }
+        else if (isInFunc)
+        {
+            return "$" + varName;
+        }
+        else
+        {
+            return currentSessionName + "_LOCALS[\""+varName+"\"]";
+        }
+    }    
 }
