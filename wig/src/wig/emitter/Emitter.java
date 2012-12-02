@@ -17,6 +17,7 @@ public class Emitter extends DepthFirstAdapter
     {
         node.apply(this);
     }   
+    
     public Emitter(SymbolTable symbolTable)
     {
         serviceSymbolTable = symbolTable;

@@ -49,5 +49,6 @@ public class CompilerOptionsFactory
         options.addOption(symbolTablePhaseAndPrinting);
         options.addOption(typeChecking);
         options.addOption(typePrinting);
+        options.addOption(codeEmission);
     }
 }
