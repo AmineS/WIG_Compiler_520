@@ -7,7 +7,7 @@ print "Content-type:text/html\r\n\r\n"
 
 # Create instance of FieldStorage 
 form = cgi.FieldStorage() 
-msg=""
+msg = ""
 
 # get data from field
 

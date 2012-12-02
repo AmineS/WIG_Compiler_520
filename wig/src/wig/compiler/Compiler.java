@@ -14,6 +14,7 @@ import wig.commons.cli.CommandLineParser;
 import wig.commons.cli.HelpFormatter;
 import wig.commons.cli.Options;
 import wig.commons.cli.PosixParser;
+import wig.emitter.Emitter;
 import wig.lexer.Lexer;
 import wig.lexer.LexerException;
 import wig.node.Start;
@@ -183,6 +184,38 @@ public class Compiler
                 tpp.print(tree);
                 System.out.println("\n\n..............................................................");
             }
+        }
+        
+        if (commandLine.hasOption("cg"))
+        {
+            System.out.println("\n..............................................................");
+            System.out.println("Symbol Table Phase:");
+            
+            // collect symbols
+            System.out.println("\nCollecting Symbols...");
+            SymbolCollector symCollector = new SymbolCollector();
+            symCollector.collect(tree);
+            
+            // analyze symbols
+            System.out.println("\nAnalyzing Symbols...");
+            SymbolAnalyzer symAnalyzer = new SymbolAnalyzer(symCollector.getServiceTable());
+            symAnalyzer.analyze(tree);
+            
+            // st phase done
+            System.out.println("\nSymbol Table Phase Done.");
+            System.out.println("..............................................................");
+
+            System.out.println("\n..............................................................");
+            System.out.println("Type Checking Phase:");
+            
+            TypeChecker typeChecker = new TypeChecker(symCollector.getServiceTable());
+            typeChecker.typeCheck(tree);
+            
+            System.out.println("\nType Checking Phase Done.");
+            System.out.println("..............................................................");
+
+            Emitter em = new Emitter(symAnalyzer.getServiceSymbolTable());
+            em.emit();
         }
     }
 }

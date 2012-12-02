@@ -12,6 +12,8 @@ public class CompilerOptionsFactory
     private static Option symbolTablePhaseAndPrinting;
     private static Option typeChecking;
     private static Option typePrinting;
+    private static Option codeEmission;
+   
     
     /**
      * get all options
@@ -38,7 +40,8 @@ public class CompilerOptionsFactory
         symbolTablePhaseAndPrinting = new Option("pst", false, "performs symbol table phase and prints symbol tables");
         typeChecking = new Option("tc", false, "performs type checking");
         typePrinting = new Option("tp", false, "pretty prints the types of each expression");
-        
+        codeEmission = new Option("cg", false, "generates code");
+                
         options.addOption(help);
         options.addOption(disableWeeder);
         options.addOption(prettyPrint);        
