@@ -6,23 +6,27 @@ import java.util.*;
 import wig.analysis.DepthFirstAdapter;
 import wig.node.*;
 import wig.symboltable.*;
+import wig.symboltable.symbols.Symbol;
 
 public class Emitter extends DepthFirstAdapter
 {
+    SymbolTable serviceSymbolTable;
+    SymbolTable currentSymbolTable;
+    
+    public void emit(Node node)
+    {
+        node.apply(this);
+    }   
+    public Emitter(SymbolTable symbolTable)
+    {
+        serviceSymbolTable = symbolTable;
+        currentSymbolTable= serviceSymbolTable;
+    }
+    
     private void puts(String s)
     {
         System.out.print(s);
         System.out.flush();
-    }
-
-    public void inStart(Start node)
-    {
-        defaultIn(node);
-    }
-
-    public void outStart(Start node)
-    {
-        defaultOut(node);
     }
 
     public void defaultIn(@SuppressWarnings("unused") Node node)
@@ -35,25 +39,14 @@ public class Emitter extends DepthFirstAdapter
         // Do nothing
     }
 
-    @Override
-    public void caseStart(Start node)
-    {
-        inStart(node);
-        node.getPService().apply(this);
-        node.getEOF().apply(this);
-        outStart(node);
-    }
-
     public void inAService(AService node)
     {
         defaultIn(node);
     }
-
     public void outAService(AService node)
     {
         defaultOut(node);
     }
-
     @Override
     public void caseAService(AService node)
     {
@@ -98,14 +91,13 @@ public class Emitter extends DepthFirstAdapter
 
     public void inAHtml(AHtml node)
     {
-        defaultIn(node);
-    }
-
+        Symbol symbol = SymbolTable.getSymbol(currentSymbolTable, node.getIdentifier().getText());
+        currentSymbolTable = SymbolTable.getScopedSymbolTable(symbol);
+    }    
     public void outAHtml(AHtml node)
     {
-        defaultOut(node);
-    }
-
+        currentSymbolTable = currentSymbolTable.getNext();
+    }    
     @Override
     public void caseAHtml(AHtml node)
     {
@@ -128,12 +120,10 @@ public class Emitter extends DepthFirstAdapter
     {
         defaultIn(node);
     }
-
     public void outATagStartHtmlbody(ATagStartHtmlbody node)
     {
         defaultOut(node);
     }
-
     @Override
     public void caseATagStartHtmlbody(ATagStartHtmlbody node)
     {
@@ -156,12 +146,10 @@ public class Emitter extends DepthFirstAdapter
     {
         defaultIn(node);
     }
-
     public void outATagEndHtmlbody(ATagEndHtmlbody node)
     {
         defaultOut(node);
     }
-
     @Override
     public void caseATagEndHtmlbody(ATagEndHtmlbody node)
     {
@@ -177,12 +165,10 @@ public class Emitter extends DepthFirstAdapter
     {
         defaultIn(node);
     }
-
     public void outAHoleHtmlbody(AHoleHtmlbody node)
     {
         defaultOut(node);
     }
-
     @Override
     public void caseAHoleHtmlbody(AHoleHtmlbody node)
     {
@@ -198,12 +184,10 @@ public class Emitter extends DepthFirstAdapter
     {
         defaultIn(node);
     }
-
     public void outAWhateverHtmlbody(AWhateverHtmlbody node)
     {
         defaultOut(node);
     }
-
     @Override
     public void caseAWhateverHtmlbody(AWhateverHtmlbody node)
     {
@@ -219,12 +203,10 @@ public class Emitter extends DepthFirstAdapter
     {
         defaultIn(node);
     }
-
     public void outAMetaHtmlbody(AMetaHtmlbody node)
     {
         defaultOut(node);
     }
-
     @Override
     public void caseAMetaHtmlbody(AMetaHtmlbody node)
     {
@@ -240,12 +222,10 @@ public class Emitter extends DepthFirstAdapter
     {
         defaultIn(node);
     }
-
     public void outAInputHtmlbody(AInputHtmlbody node)
     {
         defaultOut(node);
     }
-
     @Override
     public void caseAInputHtmlbody(AInputHtmlbody node)
     {
@@ -263,17 +243,15 @@ public class Emitter extends DepthFirstAdapter
         }
         outAInputHtmlbody(node);
     }
-
+    
     public void inASelectHtmlbody(ASelectHtmlbody node)
     {
         defaultIn(node);
     }
-
     public void outASelectHtmlbody(ASelectHtmlbody node)
     {
         defaultOut(node);
     }
-
     @Override
     public void caseASelectHtmlbody(ASelectHtmlbody node)
     {
@@ -307,12 +285,10 @@ public class Emitter extends DepthFirstAdapter
     {
         defaultIn(node);
     }
-
     public void outANameInputattr(ANameInputattr node)
     {
         defaultOut(node);
     }
-
     @Override
     public void caseANameInputattr(ANameInputattr node)
     {
@@ -332,12 +308,10 @@ public class Emitter extends DepthFirstAdapter
     {
         defaultIn(node);
     }
-
     public void outATypeInputattr(ATypeInputattr node)
     {
         defaultOut(node);
     }
-
     @Override
     public void caseATypeInputattr(ATypeInputattr node)
     {
@@ -357,12 +331,10 @@ public class Emitter extends DepthFirstAdapter
     {
         defaultIn(node);
     }
-
     public void outAAttributeInputattr(AAttributeInputattr node)
     {
         defaultOut(node);
     }
-
     @Override
     public void caseAAttributeInputattr(AAttributeInputattr node)
     {
@@ -378,12 +350,10 @@ public class Emitter extends DepthFirstAdapter
     {
         defaultIn(node);
     }
-
     public void outATexttypeInputtype(ATexttypeInputtype node)
     {
         defaultOut(node);
     }
-
     @Override
     public void caseATexttypeInputtype(ATexttypeInputtype node)
     {
@@ -399,12 +369,10 @@ public class Emitter extends DepthFirstAdapter
     {
         defaultIn(node);
     }
-
     public void outARadiotypeInputtype(ARadiotypeInputtype node)
     {
         defaultOut(node);
     }
-
     @Override
     public void caseARadiotypeInputtype(ARadiotypeInputtype node)
     {
@@ -415,17 +383,15 @@ public class Emitter extends DepthFirstAdapter
         }
         outARadiotypeInputtype(node);
     }
-
+    
     public void inAStrtypeInputtype(AStrtypeInputtype node)
     {
         defaultIn(node);
     }
-
     public void outAStrtypeInputtype(AStrtypeInputtype node)
     {
         defaultOut(node);
     }
-
     @Override
     public void caseAStrtypeInputtype(AStrtypeInputtype node)
     {
@@ -441,12 +407,10 @@ public class Emitter extends DepthFirstAdapter
     {
         defaultIn(node);
     }
-
     public void outAAttrAttribute(AAttrAttribute node)
     {
         defaultOut(node);
     }
-
     @Override
     public void caseAAttrAttribute(AAttrAttribute node)
     {
@@ -462,12 +426,10 @@ public class Emitter extends DepthFirstAdapter
     {
         defaultIn(node);
     }
-
     public void outAAssignAttribute(AAssignAttribute node)
     {
         defaultOut(node);
     }
-
     @Override
     public void caseAAssignAttribute(AAssignAttribute node)
     {
@@ -487,12 +449,10 @@ public class Emitter extends DepthFirstAdapter
     {
         defaultIn(node);
     }
-
     public void outAIdAttr(AIdAttr node)
     {
         defaultOut(node);
     }
-
     @Override
     public void caseAIdAttr(AIdAttr node)
     {
@@ -508,12 +468,10 @@ public class Emitter extends DepthFirstAdapter
     {
         defaultIn(node);
     }
-
     public void outAStrAttr(AStrAttr node)
     {
         defaultOut(node);
     }
-
     @Override
     public void caseAStrAttr(AStrAttr node)
     {
@@ -2452,7 +2410,7 @@ public class Emitter extends DepthFirstAdapter
     }
     public void caseTIdentifier(TIdentifier node)
     {
-        puts(node.getText());
+        puts("$"+node.getText());
     }
     public void caseTStringconst(TStringconst node)
     {
