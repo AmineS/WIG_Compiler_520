@@ -24,3 +24,9 @@ y.tab.h
 .svn
 y.tab.h
 
+# Other files #
+##############
+.jar
+.dat
+.DS_Store
+
