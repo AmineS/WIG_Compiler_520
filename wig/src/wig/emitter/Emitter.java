@@ -24,29 +24,14 @@ public class Emitter extends DepthFirstAdapter
     HashMap<String, String> globalVariablesMap = new HashMap<String, String>();
     HashMap<String, HashMap<String, String>> localVariableMaps = new HashMap<String, HashMap<String, String>>();
     private final String globalFname = "global.txt";
-    private ArrayList<String> currentFunctionVars = new ArrayList<String>();
     private boolean isInFunc = false;
+    String currentSessionName = "";
     
     public void emit(Node node)
     {
         node.apply(this);
         printPhpCode();
-        /*
-        for(String s : globalVariablesMap.keySet())
-        {
-        	System.out.println(s + " " + globalVariablesMap.get(s));
-        }
-        
-        for(String session: localVariableMaps.keySet())
-        {
-            HashMap<String, String> localVariableMap = localVariableMaps.get(session);
-            
-            System.out.println("Session " + session + ":");
-            for(String s : localVariableMap.keySet())
-            {
-                System.out.println("\t" + s + " " + localVariableMap.get(s));
-            }
-        }   */      
+    
     }   
     
     public Emitter(SymbolTable symbolTable)
@@ -982,7 +967,7 @@ public class Emitter extends DepthFirstAdapter
     public void outAFunction(AFunction node)
     {
         currentSymbolTable = currentSymbolTable.getNext();
-        currentFunctionVars.clear();
+        //currentFunctionVars.clear();
         isInFunc = false;
     }
     @Override
@@ -1056,7 +1041,7 @@ public class Emitter extends DepthFirstAdapter
         if(node.getIdentifier() != null)
         {
             puts("$" + node.getIdentifier().getText());
-            currentFunctionVars.add(node.getIdentifier().getText());
+            //currentFunctionVars.add(node.getIdentifier().getText());
         }
         outAArgument(node);
     }
@@ -1065,11 +1050,15 @@ public class Emitter extends DepthFirstAdapter
     {
         Symbol symbol = SymbolTable.getSymbol(currentSymbolTable, node.getIdentifier().getText());
         currentSymbolTable = SymbolTable.getScopedSymbolTable(symbol);
+        currentSessionName = node.getIdentifier().getText().toUpperCase();
     }
+    
     public void outASession(ASession node)
     {
         currentSymbolTable = currentSymbolTable.getNext();
+        currentSessionName = "";
     }
+    
     @Override
     public void caseASession(ASession node)
     {
@@ -1411,7 +1400,7 @@ public class Emitter extends DepthFirstAdapter
 
     private void printSessionLocals(ASession session, List<PVariable> variables)
     {
-        String localsArray = "$"+session.getIdentifier().getText() + "_locals";
+        String localsArray = "$"+session.getIdentifier().getText().toUpperCase() + "_LOCALS";
         puts(localsArray+ "= array();\n");
         
         for(PVariable variable : variables)
@@ -2412,11 +2401,11 @@ public class Emitter extends DepthFirstAdapter
     }
     public void caseTPosIntconst(TPosIntconst node)
     {
-        //puts(node.getText());
+        puts(node.getText());
     }
     public void caseTNegIntconst(TNegIntconst node)
     {
-        
+        puts(node.getText());
     }
     public void caseTSelect(TSelect node)
     {
@@ -2574,6 +2563,7 @@ public class Emitter extends DepthFirstAdapter
 
     public void caseTStringconst(TStringconst node)
     {
+        puts(node.getText());
     }
     
     public void caseTWhatever(TWhatever node)
@@ -2596,7 +2586,7 @@ public class Emitter extends DepthFirstAdapter
         }
         else
         {
-            return "LOCALS[\""+varName+"\"]";
+            return currentSessionName + "_LOCALS[\""+varName+"\"]";
         }
     }    
 }
