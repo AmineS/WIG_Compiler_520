@@ -121,7 +121,7 @@ public class Weeder extends DepthFirstAdapter
             {
                 if(fHtmlsTuplesGlobalVariablesNames.contains(identifier.getText()))
                 {
-                    System.out.println("Error: Duplicate variable: " + identifier.getText() + " at line " + identifier.getLine());
+                    System.out.println("Error: Duplicate global variable: " + identifier.getText() + " at line " + identifier.getLine());
                     fErrorPresent = true;
                 }
                 else
@@ -134,12 +134,12 @@ public class Weeder extends DepthFirstAdapter
         {
             for(TIdentifier identifier : node.getIdentifier())
             {
-                if(fCurrentLocalVariableNames.contains(identifier.getText()) && !fHtmlsTuplesGlobalVariablesNames.contains(identifier.getText()))
-                {
-                    System.out.println("Error: Duplicate local variable: " + identifier.getText() + " at line " + identifier.getLine());
-                    fErrorPresent = true;
-                }
-                else if(fHtmlsTuplesGlobalVariablesNames.contains(identifier.getText()))
+//                if(fCurrentLocalVariableNames.contains(identifier.getText()) && fHtmlsTuplesGlobalVariablesNames.contains(identifier.getText()))
+//                {
+//                    System.out.println("Error: Duplicate local variable: " + identifier.getText() + " at line " + identifier.getLine());
+//                    fErrorPresent = true;
+//                }
+                if(fHtmlsTuplesGlobalVariablesNames.contains(identifier.getText()))
                 {
                     System.out.println("Error: Duplicate global variable: " + identifier.getText() + " at line " + identifier.getLine());
                     fErrorPresent = true;
