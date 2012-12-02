@@ -57,7 +57,7 @@ string messages;
    string another;
    x=0;
    x = func(x);
-	x.num1=userMsg;
+	//num.num1=userMsg;
    while (x<10)
   	{
   		show setup receive[userMsg=userMsg];
