@@ -82,7 +82,6 @@ public class Emitter extends DepthFirstAdapter
     	int size = tupleFields.size();
     	for (String k: tupleFields.keySet())
     	{
-    		//System.out.println(k + " " + tupleFields.get(k));
     		SField sv = (SField) tupleFields.get(k);
     		PType ptyp = sv.getField().getType();
     		
