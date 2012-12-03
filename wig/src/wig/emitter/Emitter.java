@@ -1112,7 +1112,7 @@ public class Emitter extends DepthFirstAdapter
     {
         Symbol symbol = SymbolTable.getSymbol(currentSymbolTable, node.getIdentifier().getText());
         currentSymbolTable = SymbolTable.getScopedSymbolTable(symbol);
-        currentSessionName = node.getIdentifier().getText().toUpperCase();
+        currentSessionName = node.getIdentifier().getText();
     }
     
     public void outASession(ASession node)
@@ -1462,7 +1462,7 @@ public class Emitter extends DepthFirstAdapter
 
     private void printSessionLocals(ASession session, List<PVariable> variables)
     {
-        String localsArray = "$"+session.getIdentifier().getText().toUpperCase() + "_LOCALS";
+        String localsArray = "$_SESSION["+session.getIdentifier().getText() + "][\"LOCALS\"]";
         puts(localsArray+ "= array();\n");
         
         for(PVariable variable : variables)
@@ -1933,14 +1933,14 @@ public class Emitter extends DepthFirstAdapter
     public void caseAJoinExp(AJoinExp node)
     {
         inAJoinExp(node);
-        if(node.getLeft() != null)
+        puts("array_merge(");
+        if(node.getLeft() != null && node.getRight() != null)
         {
-            node.getLeft().apply(this);
+            puts(varNameToPhp(node.getLeft().toString().replace(" ", "")));
+            puts(", ");
+            puts(varNameToPhp(node.getRight().toString().replace(" ", "")));
         }
-        if(node.getRight() != null)
-        {
-            node.getRight().apply(this);
-        }
+        puts(")");
         outAJoinExp(node);
     }
 
@@ -1956,14 +1956,13 @@ public class Emitter extends DepthFirstAdapter
     public void caseAKeepExp(AKeepExp node)
     {
         inAKeepExp(node);
-        if(node.getLeft() != null)
-        {
-            node.getLeft().apply(this);
-        }
-        if(node.getIdentifier() != null)
-        {
-            node.getIdentifier().apply(this);
-        }
+        if(node.getLeft() != null && node.getIdentifier() != null)
+        {            
+            puts("array(\"" + node.getIdentifier().toString().replace(" ", "") + "\" => ");
+            puts(varNameToPhp(node.getLeft().toString().replace(" ", ""))  + "[\"" + 
+                    node.getIdentifier().toString().replace(" ", "") + "\"]");
+            puts(")");
+        }        
         outAKeepExp(node);
     }
 
@@ -1978,15 +1977,21 @@ public class Emitter extends DepthFirstAdapter
     @Override
     public void caseARemoveExp(ARemoveExp node)
     {
-        inARemoveExp(node);
-        if(node.getLeft() != null)
+        inARemoveExp(node);        
+        if(node.getLeft() != null && node.getIdentifier() != null)
         {
-            node.getLeft().apply(this);
-        }
-        if(node.getIdentifier() != null)
-        {
-            node.getIdentifier().apply(this);
-        }
+            puts("array_remove_key(");
+            if (node.getLeft() instanceof ARemoveExp)
+            {
+                node.getLeft().apply(this);
+            }
+            if (node.getLeft() instanceof ALvalueExp)
+            {
+                puts(varNameToPhp(node.getLeft().toString().replace(" ", "")));
+            }
+            puts(", array(\""); 
+            puts(node.getIdentifier().getText() + "\"))");
+        }        
         outARemoveExp(node);
     }
 
@@ -2004,14 +2009,22 @@ public class Emitter extends DepthFirstAdapter
         inAKeepManyExp(node);
         if(node.getLeft() != null)
         {
-            node.getLeft().apply(this);
-        }
-        {
+            puts("array(");
             List<TIdentifier> copy = new ArrayList<TIdentifier>(node.getIdentifier());
+            int size = copy.size();
+            int counter = 0;
             for(TIdentifier e : copy)
             {
-                e.apply(this);
+                puts("\"" + e.getText() + "\" => ");
+                puts(varNameToPhp(node.getLeft().toString().replace(" ", ""))  + "[\"" + 
+                        e.getText() + "\"]");
+                counter++;
+                if (counter < size)
+                {
+                    puts(", ");
+                }
             }
+            puts(")");
         }
         outAKeepManyExp(node);
     }
@@ -2030,14 +2043,21 @@ public class Emitter extends DepthFirstAdapter
         inARemoveManyExp(node);
         if(node.getLeft() != null)
         {
-            node.getLeft().apply(this);
-        }
-        {
+            puts("array_remove_key(" + varNameToPhp(node.getLeft().toString().replace(" ", "")) + ", ");
+            puts("array(");
             List<TIdentifier> copy = new ArrayList<TIdentifier>(node.getIdentifier());
+            int size = copy.size();
+            int counter = 0;
             for(TIdentifier e : copy)
             {
-                e.apply(this);
+                puts("\"" + e.getText() + "\"");
+                counter++;
+                if (counter < size)
+                {
+                    puts(", ");
+                }
             }
+            puts(")");
         }
         outARemoveManyExp(node);
     }
@@ -2649,7 +2669,27 @@ public class Emitter extends DepthFirstAdapter
         }
         else
         {
-            return currentSessionName + "_LOCALS[\""+varName+"\"]";
+            return "$_SESSION[\"" + currentSessionName + "\"][\"LOCALS\"][\""+varName+"\"]";
         }
-    }    
+    } 
+    
+    /**
+     * 
+     * @param str - the fields
+     * @param field - the field you want
+     * @return - the default value of the field you want
+     */
+    public static String getTupleDefaultValue(String str, String field)
+    {
+        String[] split = str.split(",");
+        for (String s: split)
+        {
+            String[] s1 = s.split("=");
+            if (s1[0].contains(field))
+            {
+                return s1[1];
+            }
+        }
+        return "";
+    }
 }

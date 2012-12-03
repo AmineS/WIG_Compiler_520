@@ -870,6 +870,11 @@ public class Weeder extends DepthFirstAdapter
       
       public void caseAJoinExp(AJoinExp node)
       {
+//          if (node.getRight() instanceof AJoinExp)
+//          {
+//              System.out.println("Chained joins not allowed.");
+//              fErrorPresent = true;
+//          }
           node.getLeft().apply(this);
           node.getRight().apply(this);
       }
