@@ -1454,7 +1454,7 @@ public class Emitter extends DepthFirstAdapter
             int counter;
             size = copy.size();
             counter = 0;
-            puts("{");
+            puts("array(");
             for(PPlug e : copy)
             {                
                 e.apply(this);
@@ -1462,7 +1462,7 @@ public class Emitter extends DepthFirstAdapter
                 if (counter<size)
                     puts(",");
             }
-            puts("}");
+            puts(")");
         }
         puts(");\n");
         outAPlugDocument(node);
@@ -2346,7 +2346,7 @@ public class Emitter extends DepthFirstAdapter
                puts(", ");
            }
         }
-        puts(");\n");
+        puts(")");
         outACallExp(node);
     }
 
@@ -2797,11 +2797,11 @@ public class Emitter extends DepthFirstAdapter
     }
     public void caseTAnd(TAnd node)
     {
-        puts("&&");
+        puts(" && ");
     }
     public void caseTOr(TOr node)
     {
-        puts("||");
+        puts(" || ");
     }
     public void caseTDot(TDot node){}
     public void caseTEol(TEol node)
@@ -2817,7 +2817,7 @@ public class Emitter extends DepthFirstAdapter
     }
     public void caseTStringconst(TStringconst node)
     {
-        puts(node.getText());
+        puts(node.getText() + " ");
     }
     public void caseTWhatever(TWhatever node)
     {
