@@ -815,6 +815,10 @@ public class Emitter extends DepthFirstAdapter
                 {
                     htmlStr += node.getIntconst().toString();
                 }
+                else
+                {
+                    htmlStr += HtmlEscape.escape(node.getIntconst().toString());
+                }
             }
 
         }
