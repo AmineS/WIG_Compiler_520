@@ -20,20 +20,24 @@ import wig.symboltable.symbols.Symbol;
 
 public class Emitter extends DepthFirstAdapter
 {
-    SymbolTable serviceSymbolTable;
-    SymbolTable currentSymbolTable;
-    StringBuilder phpCode;
-    HashMap<String, String> globalVariablesMap = new HashMap<String, String>();
-    HashMap<String, HashMap<String, String>> localVariableMaps = new HashMap<String, HashMap<String, String>>();
-    HashMap<Node,String> labelMap = new HashMap<Node,String>();
+    private SymbolTable serviceSymbolTable;
+    private SymbolTable currentSymbolTable;
+    private StringBuilder phpCode;
+    private HashMap<String, String> globalVariablesMap = new HashMap<String, String>();
+    private HashMap<String, HashMap<String, String>> localVariableMaps = new HashMap<String, HashMap<String, String>>();
+    private HashMap<Node,String> labelMap = new HashMap<Node,String>();
     private final String globalFname = "global.txt";
     private String htmlStr = "";
     private boolean isInFunc = false;
     private boolean inAWhileCond = false;
-    String currentSessionName = "";
+    private String currentSessionName = "";
     private int showCounter = 0;
     private int loopCounter = 0;
     private int tabCount = 0;
+    
+    private boolean currHtmlHasInputOrSelect = false;
+    private boolean isFirstTagInHtml = true;
+    private boolean hasClosingBodyTag = false;
     
     public void emit(Node node)
     {
@@ -347,12 +351,13 @@ public class Emitter extends DepthFirstAdapter
         currentSymbolTable = currentSymbolTable.getNext();
         puts(htmlStr);
         htmlStr = "";
+        isFirstTagInHtml = true;
     }    
     @Override
     public void caseAHtml(AHtml node)
     {
         inAHtml(node);
-        htmlStr += "function "+ node.getIdentifier().getText().trim() +" ($holes){ \n\t$html = \"<html>";
+        htmlStr += "function "+ node.getIdentifier().getText().trim() +" ($holes, $url, $currSessionNAme){ \n\t$html = \"<html>";
         {
             List<PHtmlbody> copy = new ArrayList<PHtmlbody>(node.getHtmlbody());
             for(PHtmlbody e : copy)
@@ -360,6 +365,15 @@ public class Emitter extends DepthFirstAdapter
                 e.apply(this);
             }
         }
+        if(currHtmlHasInputOrSelect)
+        {
+            currHtmlHasInputOrSelect = false;
+            htmlStr += "<br/><button type=\"button\">Click Me!</button></br>";
+        }
+        htmlStr += "</form>";
+
+        hasClosingBodyTag = false;
+        htmlStr += "</body>";
         htmlStr += "</html>\";\n\techo $html; \n\texit(0);\n}\n";
         outAHtml(node);
     }
@@ -376,7 +390,21 @@ public class Emitter extends DepthFirstAdapter
     public void caseATagStartHtmlbody(ATagStartHtmlbody node)
     {
         inATagStartHtmlbody(node);
-        htmlStr += "<"+node.getIdentifier().getText().trim();
+        if(!node.getIdentifier().getText().trim().equals("body") && isFirstTagInHtml)
+        {
+            htmlStr += "<body><form name=\".$currSessionName.\" action=\".$url.\" method=\"get\"><" + node.getIdentifier().getText().trim();
+            isFirstTagInHtml = false;
+        }
+        else if(node.getIdentifier().getText().trim().equals("body") && isFirstTagInHtml)
+        {
+            htmlStr += "<body><form name=\".$currSessionName.\" action=\".$url.\" method=\"get\"";
+            isFirstTagInHtml = false;
+        }
+        else 
+        {
+            htmlStr += "<"+node.getIdentifier().getText().trim();
+            isFirstTagInHtml = false;
+        }
         {
             List<PAttribute> copy = new ArrayList<PAttribute>(node.getAttribute());
             for(PAttribute e : copy)
@@ -400,7 +428,14 @@ public class Emitter extends DepthFirstAdapter
     public void caseATagEndHtmlbody(ATagEndHtmlbody node)
     {
         inATagEndHtmlbody(node);
-         htmlStr += "</"+node.getIdentifier().getText().trim()+">";
+        if(node.getIdentifier().getText().trim().equals("body"))
+        {
+            hasClosingBodyTag = true;
+        }
+        else
+        {
+            htmlStr += "</"+node.getIdentifier().getText().trim()+">";
+        }
         outATagEndHtmlbody(node);
     }
 
@@ -470,7 +505,10 @@ public class Emitter extends DepthFirstAdapter
     public void caseAInputHtmlbody(AInputHtmlbody node)
     {
         inAInputHtmlbody(node);
-
+        if(!currHtmlHasInputOrSelect)
+        {
+            currHtmlHasInputOrSelect = true; 
+        }
         htmlStr += "<"  + node.getInput().getText() + " ";
         {
             List<PInputattr> copy = new ArrayList<PInputattr>(node.getInputattr());
@@ -495,6 +533,10 @@ public class Emitter extends DepthFirstAdapter
     public void caseASelectHtmlbody(ASelectHtmlbody node)
     {
         inASelectHtmlbody(node);
+        if(!currHtmlHasInputOrSelect)
+        {
+            currHtmlHasInputOrSelect = true; 
+        }
         if(node.getSelectTag() != null)
         {
             node.getSelectTag().apply(this);
