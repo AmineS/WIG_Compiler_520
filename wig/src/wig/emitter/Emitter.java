@@ -25,14 +25,23 @@ public class Emitter extends DepthFirstAdapter
     StringBuilder phpCode;
     HashMap<String, String> globalVariablesMap = new HashMap<String, String>();
     HashMap<String, HashMap<String, String>> localVariableMaps = new HashMap<String, HashMap<String, String>>();
+    HashMap<Node,String> labelMap = new HashMap<Node,String>();
     private final String globalFname = "global.txt";
     private String htmlStr = "";
     private boolean isInFunc = false;
     String currentSessionName = "";
+    private int showCounter = 0;
+    private int loopCounter = 0;
+    private int tabCount = 0;
     
     public void emit(Node node)
     {
+        puts("<?php"); 
+        ++tabCount;
+        puts("\nsession_start();\n");
         node.apply(this);
+        --tabCount;
+        puts("\n?>");
         printPhpCode();
 //        for(String s : globalVariablesMap.keySet())
 //        {
@@ -50,8 +59,7 @@ public class Emitter extends DepthFirstAdapter
 //            }
 //        }
 
-    }   
-    
+    }      
     public Emitter(SymbolTable symbolTable)
     {
         serviceSymbolTable = symbolTable;
@@ -198,11 +206,32 @@ public class Emitter extends DepthFirstAdapter
     }
     private void puts(String s)
     {
-        phpCode.append(s);
+        phpCode.append(s.replaceAll("\n", tabbedNewLine()));
+    }
+    private void putOpenBrace()
+    {
+        puts("{");
+        ++tabCount;
+        puts("\n");
+    }
+    private void putCloseBrace()
+    {
+        --tabCount;
+        puts("\n}\n");
     }
     private void printPhpCode()
     {
         System.out.println(phpCode.toString());
+    }
+    private String tabbedNewLine()
+    {
+        StringBuilder tabbedLine = new StringBuilder();
+        tabbedLine.append('\n');
+        for(int i=0; i<tabCount; ++i)
+        {
+            tabbedLine.append('\t');
+        }
+        return tabbedLine.toString();
     }
     
     public void defaultIn(@SuppressWarnings("unused") Node node)
@@ -256,24 +285,17 @@ public class Emitter extends DepthFirstAdapter
             }
         }
         {
-            puts("$WIG_SESSION = $_GET[\"session\"];\n");
+            puts("\n$WIG_SESSION = $_GET[\"session\"];\n");
             List<PSession> sessions = new ArrayList<PSession>(node.getSession());
             for(int i=0; i<sessions.size(); ++i)
             {                
                 ASession session  = (ASession)sessions.get(i);
-
-                puts("if ($WIG_SESSION == \"" + session.getIdentifier().getText()+"\")\n{\n");
-                
-                session.apply(this);
-                
+                puts("if ($WIG_SESSION == \"" + session.getIdentifier().getText()+"\")\n");                
+                session.apply(this);                
                 if(i!=sessions.size()-1)
                 {
-                    puts("}\nelse ");
-                }
-                else
-                {
-                    puts("}");
-                }                
+                    puts("else ");
+                }        
             }
         }
         outAService(node);
@@ -317,7 +339,7 @@ public class Emitter extends DepthFirstAdapter
     public void outAHtml(AHtml node)
     {
         currentSymbolTable = currentSymbolTable.getNext();
-        System.out.println("HTML STR FUNCTIONS \n" + htmlStr);
+        puts("HTML STR FUNCTIONS \n" + htmlStr);
         htmlStr = "";
     }    
     @Override
@@ -1120,7 +1142,6 @@ public class Emitter extends DepthFirstAdapter
         currentSymbolTable = currentSymbolTable.getNext();
         currentSessionName = "";
     }
-    
     @Override
     public void caseASession(ASession node)
     {
@@ -1162,6 +1183,7 @@ public class Emitter extends DepthFirstAdapter
     @Override
     public void caseAShowStm(AShowStm node)
     {
+        String label = getNextLoopLabel(node);
         inAShowStm(node);
         if(node.getDocument() != null)
         {
@@ -1297,7 +1319,13 @@ public class Emitter extends DepthFirstAdapter
     @Override
     public void caseAWhileStm(AWhileStm node)
     {
+        String label = getNextLoopLabel(node);       
         inAWhileStm(node);
+        
+        puts("\nif(!");
+        printLocalsState();
+        puts("[\"" + label + "\"][\"skip\"])\n");
+        putOpenBrace();
         puts("while");
         puts("(");
         if(node.getExp() != null)
@@ -1309,6 +1337,9 @@ public class Emitter extends DepthFirstAdapter
         {
             node.getStm().apply(this);
         }
+        printLocalsState();
+        puts("[\"" + label + "\"][\"skip\"]=TRUE;");
+        putCloseBrace();
         outAWhileStm(node);
     }
 
@@ -1435,7 +1466,7 @@ public class Emitter extends DepthFirstAdapter
     public void caseACompoundstm(ACompoundstm node)
     {
         inACompoundstm(node);
-        puts("{\n");
+        putOpenBrace();      
         {
             List<PVariable> variables = new ArrayList<PVariable>(node.getVariable());
             for(PVariable e : variables)
@@ -1456,7 +1487,19 @@ public class Emitter extends DepthFirstAdapter
                 e.apply(this);
             }
         }
-        puts("}\n");
+        if(node.parent().parent() instanceof AWhileStm)
+        {
+            LoopLabelCollector labelcollector = new LoopLabelCollector(labelMap);
+            ArrayList<String> labels = labelcollector.generateLabels(node); 
+            
+            for(String label:labels)
+            {
+                puts("unset(");
+                printLocalsState();
+                puts("[\""+label+"\"])\n");
+            }
+        }
+        putCloseBrace();
         outACompoundstm(node);
     }
 
@@ -2395,7 +2438,6 @@ public class Emitter extends DepthFirstAdapter
         outAFieldvalue(node);
     }
 
-
     public void caseTService(TService node)
     {
         
@@ -2601,7 +2643,6 @@ public class Emitter extends DepthFirstAdapter
     {
         puts("!");
     }
- 
     public void caseTMinus(TMinus node)
     {
         puts("-");
@@ -2642,17 +2683,15 @@ public class Emitter extends DepthFirstAdapter
     public void caseTIdentifier(TIdentifier node)
     {
     }
-
     public void caseTStringconst(TStringconst node)
     {
         puts(node.getText());
     }
-    
     public void caseTWhatever(TWhatever node)
     {
         htmlStr += node.getText().trim();
     }
-    
+   
     public void caseEOF(EOF node)
     {
     }
@@ -2692,4 +2731,47 @@ public class Emitter extends DepthFirstAdapter
         }
         return "";
     }
+
+    private void saveShowState(String label)
+    {
+        printLocalsState();
+        puts("[\""+label+"\"]");
+        puts("[\"locals\"]");
+     
+        printLocalsState();
+        puts("[\""+label+"\"]");
+        puts("[\"globals\"]");
+    }   
+    private void saveWhileState(String label)
+    {
+        printLocalsState();
+        puts("[\""+label+"\"]");
+        puts("[\"locals\"]");
+     
+        printLocalsState();
+        puts("[\""+label+"\"]");
+        puts("[\"globals\"]");
+        
+        printLocalsState();
+        puts("[\""+label+"\"]");
+        puts("[\"skip\"]");
+    }  
+    private void printLocalsState()
+    {
+        puts("$_SESSSION[\"" +currentSessionName + "\"][\"LOCALS_STATES\"]");
+    }
+    
+    private String getNextShowLabel(Node node)
+    {
+        String label = "show"+ (++showCounter);
+        labelMap.put(node, label);
+        return label;
+    }
+    private String getNextLoopLabel(Node node)
+    {
+        String label = "loop"+ (++showCounter);
+        labelMap.put(node, label);
+        return label;
+    }
 }
+
