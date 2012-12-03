@@ -43,23 +43,28 @@ public class Emitter extends DepthFirstAdapter
         --tabCount;
         puts("\n?>");
         printPhpCode();
-//        for(String s : globalVariablesMap.keySet())
-//        {
-//        	System.out.println(s + " " + globalVariablesMap.get(s));
-//        }
-//        
-//        for(String session: localVariableMaps.keySet())
-//        {
-//            HashMap<String, String> localVariableMap = localVariableMaps.get(session);
-//            
-//            System.out.println("Session " + session + ":");
-//            for(String s : localVariableMap.keySet())
-//            {
-//                System.out.println("\t" + s + " " + localVariableMap.get(s));
-//            }
-//        }
 
     }      
+
+    public void printLocalsAndGlobals()
+    {
+        for(String s : globalVariablesMap.keySet())
+        {
+            System.out.println(s + " " + globalVariablesMap.get(s));
+        }
+        
+        for(String session: localVariableMaps.keySet())
+        {
+            HashMap<String, String> localVariableMap = localVariableMaps.get(session);
+            
+            System.out.println("Session " + session + ":");
+            for(String s : localVariableMap.keySet())
+            {
+                System.out.println("\t" + s + " " + localVariableMap.get(s));
+            }
+        }
+    }
+    
     public Emitter(SymbolTable symbolTable)
     {
         serviceSymbolTable = symbolTable;
@@ -67,8 +72,7 @@ public class Emitter extends DepthFirstAdapter
         phpCode = new StringBuilder();
         initializeGlobalVariablesMap();
         initializeLocalSymbolVariablesMaps();
-        //writeVariablesToFile(globalFname, globalVariablesMap);
-        
+        writeVariablesToFile(globalFname, globalVariablesMap);
     }
     
     public void initializeGlobalVariablesMap()
@@ -235,11 +239,11 @@ public class Emitter extends DepthFirstAdapter
         return tabbedLine.toString();
     }
     
-    public void defaultIn(@SuppressWarnings("unused") Node node)
+    public void defaultIn(Node node)
     {
         // Do nothing
     }
-    public void defaultOut(@SuppressWarnings("unused") Node node)
+    public void defaultOut(Node node)
     {
         // Do nothing
     }
@@ -2849,6 +2853,7 @@ public class Emitter extends DepthFirstAdapter
         puts("[\""+label+"\"]");
         puts("[\"globals\"]");
     }   
+    
     private void saveWhileState(String label)
     {
         printLocalsState();
