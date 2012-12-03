@@ -291,7 +291,7 @@ public class Emitter extends DepthFirstAdapter
             for(int i=0; i<sessions.size(); ++i)
             {                
                 ASession session  = (ASession)sessions.get(i);
-                puts("if ($WIG_SESSION == \"" + session.getIdentifier().getText()+"\")\n");                
+                puts("if (strcmp($WIG_SESSION, \"" + session.getIdentifier().getText()+"\")==0)\n");                
                 session.apply(this);                
                 if(i!=sessions.size()-1)
                 {
@@ -1186,14 +1186,29 @@ public class Emitter extends DepthFirstAdapter
     {
         String label = getNextShowLabel(node);
         inAShowStm(node);
+        String currShowLabel = this.getNextShowLabel(node);
+        puts("if (strcmp($_SESSION[\"" + currentSessionName + "\"]['curShow'],\"\") == 0)\n");
+        putOpenBrace();
         if(node.getDocument() != null)
         {
             node.getDocument().apply(this);
         }
+        //show html
+        puts("$_SESSION[\"" + currentSessionName + "\"]['currShow'] = \"" + currShowLabel + "\";\n" );
+        puts("saveLocalsState(\""+currShowLabel+"\",\""+currentSessionName+"\");\n");
+        puts("writeGlobals();\n");
+        puts("exit(-1);");
+        putCloseBrace();
+        puts("loadLocalsState(\""+currShowLabel+"\",\""+currentSessionName+"\");\n");
+        puts("if (strcmp($_SESSION[\"" + currentSessionName + "\"]['curShow'],'" + currShowLabel + "') == 0)\n");
+        putOpenBrace();
+        puts("readGlobals();");
         if(node.getReceive() != null)
         {
             node.getReceive().apply(this);
         }
+        puts("$_SESSION[\"" + currentSessionName + "\"]['currShow'] = \"\";\n" );
+        putCloseBrace();
         outAShowStm(node);
     }
 
@@ -1322,10 +1337,14 @@ public class Emitter extends DepthFirstAdapter
     {
         String label = getNextLoopLabel(node);       
         inAWhileStm(node);
-        
+
+        saveWhileState(label);
         puts("\nif(!");
+        puts("\nif(!(isset(");
         printLocalsState();
-        puts("[\"" + label + "\"][\"skip\"])\n");
+        puts("[\""+label+"\"]) && ");
+        printLocalsState();
+        puts("[\"" + label + "\"][\"skip\"]))\n");
         putOpenBrace();
         puts("while");
         puts("(");
@@ -1367,6 +1386,7 @@ public class Emitter extends DepthFirstAdapter
         outACompStm(node);
     }
 
+    
     public void inAExpStm(AExpStm node)
     {
         defaultIn(node);
@@ -1444,6 +1464,7 @@ public class Emitter extends DepthFirstAdapter
     {
         inAReceive(node);
         {
+            
             List<PInput> copy = new ArrayList<PInput>(node.getInput());
             for(PInput e : copy)
             {
@@ -1631,13 +1652,71 @@ public class Emitter extends DepthFirstAdapter
     public void caseAInput(AInput node)
     {
         inAInput(node);
+        String variableName = "";
+        String tupleName = "";
+        String tupleField = "";
+        boolean isTuple = false;
         if(node.getLvalue() != null)
         {
-            node.getLvalue().apply(this);
+            Node leftNode = node.getLvalue();
+            if(leftNode instanceof ASimpleLvalue)
+            {
+                ASimpleLvalue lValue = (ASimpleLvalue) leftNode;
+                variableName = lValue.getIdentifier().getText().trim();
+                puts("\n\n$_SESSION[\"" + currentSessionName + "\"]['locals']['show"+ showCounter +"']['"+ variableName +"'] = ");                
+            }
+            else if(leftNode instanceof AQualifiedLvalue)
+            {
+                AQualifiedLvalue lQValue = (AQualifiedLvalue) leftNode;
+                tupleName = lQValue.getLeft().getText().trim();
+                tupleField = lQValue.getRight().getText().trim();
+                puts("\n\n$_SESSION[\"" + currentSessionName + "\"]['locals']['show"+ showCounter +"']['"+ tupleName +"']['" + tupleField + "'] = ");
+                isTuple = true;                
+            }
         }
         if(node.getIdentifier() != null)
         {
-            node.getIdentifier().apply(this);
+            String inputFieldVar = node.getIdentifier().getText().trim();
+            String defaultValue = "";
+            if(!isTuple)
+            {
+                if(globalVariablesMap.containsKey(variableName))
+                {
+                    defaultValue = globalVariablesMap.get(variableName);
+                }
+                else
+                {
+                    defaultValue = localVariableMaps.get(currentSessionName).get(variableName);
+                }
+            }
+            else
+            {
+                if(globalVariablesMap.containsKey(tupleName))
+                {
+                    defaultValue = getTupleDefaultValue(globalVariablesMap.get(tupleName), tupleField);
+                }
+                else
+                {
+                    defaultValue = getTupleDefaultValue(localVariableMaps.get(currentSessionName).get(tupleName), tupleField);
+                }
+            }
+            
+            if(defaultValue.equals("0"))
+            {
+                puts("intval($_GET['"+ inputFieldVar + "']);");
+
+            }
+            else if(defaultValue.equals(" ") || defaultValue.equals(""))
+            {
+                puts("$_GET['"+ inputFieldVar + "'];");
+            }
+            else
+            {
+                puts("\nERROR: Cannot Receive Tuple! @ line number " + node.getIdentifier().getLine());
+                System.exit(-1);
+            }
+            
+            puts("\n");
         }
         outAInput(node);
     }
@@ -2793,7 +2872,7 @@ public class Emitter extends DepthFirstAdapter
     }
     private String getNextLoopLabel(Node node)
     {
-        String label = "loop"+ (++showCounter);
+        String label = "loop"+ (++loopCounter);
         labelMap.put(node, label);
         return label;
     }
