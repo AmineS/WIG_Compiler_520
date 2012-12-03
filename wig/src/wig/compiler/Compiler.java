@@ -38,6 +38,8 @@ public class Compiler
     private static Options compilerOptions; 
     private static CommandLineParser cliParser;
     private static CommandLine commandLine;
+    private static String urlPrefix = "";
+    private static String fileName = "";
     
     public static void main(String[] args)
     {             
@@ -66,10 +68,23 @@ public class Compiler
                 // compile each file
                 for(String file : files)
                 {
-                    System.out.println("------- Generating output: " + file + "-------");
-                    compileInput(getFileReader(file));
-                    System.out.println();
+                    if (file.endsWith(".wig"))
+                    {
+                        fileName = file;
+                    }
+                    else
+                    {
+                        urlPrefix = file;
+                    }
                 }
+                if (commandLine.hasOption("up") && urlPrefix == "")
+                {
+                    System.out.println("User asked for Code Generation without providing URL prefix!");
+                    System.exit(-1);
+                }
+                System.out.println("------- Generating output: " + fileName + "-------");
+                compileInput(getFileReader(fileName));
+                System.out.println();
             }          
         }
         catch(Exception e)
@@ -213,8 +228,12 @@ public class Compiler
             
             System.out.println("\nType Checking Phase Done.");
             System.out.println("..............................................................");
-
-            Emitter em = new Emitter(symAnalyzer.getServiceSymbolTable());
+            
+            String temp = fileName.replaceAll("[.]wig", "");
+            String [] split = temp.split("/");
+            fileName = split[split.length-1];
+            
+            Emitter em = new Emitter(symAnalyzer.getServiceSymbolTable(), urlPrefix, fileName);
             em.emit(tree);
         }
     }
