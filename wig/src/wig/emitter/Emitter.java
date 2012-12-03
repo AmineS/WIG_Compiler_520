@@ -308,7 +308,7 @@ public class Emitter extends DepthFirstAdapter
     }
     private void printServiceGlobals(List<PVariable> variables)
     {
-        puts("$GLOBALS= array();");
+        puts("$globals= array();");
         for(PVariable variable : variables)
         {
             AVariable avariable = (AVariable) variable;
@@ -1427,7 +1427,7 @@ public class Emitter extends DepthFirstAdapter
         inAIdDocument(node);
         if(node.getIdentifier() != null)
         {
-            puts(node.getIdentifier().getText() + "();\n");
+            puts(node.getIdentifier().getText() + "(null);\n");
         }
         outAIdDocument(node);
     }
@@ -1560,7 +1560,7 @@ public class Emitter extends DepthFirstAdapter
 
     private void printSessionLocals(ASession session, List<PVariable> variables)
     {
-        String localsArray = "$_SESSION["+session.getIdentifier().getText() + "][\"LOCALS\"]";
+        String localsArray = "$_SESSION[\""+session.getIdentifier().getText() + "\"][\"locals\"]";
         puts(localsArray+ "= array();\n");
         
         for(PVariable variable : variables)
@@ -2832,7 +2832,7 @@ public class Emitter extends DepthFirstAdapter
     {
         if (globalVariablesMap.get(varName) != null)
         {
-            return "$_SESSION[\"GLOBALS\"][\""+varName+"\"]";
+            return "$_SESSION[\"globals\"][\""+varName+"\"]";
         }
         else if (isInFunc)
         {
@@ -2840,7 +2840,7 @@ public class Emitter extends DepthFirstAdapter
         }
         else
         {
-            return "$_SESSION[\"" + currentSessionName + "\"][\"LOCALS\"][\""+varName+"\"]";
+            return "$_SESSION[\"" + currentSessionName + "\"][\"locals\"][\""+varName+"\"]";
         }
     } 
     
@@ -2891,7 +2891,7 @@ public class Emitter extends DepthFirstAdapter
     }  
     private void printLocalsState()
     {
-        puts("$_SESSSION[\"" +currentSessionName + "\"][\"LOCALS_STATES\"]");
+        puts("$_SESSION[\"" + currentSessionName + "\"][\"LOCALS_STATES\"]");
     }
     
     private String getNextShowLabel(Node node)
