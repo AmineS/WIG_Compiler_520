@@ -1417,7 +1417,7 @@ public class Emitter extends DepthFirstAdapter
         String label = getNextLoopLabel(node);       
         inAWhileStm(node);
 
-        saveWhileState(label);
+        initializeWhileState(label);
         puts("\nif(!(isset(");
         printLocalsState();
         puts("[\""+label+"\"]) && ");
@@ -2952,23 +2952,23 @@ public class Emitter extends DepthFirstAdapter
         puts("[\"globals\"]");
     }   
     
-    private void saveWhileState(String label)
+    private void initializeWhileState(String label)
     {
         printLocalsState();
         puts("[\""+label+"\"]");
-        puts("[\"locals\"];\n");
+        puts("[\"locals\"]=array();\n");
      
         printLocalsState();
         puts("[\""+label+"\"]");
-        puts("[\"globals\"];\n");
+        puts("[\"globals\"]=array();\n");
         
         printLocalsState();
         puts("[\""+label+"\"]");
-        puts("[\"skip\"];\n");
+        puts("[\"skip\"]=false;\n");
     }  
     private void printLocalsState()
     {
-        puts("$_SESSION[\"" + currentSessionName + "\"][\"LOCALS_STATES\"]");
+        puts("$_SESSION[\"" + currentSessionName + "\"][\"locals_states\"]");
     }
     
     private String getNextShowLabel(Node node)

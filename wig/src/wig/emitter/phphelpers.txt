@@ -35,12 +35,20 @@ function writeGlobals()
 
 function saveLocalsState($label, $currentSession)
 {
-	$_SESSION[$currentSession]["LOCALS_STATES"][$label]["LOCALS"] = $_SESSION[$currentSession]["LOCALS"];
-	$_SESSION[$currentSession]["LOCALS_STATES"][$label]["GLOBALS"] = $_SESSION["GLOBALS"];
+	if(!isset($_SESSION[$currentSession]["locals_states"]))
+	{
+		$_SESSION[$currentSession]["locals_states"] = array();
+		if(!isset($_SESSION[$currentSession]["locals_states"][$label]))
+		{
+			$_SESSION[$currentSession]["locals_states"][$label] = array();
+		}
+	}
+	$_SESSION[$currentSession]["locals_states"][$label]["locals"] = $_SESSION[$currentSession]["locals"];
+	$_SESSION[$currentSession]["locals_states"][$label]["globals"] = $_SESSION["globals"];
 }
 
 function loadLocalsState($label, $currentSession)
 {
-	$_SESSION[$currentSession]["LOCALS"] = 	$_SESSION[$currentSession]["LOCALS_STATES"][$label]["LOCALS"];
-	$_SESSION["GLOBALS"] = $_SESSION[$currentSession]["LOCALS_STATES"][$label]["GLOBALS"];
+	$_SESSION[$currentSession]["locals"] = 	$_SESSION[$currentSession]["locals_states"][$label]["locals"];
+	$_SESSION["locals"] = $_SESSION[$currentSession]["locals_states"][$label]["globals"];
 }
