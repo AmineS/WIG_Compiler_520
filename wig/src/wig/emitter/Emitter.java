@@ -340,14 +340,14 @@ public class Emitter extends DepthFirstAdapter
     public void outAHtml(AHtml node)
     {
         currentSymbolTable = currentSymbolTable.getNext();
-        puts("HTML STR FUNCTIONS \n" + htmlStr);
+        puts(htmlStr);
         htmlStr = "";
     }    
     @Override
     public void caseAHtml(AHtml node)
     {
         inAHtml(node);
-        htmlStr += "function "+ node.getIdentifier().getText().trim() +" ($holes){ \n$html = \"<html>";
+        htmlStr += "function "+ node.getIdentifier().getText().trim() +" ($holes){ \n\t$html = \"<html>";
         {
             List<PHtmlbody> copy = new ArrayList<PHtmlbody>(node.getHtmlbody());
             for(PHtmlbody e : copy)
@@ -355,7 +355,7 @@ public class Emitter extends DepthFirstAdapter
                 e.apply(this);
             }
         }
-        htmlStr += "</html>\";\nreturn $html;\n}\n";
+        htmlStr += "</html>\";\n\techo $html; \n\texit(0);\n}\n";
         outAHtml(node);
     }
 
