@@ -29,6 +29,7 @@ public class Emitter extends DepthFirstAdapter
     private final String globalFname = "global.txt";
     private String htmlStr = "";
     private boolean isInFunc = false;
+    private boolean inAWhileCond = false;
     String currentSessionName = "";
     private int showCounter = 0;
     private int loopCounter = 0;
@@ -43,23 +44,28 @@ public class Emitter extends DepthFirstAdapter
         --tabCount;
         puts("\n?>");
         printPhpCode();
-//        for(String s : globalVariablesMap.keySet())
-//        {
-//        	System.out.println(s + " " + globalVariablesMap.get(s));
-//        }
-//        
-//        for(String session: localVariableMaps.keySet())
-//        {
-//            HashMap<String, String> localVariableMap = localVariableMaps.get(session);
-//            
-//            System.out.println("Session " + session + ":");
-//            for(String s : localVariableMap.keySet())
-//            {
-//                System.out.println("\t" + s + " " + localVariableMap.get(s));
-//            }
-//        }
 
     }      
+
+    public void printLocalsAndGlobals()
+    {
+        for(String s : globalVariablesMap.keySet())
+        {
+            System.out.println(s + " " + globalVariablesMap.get(s));
+        }
+        
+        for(String session: localVariableMaps.keySet())
+        {
+            HashMap<String, String> localVariableMap = localVariableMaps.get(session);
+            
+            System.out.println("Session " + session + ":");
+            for(String s : localVariableMap.keySet())
+            {
+                System.out.println("\t" + s + " " + localVariableMap.get(s));
+            }
+        }
+    }
+    
     public Emitter(SymbolTable symbolTable)
     {
         serviceSymbolTable = symbolTable;
@@ -67,8 +73,7 @@ public class Emitter extends DepthFirstAdapter
         phpCode = new StringBuilder();
         initializeGlobalVariablesMap();
         initializeLocalSymbolVariablesMaps();
-        //writeVariablesToFile(globalFname, globalVariablesMap);
-        
+        writeVariablesToFile(globalFname, globalVariablesMap);
     }
     
     public void initializeGlobalVariablesMap()
@@ -235,11 +240,11 @@ public class Emitter extends DepthFirstAdapter
         return tabbedLine.toString();
     }
     
-    public void defaultIn(@SuppressWarnings("unused") Node node)
+    public void defaultIn(Node node)
     {
         // Do nothing
     }
-    public void defaultOut(@SuppressWarnings("unused") Node node)
+    public void defaultOut(Node node)
     {
         // Do nothing
     }
@@ -303,7 +308,7 @@ public class Emitter extends DepthFirstAdapter
     }
     private void printServiceGlobals(List<PVariable> variables)
     {
-        puts("$GLOBALS= array();");
+        puts("$globals= array();");
         for(PVariable variable : variables)
         {
             AVariable avariable = (AVariable) variable;
@@ -840,7 +845,7 @@ public class Emitter extends DepthFirstAdapter
                     puts ("array()");
                 }                
             }
-            puts("\n)\n");
+            puts("\n);\n");
         }
         outASchema(node);
     }
@@ -1350,7 +1355,9 @@ public class Emitter extends DepthFirstAdapter
         puts("(");
         if(node.getExp() != null)
         {
+            inAWhileCond = true;
             node.getExp().apply(this);
+            inAWhileCond = false;
         }
         puts(")\n");
         if(node.getStm() != null)
@@ -1420,7 +1427,7 @@ public class Emitter extends DepthFirstAdapter
         inAIdDocument(node);
         if(node.getIdentifier() != null)
         {
-            puts(node.getIdentifier().getText() + "()");
+            puts(node.getIdentifier().getText() + "(null);\n");
         }
         outAIdDocument(node);
     }
@@ -1553,7 +1560,7 @@ public class Emitter extends DepthFirstAdapter
 
     private void printSessionLocals(ASession session, List<PVariable> variables)
     {
-        String localsArray = "$_SESSION["+session.getIdentifier().getText() + "][\"LOCALS\"]";
+        String localsArray = "$_SESSION[\""+session.getIdentifier().getText() + "\"][\"locals\"]";
         puts(localsArray+ "= array();\n");
         
         for(PVariable variable : variables)
@@ -1743,6 +1750,11 @@ public class Emitter extends DepthFirstAdapter
     public void caseAAssignExp(AAssignExp node)
     {
         inAAssignExp(node);
+        if(inAWhileCond)
+        {
+            puts("(");
+        }
+            
         if(node.getLvalue() != null)
         {
             node.getLvalue().apply(this);
@@ -1752,7 +1764,14 @@ public class Emitter extends DepthFirstAdapter
         {
             node.getRight().apply(this);
         }
-        puts(";\n");
+        if (!inAWhileCond)
+        {
+            puts(";\n");
+        }
+        else
+        {
+            puts(")");
+        }
         outAAssignExp(node);
     }
 
@@ -2313,15 +2332,21 @@ public class Emitter extends DepthFirstAdapter
         inACallExp(node);
         if(node.getIdentifier() != null)
         {
-            node.getIdentifier().apply(this);
+            puts(node.getIdentifier().getText() + "(");
         }
+        List<PExp> copy = new ArrayList<PExp>(node.getExp());
+        int size = copy.size();
+        int counter = 0;
+        for(PExp e : copy)
         {
-            List<PExp> copy = new ArrayList<PExp>(node.getExp());
-            for(PExp e : copy)
-            {
-                e.apply(this);
-            }
+           e.apply(this);
+           counter++;
+           if (counter < size)
+           {
+               puts(", ");
+           }
         }
+        puts(");\n");
         outACallExp(node);
     }
 
@@ -2807,7 +2832,7 @@ public class Emitter extends DepthFirstAdapter
     {
         if (globalVariablesMap.get(varName) != null)
         {
-            return "$_SESSION[\"GLOBALS\"][\""+varName+"\"]";
+            return "$_SESSION[\"globals\"][\""+varName+"\"]";
         }
         else if (isInFunc)
         {
@@ -2815,7 +2840,7 @@ public class Emitter extends DepthFirstAdapter
         }
         else
         {
-            return "$_SESSION[\"" + currentSessionName + "\"][\"LOCALS\"][\""+varName+"\"]";
+            return "$_SESSION[\"" + currentSessionName + "\"][\"locals\"][\""+varName+"\"]";
         }
     } 
     
@@ -2849,6 +2874,7 @@ public class Emitter extends DepthFirstAdapter
         puts("[\""+label+"\"]");
         puts("[\"globals\"]");
     }   
+    
     private void saveWhileState(String label)
     {
         printLocalsState();
@@ -2865,7 +2891,7 @@ public class Emitter extends DepthFirstAdapter
     }  
     private void printLocalsState()
     {
-        puts("$_SESSSION[\"" +currentSessionName + "\"][\"LOCALS_STATES\"]");
+        puts("$_SESSION[\"" + currentSessionName + "\"][\"LOCALS_STATES\"]");
     }
     
     private String getNextShowLabel(Node node)
