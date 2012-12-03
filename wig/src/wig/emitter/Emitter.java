@@ -30,10 +30,13 @@ public class Emitter extends DepthFirstAdapter
     private String htmlStr = "";
     private boolean isInFunc = false;
     private boolean inAWhileCond = false;
+    private boolean needSemicolInCall = false;
     String currentSessionName = "";
     private int showCounter = 0;
     private int loopCounter = 0;
     private int tabCount = 0;
+    private String urlPrefix = "";
+    private String fileName;
     
     public void emit(Node node)
     {
@@ -66,11 +69,13 @@ public class Emitter extends DepthFirstAdapter
         }
     }
     
-    public Emitter(SymbolTable symbolTable)
+    public Emitter(SymbolTable symbolTable, String up, String fname)
     {
         serviceSymbolTable = symbolTable;
         currentSymbolTable= serviceSymbolTable;
         phpCode = new StringBuilder();
+        urlPrefix = up;
+        fileName = fname;
         initializeGlobalVariablesMap();
         initializeLocalSymbolVariablesMaps();
         writeVariablesToFile(globalFname, globalVariablesMap);
@@ -815,7 +820,7 @@ public class Emitter extends DepthFirstAdapter
         inASchema(node);
         if(node.getIdentifier() != null)
         {
-            puts("$schema_"+node.getIdentifier().getText()+"= array(\n");
+            puts("$schema_"+node.getIdentifier().getText()+"= array(");
         }
         {
             List<PField> fields = new ArrayList<PField>(node.getField());
@@ -824,7 +829,7 @@ public class Emitter extends DepthFirstAdapter
             {   
                 AField afield = (AField) field;
                 if(!first) 
-                    puts(",\n");
+                    puts(",");
                 else
                     first = !first;
                 puts("\""+afield.getIdentifier().getText()+"\"=>");
@@ -845,7 +850,7 @@ public class Emitter extends DepthFirstAdapter
                     puts ("array()");
                 }                
             }
-            puts("\n);\n");
+            puts(");\n");
         }
         outASchema(node);
     }
@@ -1427,7 +1432,7 @@ public class Emitter extends DepthFirstAdapter
         inAIdDocument(node);
         if(node.getIdentifier() != null)
         {
-            puts(node.getIdentifier().getText() + "(null);\n");
+            puts(node.getIdentifier().getText() + "(null, \"" + urlPrefix + "/" + fileName + ".php?session=" + currentSessionName + "\", \"" + currentSessionName + "\");\n");
         }
         outAIdDocument(node);
     }
@@ -1462,9 +1467,9 @@ public class Emitter extends DepthFirstAdapter
                 if (counter<size)
                     puts(",");
             }
-            puts(")");
+            puts("), ");
         }
-        puts(");\n");
+        puts("\"" + urlPrefix + "/" + fileName + ".php?session=" + currentSessionName + "\", \"" + currentSessionName + "\");\n");
         outAPlugDocument(node);
     }
 
@@ -2347,6 +2352,10 @@ public class Emitter extends DepthFirstAdapter
            }
         }
         puts(")");
+        if (needSemicolInCall)
+        {
+            puts(";\n");
+        }
         outACallExp(node);
     }
 
