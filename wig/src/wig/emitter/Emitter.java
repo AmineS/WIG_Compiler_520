@@ -1168,14 +1168,22 @@ public class Emitter extends DepthFirstAdapter
     public void caseAShowStm(AShowStm node)
     {
         inAShowStm(node);
+        String currShowLabel = this.getNextShowLabel(node);
+        puts("if (strcmp($_SESSION[\"" + currentSessionName + "\"]['curShow'],\"\") == 0)\n{\n");
         if(node.getDocument() != null)
         {
             node.getDocument().apply(this);
         }
+        puts("\n\n$_SESSION[\"" + currentSessionName + "\"]['currShow'] = \"" + currShowLabel + "\";\n" );
+        puts("$_SESSION[\"" + currentSessionName + "\"][\"" + currShowLabel + "\"]['skip'] = true;\n" );
+        puts("\n}\n");
+        puts("elseif (strcmp($_SESSION[\"" + currentSessionName + "\"]['curShow'],'" + currShowLabel + "') == 0)\n{\n");
         if(node.getReceive() != null)
         {
             node.getReceive().apply(this);
         }
+        puts("\n\n$_SESSION[\"" + currentSessionName + "\"]['currShow'] = \"\";\n" );
+        puts("\n}\n");
         outAShowStm(node);
     }
 
@@ -1306,7 +1314,7 @@ public class Emitter extends DepthFirstAdapter
         
         inAWhileStm(node);
         
-        saveWhileState(label)
+        saveWhileState(label);
         puts("while");
         puts("(");
         if(node.getExp() != null)
@@ -1417,6 +1425,7 @@ public class Emitter extends DepthFirstAdapter
     {
         inAReceive(node);
         {
+            
             List<PInput> copy = new ArrayList<PInput>(node.getInput());
             for(PInput e : copy)
             {
@@ -1580,13 +1589,76 @@ public class Emitter extends DepthFirstAdapter
     public void caseAInput(AInput node)
     {
         inAInput(node);
+        String variableName = "";
+        String tupleName = "";
+        String tupleField = "";
+        boolean isTuple = false;
         if(node.getLvalue() != null)
         {
+            Node leftNode = node.getLvalue();
+            if(leftNode instanceof ASimpleLvalue)
+            {
+                ASimpleLvalue lValue = (ASimpleLvalue) leftNode;
+                variableName = lValue.getIdentifier().getText().trim();
+                puts("\n\n$_SESSION[\"" + currentSessionName + "\"]['locals']['show"+ showCounter +"']['"+ variableName +"'] = ");                
+            }
+            else if(leftNode instanceof AQualifiedLvalue)
+            {
+                AQualifiedLvalue lQValue = (AQualifiedLvalue) leftNode;
+                tupleName = lQValue.getLeft().getText().trim();
+                tupleField = lQValue.getRight().getText().trim();
+                puts("\n\n$_SESSION[\"" + currentSessionName + "\"]['locals']['show"+ showCounter +"']['"+ tupleName +"']['" + tupleField + "'] = ");
+                isTuple = true;                
+            }
             node.getLvalue().apply(this);
         }
         if(node.getIdentifier() != null)
         {
-            node.getIdentifier().apply(this);
+            String inputFieldVar = node.getIdentifier().getText().trim();
+            String defaultValue = "";
+            if(!isTuple)
+            {
+                if(globalVariablesMap.containsKey(variableName))
+                {
+                    defaultValue = globalVariablesMap.get(variableName);
+                }
+                else
+                {
+                    defaultValue = localVariableMaps.get(currentSessionName).get(variableName);
+                }
+            }
+            else
+            {
+                if(globalVariablesMap.containsKey(tupleName))
+                {
+                    
+                }
+                else
+                {
+                    
+                }
+            }
+            
+            if(defaultValue.equals("false"))
+            {
+                puts("strcmp($_GET['"+ inputFieldVar + "'], \"true\") == 0;");
+            }
+            else if(defaultValue.equals("0"))
+            {
+                puts("intval($_GET['"+ inputFieldVar + "']);");
+
+            }
+            else if(defaultValue.equals("\"\""))
+            {
+                puts("$_GET['"+ inputFieldVar + "']");
+            }
+            else
+            {
+                puts("\nERROR: Cannot Receive Tuple! @ line number " + node.getIdentifier().getLine());
+                System.exit(-1);
+            }
+            
+            puts("\"\";\n");
         }
         outAInput(node);
     }

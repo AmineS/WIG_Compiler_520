@@ -19,9 +19,5 @@ public class PHPHelper
        reader.close();
        return sb.toString();
    }
-   
-   public static void main(String args[]) throws IOException
-   {
-       System.out.println(PHPHelper.getHelperPHPFunctions());
-   }
+
 }
