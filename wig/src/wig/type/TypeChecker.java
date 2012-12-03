@@ -2245,7 +2245,19 @@ public class TypeChecker extends DepthFirstAdapter
             node.getIdentifier().apply(this);
         }
 
-        if(node.getLeft() instanceof ALvalueExp)
+        if(fTypeTable.containsNode(node.getLeft()))
+        {
+            if(fTypeTable.getNodeType(node.getLeft()) == Type.TUPLE)
+            {
+                fTypeTable.setNodeType(node, Type.TUPLE);
+            }
+            else
+            {
+                puts("Error: Type mismatch: Left side of remove expression is not a tuple.");
+                System.exit(-1);
+            }
+        }
+        else if(node.getLeft() instanceof ALvalueExp)
         {
             ALvalueExp lvalueExp = (ALvalueExp) node.getLeft();
             if(lvalueExp.getLvalue() instanceof ASimpleLvalue)

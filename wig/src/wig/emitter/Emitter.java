@@ -2001,10 +2001,17 @@ public class Emitter extends DepthFirstAdapter
         inAKeepExp(node);
         if(node.getLeft() != null && node.getIdentifier() != null)
         {            
-            puts("array(\"" + node.getIdentifier().toString().replace(" ", "") + "\" => ");
-            puts(varNameToPhp(node.getLeft().toString().replace(" ", ""))  + "[\"" + 
-                    node.getIdentifier().toString().replace(" ", "") + "\"]");
-            puts(")");
+            if(node.getLeft() instanceof ALvalueExp)
+            {
+                puts("array(\"" + node.getIdentifier().toString().replace(" ", "") + "\" => ");
+                puts(varNameToPhp(node.getLeft().toString().replace(" ", ""))  + "[\"" + 
+                        node.getIdentifier().toString().replace(" ", "") + "\"]");
+                puts(")");
+            }
+            else
+            {
+                node.getLeft().apply(this);
+            }
         }        
         outAKeepExp(node);
     }
