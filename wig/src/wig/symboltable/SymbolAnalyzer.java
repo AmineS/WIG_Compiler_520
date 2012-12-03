@@ -31,6 +31,7 @@ import wig.node.ARemoveManyExp;
 import wig.node.ASession;
 import wig.node.AShowStm;
 import wig.node.ASimpleLvalue;
+import wig.node.ATupleExp;
 import wig.node.Node;
 import wig.node.PExp;
 import wig.node.PHtmlbody;
@@ -775,7 +776,7 @@ public class SymbolAnalyzer extends DepthFirstAdapter
                 }
                 else
                 {
-                    puts("Error: Not a tuple.Line no: " + simpleLvalue.getIdentifier().getLine());
+                    puts("Error: Not a tuple. Line no: " + simpleLvalue.getIdentifier().getLine());
                     System.exit(-1);
                 }
             }
