@@ -1,0 +1,30 @@
+session_start();
+
+function array_remove_key($tuppy, $keys) {  
+    $newTuppy = array();
+    foreach($tuppy as $k=>$v)
+    { 
+        if(!in_array($k, $keys))
+        {
+            $newTuppy[$k] = $v; 
+        }
+    } 
+    return $newTuppy; 
+}
+function readGlobals()
+{
+    $GLOBALS_FILE = 'globals.json';
+    $line = file_get_contents($GLOBALS_FILE);
+    $json_a = json_decode($line, TRUE);
+    $_SESSION['globals'] = $json_a['globals']; 
+}
+
+function writeGlobals()
+{
+    $GLOBALS_FILE = 'globals.json';
+    $global_file_handle = fopen($GLOBALS_FILE, 'w');
+    $json_a = json_encode($_SESSION);
+    fwrite($global_file_handle, $json_a);
+    fclose($global_file_handle);
+}
+
