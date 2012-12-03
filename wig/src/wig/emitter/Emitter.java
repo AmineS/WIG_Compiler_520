@@ -2484,14 +2484,8 @@ public class Emitter extends DepthFirstAdapter
     public void caseAQualifiedLvalue(AQualifiedLvalue node)
     {
         inAQualifiedLvalue(node);
-        if(node.getLeft() != null)
-        {
-            node.getLeft().apply(this);
-        }
-        if(node.getRight() != null)
-        {
-            node.getRight().apply(this);
-        }
+        puts(varNameToPhp(node.getLeft().getText()));
+        puts("[\""+node.getRight().getText()+"\"]");
         outAQualifiedLvalue(node);
     }
 
@@ -2802,7 +2796,7 @@ public class Emitter extends DepthFirstAdapter
     {
         if (globalVariablesMap.get(varName) != null)
         {
-            return "GLOBALS[\""+varName+"\"]";
+            return "$_SESSION[\"GLOBALS\"][\""+varName+"\"]";
         }
         else if (isInFunc)
         {
