@@ -1186,21 +1186,28 @@ public class Emitter extends DepthFirstAdapter
         String label = getNextShowLabel(node);
         inAShowStm(node);
         String currShowLabel = this.getNextShowLabel(node);
-        puts("if (strcmp($_SESSION[\"" + currentSessionName + "\"]['curShow'],\"\") == 0)\n{\n");
+        puts("if (strcmp($_SESSION[\"" + currentSessionName + "\"]['curShow'],\"\") == 0)\n");
+        putOpenBrace();
         if(node.getDocument() != null)
         {
             node.getDocument().apply(this);
         }
-        puts("\n\n$_SESSION[\"" + currentSessionName + "\"]['currShow'] = \"" + currShowLabel + "\";\n" );
-        puts("$_SESSION[\"" + currentSessionName + "\"][\"" + currShowLabel + "\"]['skip'] = true;\n" );
-        puts("\n}\n");
-        puts("elseif (strcmp($_SESSION[\"" + currentSessionName + "\"]['curShow'],'" + currShowLabel + "') == 0)\n{\n");
+        //show html
+        puts("$_SESSION[\"" + currentSessionName + "\"]['currShow'] = \"" + currShowLabel + "\";\n" );
+        puts("saveLocalsState(\""+currShowLabel+"\",\""+currentSessionName+"\");\n");
+        puts("writeGlobals();\n");
+        puts("exit(-1);");
+        putCloseBrace();
+        puts("loadLocalsState(\""+currShowLabel+"\",\""+currentSessionName+"\");\n");
+        puts("if (strcmp($_SESSION[\"" + currentSessionName + "\"]['curShow'],'" + currShowLabel + "') == 0)\n");
+        putOpenBrace();
+        puts("readGlobals();");
         if(node.getReceive() != null)
         {
             node.getReceive().apply(this);
         }
-        puts("\n\n$_SESSION[\"" + currentSessionName + "\"]['currShow'] = \"\";\n" );
-        puts("\n}\n");
+        puts("$_SESSION[\"" + currentSessionName + "\"]['currShow'] = \"\";\n" );
+        putCloseBrace();
         outAShowStm(node);
     }
 
@@ -1688,16 +1695,12 @@ public class Emitter extends DepthFirstAdapter
                 }
             }
             
-            if(defaultValue.equals("false"))
-            {
-                puts("strcmp($_GET['"+ inputFieldVar + "'], \"true\") == 0;");
-            }
-            else if(defaultValue.equals("0"))
+            if(defaultValue.equals("0"))
             {
                 puts("intval($_GET['"+ inputFieldVar + "']);");
 
             }
-            else if(defaultValue.equals(""))
+            else if(defaultValue.equals(" ") || defaultValue.equals(""))
             {
                 puts("$_GET['"+ inputFieldVar + "'];");
             }

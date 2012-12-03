@@ -197,10 +197,20 @@ public class Weeder extends DepthFirstAdapter
         String leftValueName = node.getLvalue().toString().trim();
         
         // check if variable name already exists
-        if(!fCurrentLocalVariableNames.contains(leftValueName) && !fHtmlsGlobalVariablesNames.contains(leftValueName))
+        if(node.getLvalue() instanceof ASimpleLvalue && !fCurrentLocalVariableNames.contains(leftValueName) && !fHtmlsGlobalVariablesNames.contains(leftValueName))
         {
             System.out.println("Error: Variable " + leftValueName + " is not defined in global and local scope" + " at line " + node.getIdentifier().getLine());
             fErrorPresent = true;
+        }
+        else if(node.getLvalue() instanceof AQualifiedLvalue)
+        {
+            AQualifiedLvalue lQValue = (AQualifiedLvalue) node.getLvalue();
+            String tupleName = lQValue.getLeft().getText().trim();
+            if(!fCurrentLocalVariableNames.contains(tupleName) && !fHtmlsGlobalVariablesNames.contains(tupleName))
+            {
+                System.out.println("Error: Variable " + leftValueName + " is not defined in global and local scope" + " at line " + node.getIdentifier().getLine());
+                fErrorPresent = true;
+            }
         }
         
         // check whether, in a receive construct, the identifier of an input corresponds to an inputattribute 
