@@ -25,14 +25,20 @@ public class Emitter extends DepthFirstAdapter
     StringBuilder phpCode;
     HashMap<String, String> globalVariablesMap = new HashMap<String, String>();
     HashMap<String, HashMap<String, String>> localVariableMaps = new HashMap<String, HashMap<String, String>>();
+    HashMap<Node,String> labelMap = new HashMap<Node,String>();
     private final String globalFname = "global.txt";
     private String htmlStr = "";
     private boolean isInFunc = false;
     String currentSessionName = "";
+    private int showCounter = 0;
+    private int loopCounter = 0;
     
     public void emit(Node node)
     {
+        puts("<?php\n"); 
+        puts("session_start();\n");
         node.apply(this);
+        puts("\n?>");
         printPhpCode();
 //        for(String s : globalVariablesMap.keySet())
 //        {
@@ -264,8 +270,7 @@ public class Emitter extends DepthFirstAdapter
 
                 puts("if ($WIG_SESSION == \"" + session.getIdentifier().getText()+"\")\n{\n");
                 
-                session.apply(this);
-                
+                session.apply(this);                
                 if(i!=sessions.size()-1)
                 {
                     puts("}\nelse ");
@@ -317,7 +322,7 @@ public class Emitter extends DepthFirstAdapter
     public void outAHtml(AHtml node)
     {
         currentSymbolTable = currentSymbolTable.getNext();
-        System.out.println("HTML STR FUNCTIONS \n" + htmlStr);
+        puts("HTML STR FUNCTIONS \n" + htmlStr);
         htmlStr = "";
     }    
     @Override
@@ -1297,7 +1302,11 @@ public class Emitter extends DepthFirstAdapter
     @Override
     public void caseAWhileStm(AWhileStm node)
     {
+        String label = getNextLoopLabel(node);
+        
         inAWhileStm(node);
+        
+        saveWhileState(label)
         puts("while");
         puts("(");
         if(node.getExp() != null)
@@ -2375,7 +2384,6 @@ public class Emitter extends DepthFirstAdapter
         outAFieldvalue(node);
     }
 
-
     public void caseTService(TService node)
     {
         
@@ -2581,7 +2589,6 @@ public class Emitter extends DepthFirstAdapter
     {
         puts("!");
     }
- 
     public void caseTMinus(TMinus node)
     {
         puts("-");
@@ -2622,17 +2629,15 @@ public class Emitter extends DepthFirstAdapter
     public void caseTIdentifier(TIdentifier node)
     {
     }
-
     public void caseTStringconst(TStringconst node)
     {
         puts(node.getText());
     }
-    
     public void caseTWhatever(TWhatever node)
     {
         htmlStr += node.getText().trim();
     }
-    
+   
     public void caseEOF(EOF node)
     {
     }
@@ -2651,5 +2656,49 @@ public class Emitter extends DepthFirstAdapter
         {
             return currentSessionName + "_LOCALS[\""+varName+"\"]";
         }
-    }    
+    } 
+    
+    private void saveShowState(String label)
+    {
+        printLocalsState();
+        puts("[\""+label+"\"]");
+        puts("[\"locals\"]");
+     
+        printLocalsState();
+        puts("[\""+label+"\"]");
+        puts("[\"globals\"]");
+    }
+    
+    private void saveWhileState(String label)
+    {
+        printLocalsState();
+        puts("[\""+label+"\"]");
+        puts("[\"locals\"]");
+     
+        printLocalsState();
+        puts("[\""+label+"\"]");
+        puts("[\"globals\"]");
+        
+        printLocalsState();
+        puts("[\""+label+"\"]");
+        puts("[\"skip\"]");
+    }
+    
+    private void printLocalsState()
+    {
+        puts("$_SESSSION[\"" +currentSessionName + "\"][\"LOCALS\"]");
+    }
+    
+    private String getNextShowLabel(Node node)
+    {
+        String label = "show"+ (++showCounter);
+        labelMap.put(node, label);
+        return label;
+    }
+    private String getNextLoopLabel(Node node)
+    {
+        String label = "loop"+ (++showCounter);
+        labelMap.put(node, label);
+        return label;
+    }
 }
