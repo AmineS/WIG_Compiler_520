@@ -290,7 +290,7 @@ public class Emitter extends DepthFirstAdapter
             for(int i=0; i<sessions.size(); ++i)
             {                
                 ASession session  = (ASession)sessions.get(i);
-                puts("if ($WIG_SESSION == \"" + session.getIdentifier().getText()+"\")\n");                
+                puts("if (strcmp($WIG_SESSION, \"" + session.getIdentifier().getText()+"\")==0)\n");                
                 session.apply(this);                
                 if(i!=sessions.size()-1)
                 {
@@ -1322,9 +1322,11 @@ public class Emitter extends DepthFirstAdapter
         String label = getNextLoopLabel(node);       
         inAWhileStm(node);
         
-        puts("\nif(!");
+        puts("\nif(!(isset(");
         printLocalsState();
-        puts("[\"" + label + "\"][\"skip\"])\n");
+        puts("[\""+label+"\"]) && ");
+        printLocalsState();
+        puts("[\"" + label + "\"][\"skip\"]))\n");
         putOpenBrace();
         puts("while");
         puts("(");
@@ -1366,6 +1368,7 @@ public class Emitter extends DepthFirstAdapter
         outACompStm(node);
     }
 
+    
     public void inAExpStm(AExpStm node)
     {
         defaultIn(node);
@@ -2792,7 +2795,7 @@ public class Emitter extends DepthFirstAdapter
     }
     private String getNextLoopLabel(Node node)
     {
-        String label = "loop"+ (++showCounter);
+        String label = "loop"+ (++loopCounter);
         labelMap.put(node, label);
         return label;
     }
