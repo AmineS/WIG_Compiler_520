@@ -845,7 +845,7 @@ public class Emitter extends DepthFirstAdapter
                     puts ("array()");
                 }                
             }
-            puts("\n)\n");
+            puts("\n);\n");
         }
         outASchema(node);
     }
