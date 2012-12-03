@@ -42,11 +42,12 @@ public class Emitter extends DepthFirstAdapter
     private boolean isFirstTagInHtml = true;
     private boolean hasClosingBodyTag = false;
     
-    public void emit(Node node)
+    public void emit(Node node) throws IOException
     {
         puts("<?php"); 
         ++tabCount;
         puts("\nsession_start();\n");
+        puts(PHPHelper.getHelperPHPFunctions());
         node.apply(this);
         --tabCount;
         puts("\n?>");
@@ -373,7 +374,7 @@ public class Emitter extends DepthFirstAdapter
         if(currHtmlHasInputOrSelect)
         {
             currHtmlHasInputOrSelect = false;
-            htmlStr += "<br/><button type=\"button\">Click Me!</button></br>";
+            htmlStr += "<br/><button type=\'button\'>Click Me!</button></br>";
         }
         htmlStr += "</form>";
 
@@ -396,12 +397,12 @@ public class Emitter extends DepthFirstAdapter
         inATagStartHtmlbody(node);
         if(!node.getIdentifier().getText().trim().equals("body") && isFirstTagInHtml)
         {
-            htmlStr += "<body><form name=\".$currSessionName.\" action=\".$url.\" method=\"get\"><" + node.getIdentifier().getText().trim();
+            htmlStr += "<body><form name=\".$currSessionName.\" action=\".$url.\" method=\'get\'><" + node.getIdentifier().getText().trim();
             isFirstTagInHtml = false;
         }
         else if(node.getIdentifier().getText().trim().equals("body") && isFirstTagInHtml)
         {
-            htmlStr += "<body><form name=\".$currSessionName.\" action=\".$url.\" method=\"get\"";
+            htmlStr += "<body><form name=\".$currSessionName.\" action=\".$url.\" method=\'get\'";
             isFirstTagInHtml = false;
         }
         else 
