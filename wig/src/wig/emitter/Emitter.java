@@ -32,12 +32,15 @@ public class Emitter extends DepthFirstAdapter
     String currentSessionName = "";
     private int showCounter = 0;
     private int loopCounter = 0;
+    private int tabCount = 0;
     
     public void emit(Node node)
     {
-        puts("<?php\n"); 
-        puts("session_start();\n");
+        puts("<?php"); 
+        ++tabCount;
+        puts("\nsession_start();\n");
         node.apply(this);
+        --tabCount;
         puts("\n?>");
         printPhpCode();
 //        for(String s : globalVariablesMap.keySet())
@@ -56,8 +59,7 @@ public class Emitter extends DepthFirstAdapter
 //            }
 //        }
 
-    }   
-    
+    }      
     public Emitter(SymbolTable symbolTable)
     {
         serviceSymbolTable = symbolTable;
@@ -204,11 +206,32 @@ public class Emitter extends DepthFirstAdapter
     }
     private void puts(String s)
     {
-        phpCode.append(s);
+        phpCode.append(s.replaceAll("\n", tabbedNewLine()));
+    }
+    private void putOpenBrace()
+    {
+        puts("{");
+        ++tabCount;
+        puts("\n");
+    }
+    private void putCloseBrace()
+    {
+        --tabCount;
+        puts("\n}\n");
     }
     private void printPhpCode()
     {
         System.out.println(phpCode.toString());
+    }
+    private String tabbedNewLine()
+    {
+        StringBuilder tabbedLine = new StringBuilder();
+        tabbedLine.append('\n');
+        for(int i=0; i<tabCount; ++i)
+        {
+            tabbedLine.append('\t');
+        }
+        return tabbedLine.toString();
     }
     
     public void defaultIn(@SuppressWarnings("unused") Node node)
@@ -262,23 +285,17 @@ public class Emitter extends DepthFirstAdapter
             }
         }
         {
-            puts("$WIG_SESSION = $_GET[\"session\"];\n");
+            puts("\n$WIG_SESSION = $_GET[\"session\"];\n");
             List<PSession> sessions = new ArrayList<PSession>(node.getSession());
             for(int i=0; i<sessions.size(); ++i)
             {                
                 ASession session  = (ASession)sessions.get(i);
-
-                puts("if ($WIG_SESSION == \"" + session.getIdentifier().getText()+"\")\n{\n");
-                
+                puts("if ($WIG_SESSION == \"" + session.getIdentifier().getText()+"\")\n");                
                 session.apply(this);                
                 if(i!=sessions.size()-1)
                 {
-                    puts("}\nelse ");
-                }
-                else
-                {
-                    puts("}");
-                }                
+                    puts("else ");
+                }        
             }
         }
         outAService(node);
@@ -1117,7 +1134,7 @@ public class Emitter extends DepthFirstAdapter
     {
         Symbol symbol = SymbolTable.getSymbol(currentSymbolTable, node.getIdentifier().getText());
         currentSymbolTable = SymbolTable.getScopedSymbolTable(symbol);
-        currentSessionName = node.getIdentifier().getText().toUpperCase();
+        currentSessionName = node.getIdentifier().getText();
     }
     
     public void outASession(ASession node)
@@ -1125,7 +1142,6 @@ public class Emitter extends DepthFirstAdapter
         currentSymbolTable = currentSymbolTable.getNext();
         currentSessionName = "";
     }
-    
     @Override
     public void caseASession(ASession node)
     {
@@ -1167,6 +1183,7 @@ public class Emitter extends DepthFirstAdapter
     @Override
     public void caseAShowStm(AShowStm node)
     {
+        String label = getNextLoopLabel(node);
         inAShowStm(node);
         String currShowLabel = this.getNextShowLabel(node);
         puts("if (strcmp($_SESSION[\"" + currentSessionName + "\"]['curShow'],\"\") == 0)\n{\n");
@@ -1310,11 +1327,13 @@ public class Emitter extends DepthFirstAdapter
     @Override
     public void caseAWhileStm(AWhileStm node)
     {
-        String label = getNextLoopLabel(node);
-        
+        String label = getNextLoopLabel(node);       
         inAWhileStm(node);
-        
         saveWhileState(label);
+        puts("\nif(!");
+        printLocalsState();
+        puts("[\"" + label + "\"][\"skip\"])\n");
+        putOpenBrace();
         puts("while");
         puts("(");
         if(node.getExp() != null)
@@ -1326,6 +1345,9 @@ public class Emitter extends DepthFirstAdapter
         {
             node.getStm().apply(this);
         }
+        printLocalsState();
+        puts("[\"" + label + "\"][\"skip\"]=TRUE;");
+        putCloseBrace();
         outAWhileStm(node);
     }
 
@@ -1453,7 +1475,7 @@ public class Emitter extends DepthFirstAdapter
     public void caseACompoundstm(ACompoundstm node)
     {
         inACompoundstm(node);
-        puts("{\n");
+        putOpenBrace();      
         {
             List<PVariable> variables = new ArrayList<PVariable>(node.getVariable());
             for(PVariable e : variables)
@@ -1474,13 +1496,25 @@ public class Emitter extends DepthFirstAdapter
                 e.apply(this);
             }
         }
-        puts("}\n");
+        if(node.parent().parent() instanceof AWhileStm)
+        {
+            LoopLabelCollector labelcollector = new LoopLabelCollector(labelMap);
+            ArrayList<String> labels = labelcollector.generateLabels(node); 
+            
+            for(String label:labels)
+            {
+                puts("unset(");
+                printLocalsState();
+                puts("[\""+label+"\"])\n");
+            }
+        }
+        putCloseBrace();
         outACompoundstm(node);
     }
 
     private void printSessionLocals(ASession session, List<PVariable> variables)
     {
-        String localsArray = "$"+session.getIdentifier().getText().toUpperCase() + "_LOCALS";
+        String localsArray = "$_SESSION["+session.getIdentifier().getText() + "][\"LOCALS\"]";
         puts(localsArray+ "= array();\n");
         
         for(PVariable variable : variables)
@@ -2014,14 +2048,14 @@ public class Emitter extends DepthFirstAdapter
     public void caseAJoinExp(AJoinExp node)
     {
         inAJoinExp(node);
-        if(node.getLeft() != null)
+        puts("array_merge(");
+        if(node.getLeft() != null && node.getRight() != null)
         {
-            node.getLeft().apply(this);
+            puts(varNameToPhp(node.getLeft().toString().replace(" ", "")));
+            puts(", ");
+            puts(varNameToPhp(node.getRight().toString().replace(" ", "")));
         }
-        if(node.getRight() != null)
-        {
-            node.getRight().apply(this);
-        }
+        puts(")");
         outAJoinExp(node);
     }
 
@@ -2037,14 +2071,13 @@ public class Emitter extends DepthFirstAdapter
     public void caseAKeepExp(AKeepExp node)
     {
         inAKeepExp(node);
-        if(node.getLeft() != null)
-        {
-            node.getLeft().apply(this);
-        }
-        if(node.getIdentifier() != null)
-        {
-            node.getIdentifier().apply(this);
-        }
+        if(node.getLeft() != null && node.getIdentifier() != null)
+        {            
+            puts("array(\"" + node.getIdentifier().toString().replace(" ", "") + "\" => ");
+            puts(varNameToPhp(node.getLeft().toString().replace(" ", ""))  + "[\"" + 
+                    node.getIdentifier().toString().replace(" ", "") + "\"]");
+            puts(")");
+        }        
         outAKeepExp(node);
     }
 
@@ -2059,15 +2092,21 @@ public class Emitter extends DepthFirstAdapter
     @Override
     public void caseARemoveExp(ARemoveExp node)
     {
-        inARemoveExp(node);
-        if(node.getLeft() != null)
+        inARemoveExp(node);        
+        if(node.getLeft() != null && node.getIdentifier() != null)
         {
-            node.getLeft().apply(this);
-        }
-        if(node.getIdentifier() != null)
-        {
-            node.getIdentifier().apply(this);
-        }
+            puts("array_remove_key(");
+            if (node.getLeft() instanceof ARemoveExp)
+            {
+                node.getLeft().apply(this);
+            }
+            if (node.getLeft() instanceof ALvalueExp)
+            {
+                puts(varNameToPhp(node.getLeft().toString().replace(" ", "")));
+            }
+            puts(", array(\""); 
+            puts(node.getIdentifier().getText() + "\"))");
+        }        
         outARemoveExp(node);
     }
 
@@ -2085,14 +2124,22 @@ public class Emitter extends DepthFirstAdapter
         inAKeepManyExp(node);
         if(node.getLeft() != null)
         {
-            node.getLeft().apply(this);
-        }
-        {
+            puts("array(");
             List<TIdentifier> copy = new ArrayList<TIdentifier>(node.getIdentifier());
+            int size = copy.size();
+            int counter = 0;
             for(TIdentifier e : copy)
             {
-                e.apply(this);
+                puts("\"" + e.getText() + "\" => ");
+                puts(varNameToPhp(node.getLeft().toString().replace(" ", ""))  + "[\"" + 
+                        e.getText() + "\"]");
+                counter++;
+                if (counter < size)
+                {
+                    puts(", ");
+                }
             }
+            puts(")");
         }
         outAKeepManyExp(node);
     }
@@ -2111,14 +2158,21 @@ public class Emitter extends DepthFirstAdapter
         inARemoveManyExp(node);
         if(node.getLeft() != null)
         {
-            node.getLeft().apply(this);
-        }
-        {
+            puts("array_remove_key(" + varNameToPhp(node.getLeft().toString().replace(" ", "")) + ", ");
+            puts("array(");
             List<TIdentifier> copy = new ArrayList<TIdentifier>(node.getIdentifier());
+            int size = copy.size();
+            int counter = 0;
             for(TIdentifier e : copy)
             {
-                e.apply(this);
+                puts("\"" + e.getText() + "\"");
+                counter++;
+                if (counter < size)
+                {
+                    puts(", ");
+                }
             }
+            puts(")");
         }
         outARemoveManyExp(node);
     }
@@ -2726,10 +2780,30 @@ public class Emitter extends DepthFirstAdapter
         }
         else
         {
-            return currentSessionName + "_LOCALS[\""+varName+"\"]";
+            return "$_SESSION[\"" + currentSessionName + "\"][\"LOCALS\"][\""+varName+"\"]";
         }
     } 
     
+    /**
+     * 
+     * @param str - the fields
+     * @param field - the field you want
+     * @return - the default value of the field you want
+     */
+    public static String getTupleDefaultValue(String str, String field)
+    {
+        String[] split = str.split(",");
+        for (String s: split)
+        {
+            String[] s1 = s.split("=");
+            if (s1[0].contains(field))
+            {
+                return s1[1];
+            }
+        }
+        return "";
+    }
+
     private void saveShowState(String label)
     {
         printLocalsState();
@@ -2739,8 +2813,7 @@ public class Emitter extends DepthFirstAdapter
         printLocalsState();
         puts("[\""+label+"\"]");
         puts("[\"globals\"]");
-    }
-    
+    }   
     private void saveWhileState(String label)
     {
         printLocalsState();
@@ -2754,11 +2827,10 @@ public class Emitter extends DepthFirstAdapter
         printLocalsState();
         puts("[\""+label+"\"]");
         puts("[\"skip\"]");
-    }
-    
+    }  
     private void printLocalsState()
     {
-        puts("$_SESSSION[\"" +currentSessionName + "\"][\"LOCALS\"]");
+        puts("$_SESSSION[\"" +currentSessionName + "\"][\"LOCALS_STATES\"]");
     }
     
     private String getNextShowLabel(Node node)
@@ -2774,3 +2846,4 @@ public class Emitter extends DepthFirstAdapter
         return label;
     }
 }
+

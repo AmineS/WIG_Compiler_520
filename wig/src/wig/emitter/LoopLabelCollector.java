@@ -14,7 +14,7 @@ public class LoopLabelCollector extends DepthFirstAdapter
     HashMap<Node,String> labelMap;
     ArrayList<String> labels = new ArrayList<String>();
     
-    private ArrayList<String> getLabels(Node node)
+    public  ArrayList<String> generateLabels(Node node)
     {
         node.apply(this);
         return labels;
