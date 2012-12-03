@@ -51,6 +51,11 @@ public class TypeRules
         return e1 == Type.STRING && e2 == Type.STRING;
     }
     
+    public static boolean tuppyComparison(Type e1, Type e2)
+    {
+        return e1 == Type.TUPLE && e2 == Type.TUPLE;
+    }
+    
     public static boolean notExpression(Type e)     
     {
         return e == Type.BOOL;
