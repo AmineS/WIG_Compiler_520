@@ -8,7 +8,7 @@ import wig.analysis.*;
 
 public class Weeder extends DepthFirstAdapter
 {
-    private Set<String> fHtmlsTuplesGlobalVariablesNames = new HashSet<String>(); // HTML const names + Tuple names + Variable names 
+    private Set<String> fHtmlsGlobalVariablesNames = new HashSet<String>(); // HTML const names + Tuple names + Variable names 
     private Set<String> fSessionNames = new HashSet<String>(); //Session names
     private Set<String> fSchemasNames = new HashSet<String>();
     private Set<String> fCurrentLocalVariableNames = new HashSet<String>();
@@ -35,14 +35,14 @@ public class Weeder extends DepthFirstAdapter
     public void caseAHtml(AHtml node)
     {
         String name = node.getIdentifier().getText();
-        if(fHtmlsTuplesGlobalVariablesNames.contains(name))
+        if(fHtmlsGlobalVariablesNames.contains(name))
         {
             System.out.println("Error: Duplicate variable: " + node.getIdentifier().getText() + " at line " + node.getIdentifier().getLine());
             fErrorPresent = true;
         }
         else
         {
-            fHtmlsTuplesGlobalVariablesNames.add(name);
+            fHtmlsGlobalVariablesNames.add(name);
         }
         
         for(PHtmlbody htmlbody : node.getHtmlbody())
@@ -119,14 +119,14 @@ public class Weeder extends DepthFirstAdapter
         {
             for(TIdentifier identifier : node.getIdentifier())
             {
-                if(fHtmlsTuplesGlobalVariablesNames.contains(identifier.getText()))
+                if(fHtmlsGlobalVariablesNames.contains(identifier.getText()))
                 {
                     System.out.println("Error: Duplicate global variable: " + identifier.getText() + " at line " + identifier.getLine());
                     fErrorPresent = true;
                 }
                 else
                 {
-                    fHtmlsTuplesGlobalVariablesNames.add(identifier.getText());
+                    fHtmlsGlobalVariablesNames.add(identifier.getText());
                 }
             }
         }
@@ -134,12 +134,12 @@ public class Weeder extends DepthFirstAdapter
         {
             for(TIdentifier identifier : node.getIdentifier())
             {
-                if(fCurrentLocalVariableNames.contains(identifier.getText()) && !fHtmlsTuplesGlobalVariablesNames.contains(identifier.getText()))
+                if(fCurrentLocalVariableNames.contains(identifier.getText()) && !fHtmlsGlobalVariablesNames.contains(identifier.getText()))
                 {
                     System.out.println("Error: Duplicate local variable: " + identifier.getText() + " at line " + identifier.getLine());
                     fErrorPresent = true;
                 }
-                else if(fHtmlsTuplesGlobalVariablesNames.contains(identifier.getText()))
+                else if(fHtmlsGlobalVariablesNames.contains(identifier.getText()))
                 {
                     System.out.println("Error: Duplicate global variable: " + identifier.getText() + " at line " + identifier.getLine());
                     fErrorPresent = true;
@@ -197,7 +197,7 @@ public class Weeder extends DepthFirstAdapter
         String leftValueName = node.getLvalue().toString().trim();
         
         // check if variable name already exists
-        if(!fCurrentLocalVariableNames.contains(leftValueName) && !fHtmlsTuplesGlobalVariablesNames.contains(leftValueName))
+        if(!fCurrentLocalVariableNames.contains(leftValueName) && !fHtmlsGlobalVariablesNames.contains(leftValueName))
         {
             System.out.println("Error: Variable " + leftValueName + " is not defined in global and local scope" + " at line " + node.getIdentifier().getLine());
             fErrorPresent = true;
@@ -756,7 +756,6 @@ public class Weeder extends DepthFirstAdapter
       
       public void outACompoundstm(ACompoundstm node)
       {
-          fCurrentLocalVariableNames.clear();
       }
 
       
