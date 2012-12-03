@@ -118,6 +118,7 @@ public class Emitter extends DepthFirstAdapter
             }
         }
     }  
+    
     private HashMap<String,String>  getSessionSymbolVariableMap(SSession session)
     {
         SymbolTable sessionSymbolTable = session.getSymTable();
@@ -1419,7 +1420,7 @@ public class Emitter extends DepthFirstAdapter
         inAIdDocument(node);
         if(node.getIdentifier() != null)
         {
-            node.getIdentifier().apply(this);
+            puts(node.getIdentifier().getText() + "()");
         }
         outAIdDocument(node);
     }
@@ -1438,15 +1439,25 @@ public class Emitter extends DepthFirstAdapter
         inAPlugDocument(node);
         if(node.getIdentifier() != null)
         {
-            node.getIdentifier().apply(this);
+            puts(node.getIdentifier().getText() + "(");
         }
         {
             List<PPlug> copy = new ArrayList<PPlug>(node.getPlug());
+            int size;
+            int counter;
+            size = copy.size();
+            counter = 0;
+            puts("{");
             for(PPlug e : copy)
-            {
+            {                
                 e.apply(this);
+                counter++;
+                if (counter<size)
+                    puts(",");
             }
+            puts("}");
         }
+        puts(");\n");
         outAPlugDocument(node);
     }
 
@@ -1608,7 +1619,7 @@ public class Emitter extends DepthFirstAdapter
         inAPlug(node);
         if(node.getIdentifier() != null)
         {
-            node.getIdentifier().apply(this);
+            puts("\"" + node.getIdentifier().getText() + "\" => ");
         }
         if(node.getExp() != null)
         {
@@ -2870,4 +2881,3 @@ public class Emitter extends DepthFirstAdapter
         return label;
     }
 }
-
