@@ -7,6 +7,7 @@ import java.io.IOException;
 public class PHPHelper
 {
    private final static String PHP_HELPER_FILE = "/home/2010/fkhan24/cs520/group-h/wig/src/wig/emitter/phphelpers.txt";
+
    public static String getHelperPHPFunctions() throws IOException
    {
        StringBuilder sb = new StringBuilder();

@@ -8,6 +8,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
 
+import com.sun.org.apache.bcel.internal.generic.Type;
+
 import b.HtmlEscape;
 
 import wig.analysis.DepthFirstAdapter;
@@ -17,11 +19,13 @@ import wig.symboltable.symbols.SField;
 import wig.symboltable.symbols.SSession;
 import wig.symboltable.symbols.SVariable;
 import wig.symboltable.symbols.Symbol;
+import wig.type.TypeTable;
 
 public class Emitter extends DepthFirstAdapter
 {
     private SymbolTable serviceSymbolTable;
     private SymbolTable currentSymbolTable;
+    private TypeTable typeTable = null;
     private StringBuilder phpCode;
     private HashMap<String, String> globalVariablesMap = new HashMap<String, String>();
     private HashMap<String, HashMap<String, String>> localVariableMaps = new HashMap<String, HashMap<String, String>>();
@@ -40,7 +44,6 @@ public class Emitter extends DepthFirstAdapter
     
     private boolean currHtmlHasInputOrSelect = false;
     private boolean isFirstTagInHtml = true;
-    private boolean hasClosingBodyTag = false;
     
     public void emit(Node node) throws IOException
     {
@@ -74,9 +77,10 @@ public class Emitter extends DepthFirstAdapter
         }
     }
     
-    public Emitter(SymbolTable symbolTable, String up, String fname)
+    public Emitter(SymbolTable symbolTable, TypeTable typeTable, String up, String fname)
     {
         serviceSymbolTable = symbolTable;
+        this.typeTable = typeTable;  
         currentSymbolTable= serviceSymbolTable;
         phpCode = new StringBuilder();
         urlPrefix = up;
@@ -374,12 +378,12 @@ public class Emitter extends DepthFirstAdapter
         if(currHtmlHasInputOrSelect)
         {
             currHtmlHasInputOrSelect = false;
-            htmlStr += "<br/><button type=\'button\'>Click Me!</button></br>";
+            htmlStr += "<br/><input type='hidden' name='session' value='\".$currSessionName.\"'><input type='submit' value='Submit'></br>";
         }
         htmlStr += "</form>";
 
         htmlStr += "</body>";
-        htmlStr += "</html>\";\n\techo unescapeHTML($html); \n\texit(0);\n}\n";
+        htmlStr += "</html>\";\n\techo unescapeHTML($html); Kint::dump($_SESSION);\n\texit(0);\n}\n";
         outAHtml(node);
     }
 
@@ -1268,15 +1272,13 @@ public class Emitter extends DepthFirstAdapter
         putCloseBrace();
         puts("if (strcmp($_SESSION[\"" + currentSessionName + "\"]['currShow'],\"\") == 0)\n");
         putOpenBrace();
+        puts("$_SESSION[\"" + currentSessionName + "\"]['currShow'] = \"" + currShowLabel + "\";\n" );
+        puts("saveLocalsState(\""+currShowLabel+"\",\""+currentSessionName+"\");\n");
+        puts("writeGlobals();\n");
         if(node.getDocument() != null)
         {
             node.getDocument().apply(this);
         }
-        //show html
-        puts("$_SESSION[\"" + currentSessionName + "\"]['currShow'] = \"" + currShowLabel + "\";\n" );
-        puts("saveLocalsState(\""+currShowLabel+"\",\""+currentSessionName+"\");\n");
-        puts("writeGlobals();\n");
-        puts("exit(-1);");
         putCloseBrace();
         puts("loadLocalsState(\""+currShowLabel+"\",\""+currentSessionName+"\");\n");
         puts("if (strcmp($_SESSION[\"" + currentSessionName + "\"]['currShow'],'" + currShowLabel + "') == 0)\n");
@@ -1749,18 +1751,21 @@ public class Emitter extends DepthFirstAdapter
         if(node.getLvalue() != null)
         {
             Node leftNode = node.getLvalue();
+            puts("\nif(isset($_GET['"+  node.getIdentifier().getText().trim() + "']))\n");
+            putOpenBrace();
             if(leftNode instanceof ASimpleLvalue)
             {
                 ASimpleLvalue lValue = (ASimpleLvalue) leftNode;
                 variableName = lValue.getIdentifier().getText().trim();
-                puts("\n\n$_SESSION[\"" + currentSessionName + "\"]['locals']['show"+ showCounter +"']['"+ variableName +"'] = ");                
+
+                puts("$_SESSION[\"" + currentSessionName + "\"]['locals']['"+ variableName +"'] = ");                
             }
             else if(leftNode instanceof AQualifiedLvalue)
             {
                 AQualifiedLvalue lQValue = (AQualifiedLvalue) leftNode;
                 tupleName = lQValue.getLeft().getText().trim();
                 tupleField = lQValue.getRight().getText().trim();
-                puts("\n\n$_SESSION[\"" + currentSessionName + "\"]['locals']['show"+ showCounter +"']['"+ tupleName +"']['" + tupleField + "'] = ");
+                puts("$_SESSION[\"" + currentSessionName + "\"]['locals']['"+ tupleName +"']['" + tupleField + "'] = ");
                 isTuple = true;                
             }
         }
@@ -1806,7 +1811,7 @@ public class Emitter extends DepthFirstAdapter
                 System.exit(-1);
             }
             
-            puts("\n");
+            putCloseBrace();
         }
         outAInput(node);
     }
@@ -2056,7 +2061,14 @@ public class Emitter extends DepthFirstAdapter
         {
             node.getLeft().apply(this);
         }
-        puts(" + ");
+        if(typeTable.getNodeType(node.getLeft()).equals(Type.STRING) || typeTable.getNodeType(node.getRight()).equals(Type.STRING))
+        {
+            puts(" . ");
+        }
+        else
+        {
+            puts(" + ");
+        }
         if(node.getRight() != null)
         {
             node.getRight().apply(this);

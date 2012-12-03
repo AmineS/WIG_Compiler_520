@@ -1,4 +1,4 @@
-
+require '../kint-master/Kint.class.php';
 function unescapeHTML($html)
 {
     return strtr($html,Array("&lt;"=>"<","&amp;"=>"", "quot;"=>'\'', "&nbsp;" => " ", "&gt" => ">"));
@@ -50,5 +50,5 @@ function saveLocalsState($label, $currentSession)
 function loadLocalsState($label, $currentSession)
 {
 	$_SESSION[$currentSession]["locals"] = 	$_SESSION[$currentSession]["locals_states"][$label]["locals"];
-	$_SESSION["locals"] = $_SESSION[$currentSession]["locals_states"][$label]["globals"];
+	$_SESSION["globals"] = $_SESSION[$currentSession]["locals_states"][$label]["globals"];
 }
