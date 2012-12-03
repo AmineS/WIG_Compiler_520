@@ -1182,7 +1182,7 @@ public class Emitter extends DepthFirstAdapter
     @Override
     public void caseAShowStm(AShowStm node)
     {
-        String label = getNextLoopLabel(node);
+        String label = getNextShowLabel(node);
         inAShowStm(node);
         if(node.getDocument() != null)
         {
@@ -1339,6 +1339,10 @@ public class Emitter extends DepthFirstAdapter
         printLocalsState();
         puts("[\"" + label + "\"][\"skip\"]=TRUE;");
         putCloseBrace();
+        puts("else\n");
+        putOpenBrace();
+        puts("loadLocalsState(\""+label+"\",\""+currentSessionName+"\");\n");
+        putCloseBrace();
         outAWhileStm(node);
     }
 
@@ -1465,7 +1469,18 @@ public class Emitter extends DepthFirstAdapter
     public void caseACompoundstm(ACompoundstm node)
     {
         inACompoundstm(node);
-        putOpenBrace();      
+        putOpenBrace();
+        
+        if(node.parent().parent() instanceof AWhileStm)
+        {
+            AWhileStm whileNode = (AWhileStm) node.parent().parent();
+            puts("if(isset(");
+            printLocalsState();
+            puts("[\""+labelMap.get(whileNode)+"\"])\n");
+            putOpenBrace();
+            puts("loadLocalsState(\""+labelMap.get(whileNode)+"\", \""+ currentSessionName+ "\");\n");
+            putCloseBrace();
+        }
         {
             List<PVariable> variables = new ArrayList<PVariable>(node.getVariable());
             for(PVariable e : variables)
@@ -1490,13 +1505,14 @@ public class Emitter extends DepthFirstAdapter
         {
             LoopLabelCollector labelcollector = new LoopLabelCollector(labelMap);
             ArrayList<String> labels = labelcollector.generateLabels(node); 
-            
+            AWhileStm whileNode = (AWhileStm) node.parent().parent();
             for(String label:labels)
             {
                 puts("unset(");
                 printLocalsState();
-                puts("[\""+label+"\"])\n");
+                puts("[\""+label+"\"]);\n");                
             }
+            puts("saveLocalsState(\""+labelMap.get(whileNode)+"\", \""+ currentSessionName+ "\");\n");
         }
         putCloseBrace();
         outACompoundstm(node);
