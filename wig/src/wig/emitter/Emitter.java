@@ -1501,7 +1501,7 @@ public class Emitter extends DepthFirstAdapter
         inAIdDocument(node);
         if(node.getIdentifier() != null)
         {
-            puts(node.getIdentifier().getText() + "(null, \"" + urlPrefix + "/" + fileName + ".php?session=" + currentSessionName + "\", \"" + currentSessionName + "\");\n");
+            puts(node.getIdentifier().getText() + "(null, \"" + urlPrefix + "/" + fileName + ".php" + "\", \"" + currentSessionName + "\");\n");
         }
         outAIdDocument(node);
     }
@@ -1538,7 +1538,7 @@ public class Emitter extends DepthFirstAdapter
             }
             puts("), ");
         }
-        puts("\"" + urlPrefix + "/" + fileName + ".php?session=" + currentSessionName + "\", \"" + currentSessionName + "\");\n");
+        puts("\"" + urlPrefix + "/" + fileName + ".php" + "\", \"" + currentSessionName + "\");\n");
         outAPlugDocument(node);
     }
 

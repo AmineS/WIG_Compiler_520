@@ -119,6 +119,12 @@ public class Weeder extends DepthFirstAdapter
         {
             for(TIdentifier identifier : node.getIdentifier())
             {
+                if (identifier.getText().equals("Return"))
+                {
+                    System.out.println("Reserved word \"Return\" is being used as a variable name. Line no:" + identifier.getLine());
+                    System.exit(-1);
+                }
+                
                 if(fHtmlsGlobalVariablesNames.contains(identifier.getText()))
                 {
                     System.out.println("Error: Duplicate global variable: " + identifier.getText() + " at line " + identifier.getLine());
@@ -134,6 +140,12 @@ public class Weeder extends DepthFirstAdapter
         {
             for(TIdentifier identifier : node.getIdentifier())
             {
+                if (identifier.getText().equals("Return"))
+                {
+                    System.out.println("Reserved word \"Return\" is being used as a variable name. Line no:" + identifier.getLine());
+                    System.exit(-1);
+                }
+                
                 if(fCurrentLocalVariableNames.contains(identifier.getText()) && !fHtmlsGlobalVariablesNames.contains(identifier.getText()))
                 {
                     System.out.println("Error: Duplicate local variable: " + identifier.getText() + " at line " + identifier.getLine());
