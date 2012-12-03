@@ -29,6 +29,7 @@ public class Emitter extends DepthFirstAdapter
     private final String globalFname = "global.txt";
     private String htmlStr = "";
     private boolean isInFunc = false;
+    private boolean inAWhileCond = false;
     String currentSessionName = "";
     private int showCounter = 0;
     private int loopCounter = 0;
@@ -1354,7 +1355,9 @@ public class Emitter extends DepthFirstAdapter
         puts("(");
         if(node.getExp() != null)
         {
+            inAWhileCond = true;
             node.getExp().apply(this);
+            inAWhileCond = false;
         }
         puts(")\n");
         if(node.getStm() != null)
@@ -1424,7 +1427,7 @@ public class Emitter extends DepthFirstAdapter
         inAIdDocument(node);
         if(node.getIdentifier() != null)
         {
-            puts(node.getIdentifier().getText() + "()");
+            puts(node.getIdentifier().getText() + "();\n");
         }
         outAIdDocument(node);
     }
@@ -1747,6 +1750,11 @@ public class Emitter extends DepthFirstAdapter
     public void caseAAssignExp(AAssignExp node)
     {
         inAAssignExp(node);
+        if(inAWhileCond)
+        {
+            puts("(");
+        }
+            
         if(node.getLvalue() != null)
         {
             node.getLvalue().apply(this);
@@ -1756,7 +1764,14 @@ public class Emitter extends DepthFirstAdapter
         {
             node.getRight().apply(this);
         }
-        puts(";\n");
+        if (!inAWhileCond)
+        {
+            puts(";\n");
+        }
+        else
+        {
+            puts(")");
+        }
         outAAssignExp(node);
     }
 
@@ -2317,15 +2332,21 @@ public class Emitter extends DepthFirstAdapter
         inACallExp(node);
         if(node.getIdentifier() != null)
         {
-            node.getIdentifier().apply(this);
+            puts(node.getIdentifier().getText() + "(");
         }
+        List<PExp> copy = new ArrayList<PExp>(node.getExp());
+        int size = copy.size();
+        int counter = 0;
+        for(PExp e : copy)
         {
-            List<PExp> copy = new ArrayList<PExp>(node.getExp());
-            for(PExp e : copy)
-            {
-                e.apply(this);
-            }
+           e.apply(this);
+           counter++;
+           if (counter < size)
+           {
+               puts(", ");
+           }
         }
+        puts(");\n");
         outACallExp(node);
     }
 
