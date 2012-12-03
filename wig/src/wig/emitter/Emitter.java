@@ -1418,7 +1418,6 @@ public class Emitter extends DepthFirstAdapter
         inAWhileStm(node);
 
         saveWhileState(label);
-        puts("\nif(!");
         puts("\nif(!(isset(");
         printLocalsState();
         puts("[\""+label+"\"]) && ");
@@ -1590,7 +1589,7 @@ public class Emitter extends DepthFirstAdapter
             AWhileStm whileNode = (AWhileStm) node.parent().parent();
             puts("if(isset(");
             printLocalsState();
-            puts("[\""+labelMap.get(whileNode)+"\"])\n");
+            puts("[\""+labelMap.get(whileNode)+"\"]))\n");
             putOpenBrace();
             puts("loadLocalsState(\""+labelMap.get(whileNode)+"\", \""+ currentSessionName+ "\");\n");
             putCloseBrace();
@@ -2957,15 +2956,15 @@ public class Emitter extends DepthFirstAdapter
     {
         printLocalsState();
         puts("[\""+label+"\"]");
-        puts("[\"locals\"]");
+        puts("[\"locals\"];\n");
      
         printLocalsState();
         puts("[\""+label+"\"]");
-        puts("[\"globals\"]");
+        puts("[\"globals\"];\n");
         
         printLocalsState();
         puts("[\""+label+"\"]");
-        puts("[\"skip\"]");
+        puts("[\"skip\"];\n");
     }  
     private void printLocalsState()
     {
