@@ -118,6 +118,7 @@ public class Emitter extends DepthFirstAdapter
             }
         }
     }  
+    
     private HashMap<String,String>  getSessionSymbolVariableMap(SSession session)
     {
         SymbolTable sessionSymbolTable = session.getSymTable();
