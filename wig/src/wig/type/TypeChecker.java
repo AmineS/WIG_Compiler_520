@@ -1671,7 +1671,8 @@ public class TypeChecker extends DepthFirstAdapter
         if(leftNodeType != null && rightNodeType != null)
         {
             if(TypeRules.intComparison(leftNodeType, rightNodeType) ||
-                    TypeRules.strComparison(leftNodeType, rightNodeType))
+                    TypeRules.strComparison(leftNodeType, rightNodeType) ||
+                        TypeRules.tuppyComparison(leftNodeType, rightNodeType))
             {
                 fTypeTable.setNodeType(node, Type.BOOL);
             }
