@@ -42,11 +42,12 @@ public class Emitter extends DepthFirstAdapter
     private boolean isFirstTagInHtml = true;
     private boolean hasClosingBodyTag = false;
     
-    public void emit(Node node)
+    public void emit(Node node) throws IOException
     {
         puts("<?php"); 
         ++tabCount;
         puts("\nsession_start();\n");
+        puts(PHPHelper.getHelperPHPFunctions());
         node.apply(this);
         --tabCount;
         puts("\n?>");
