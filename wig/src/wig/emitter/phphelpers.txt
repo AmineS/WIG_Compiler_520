@@ -35,6 +35,14 @@ function writeGlobals()
 
 function saveLocalsState($label, $currentSession)
 {
+	if(!isset($_SESSION[$currentSession]["locals_states"]))
+	{
+		$_SESSION[$currentSession]["locals_states"] = array();
+		if(!isset($_SESSION[$currentSession]["locals_states"][$label]))
+		{
+			$_SESSION[$currentSession]["locals_states"][$label] = array();
+		}
+	}
 	$_SESSION[$currentSession]["locals_states"][$label]["locals"] = $_SESSION[$currentSession]["locals"];
 	$_SESSION[$currentSession]["locals_states"][$label]["globals"] = $_SESSION["globals"];
 }
