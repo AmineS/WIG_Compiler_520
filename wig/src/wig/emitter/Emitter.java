@@ -363,7 +363,7 @@ public class Emitter extends DepthFirstAdapter
     public void caseAHtml(AHtml node)
     {
         inAHtml(node);
-        htmlStr += "function "+ node.getIdentifier().getText().trim() +" ($holes, $url, $currSessionNAme){ \n\t$html = \"<html>";
+        htmlStr += "function "+ node.getIdentifier().getText().trim() +" ($holes, $url, $currSessionName){ \n\t$html = \"<html>";
         {
             List<PHtmlbody> copy = new ArrayList<PHtmlbody>(node.getHtmlbody());
             for(PHtmlbody e : copy)
@@ -379,7 +379,7 @@ public class Emitter extends DepthFirstAdapter
         htmlStr += "</form>";
 
         htmlStr += "</body>";
-        htmlStr += "</html>\";\n\techo $html; \n\texit(0);\n}\n";
+        htmlStr += "</html>\";\n\techo unescapeHTML($html); \n\texit(0);\n}\n";
         outAHtml(node);
     }
 
@@ -397,12 +397,12 @@ public class Emitter extends DepthFirstAdapter
         inATagStartHtmlbody(node);
         if(!node.getIdentifier().getText().trim().equals("body") && isFirstTagInHtml)
         {
-            htmlStr += "<body><form name=\".$currSessionName.\" action=\".$url.\" method=\'get\'><" + node.getIdentifier().getText().trim();
+            htmlStr += "<body><form name='\".$currSessionName.\"' action='\".$url.\"' method=\'get\'><" + node.getIdentifier().getText().trim();
             isFirstTagInHtml = false;
         }
         else if(node.getIdentifier().getText().trim().equals("body") && isFirstTagInHtml)
         {
-            htmlStr += "<body><form name=\".$currSessionName.\" action=\".$url.\" method=\'get\'";
+            htmlStr += "<body><form name='\".$currSessionName.\"' action='\".$url.\"' method=\'get\'";
             isFirstTagInHtml = false;
         }
         else 
@@ -1258,7 +1258,11 @@ public class Emitter extends DepthFirstAdapter
         String label = getNextShowLabel(node);
         inAShowStm(node);
         String currShowLabel = this.getNextShowLabel(node);
-        puts("if (strcmp($_SESSION[\"" + currentSessionName + "\"]['curShow'],\"\") == 0)\n");
+        puts("if (!isset($_SESSION[\"" + currentSessionName + "\"]['currShow']))");
+        putOpenBrace();
+        puts("$_SESSION[\"" + currentSessionName + "\"]['currShow'] = \"\";\n" );
+        putCloseBrace();
+        puts("if (strcmp($_SESSION[\"" + currentSessionName + "\"]['currShow'],\"\") == 0)\n");
         putOpenBrace();
         if(node.getDocument() != null)
         {
@@ -1271,7 +1275,7 @@ public class Emitter extends DepthFirstAdapter
         puts("exit(-1);");
         putCloseBrace();
         puts("loadLocalsState(\""+currShowLabel+"\",\""+currentSessionName+"\");\n");
-        puts("if (strcmp($_SESSION[\"" + currentSessionName + "\"]['curShow'],'" + currShowLabel + "') == 0)\n");
+        puts("if (strcmp($_SESSION[\"" + currentSessionName + "\"]['currShow'],'" + currShowLabel + "') == 0)\n");
         putOpenBrace();
         puts("readGlobals();");
         if(node.getReceive() != null)

@@ -1,4 +1,9 @@
 
+function unescapeHTML($html)
+{
+    return strtr($html,Array("&lt;"=>"<","&amp;"=>"", "quot;"=>'\'', "&nbsp;" => " ", "&gt" => ">"));
+}
+
 function array_remove_key($tuppy, $keys) {  
     $newTuppy = array();
     foreach($tuppy as $k=>$v)
