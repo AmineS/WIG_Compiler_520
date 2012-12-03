@@ -2061,7 +2061,7 @@ public class Emitter extends DepthFirstAdapter
         {
             node.getLeft().apply(this);
         }
-        if(typeTable.getNodeType(node.getLeft()).equals(Type.STRING) || typeTable.getNodeType(node.getRight()).equals(Type.STRING))
+        if(typeTable.getNodeType(node.getLeft()).equals(wig.type.Type.STRING) || typeTable.getNodeType(node.getRight()).equals(wig.type.Type.STRING))
         {
             puts(" . ");
         }
