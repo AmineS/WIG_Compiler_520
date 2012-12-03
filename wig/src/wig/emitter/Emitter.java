@@ -32,12 +32,15 @@ public class Emitter extends DepthFirstAdapter
     String currentSessionName = "";
     private int showCounter = 0;
     private int loopCounter = 0;
+    private int tabCount = 0;
     
     public void emit(Node node)
     {
-        puts("<?php\n"); 
-        puts("session_start();\n");
+        puts("<?php"); 
+        ++tabCount;
+        puts("\nsession_start();\n");
         node.apply(this);
+        --tabCount;
         puts("\n?>");
         printPhpCode();
 //        for(String s : globalVariablesMap.keySet())
@@ -56,8 +59,7 @@ public class Emitter extends DepthFirstAdapter
 //            }
 //        }
 
-    }   
-    
+    }      
     public Emitter(SymbolTable symbolTable)
     {
         serviceSymbolTable = symbolTable;
@@ -204,11 +206,32 @@ public class Emitter extends DepthFirstAdapter
     }
     private void puts(String s)
     {
-        phpCode.append(s);
+        phpCode.append(s.replaceAll("\n", tabbedNewLine()));
+    }
+    private void putOpenBrace()
+    {
+        puts("{");
+        ++tabCount;
+        puts("\n");
+    }
+    private void putCloseBrace()
+    {
+        --tabCount;
+        puts("\n}\n");
     }
     private void printPhpCode()
     {
         System.out.println(phpCode.toString());
+    }
+    private String tabbedNewLine()
+    {
+        StringBuilder tabbedLine = new StringBuilder();
+        tabbedLine.append('\n');
+        for(int i=0; i<tabCount; ++i)
+        {
+            tabbedLine.append('\t');
+        }
+        return tabbedLine.toString();
     }
     
     public void defaultIn(@SuppressWarnings("unused") Node node)
@@ -262,23 +285,17 @@ public class Emitter extends DepthFirstAdapter
             }
         }
         {
-            puts("$WIG_SESSION = $_GET[\"session\"];\n");
+            puts("\n$WIG_SESSION = $_GET[\"session\"];\n");
             List<PSession> sessions = new ArrayList<PSession>(node.getSession());
             for(int i=0; i<sessions.size(); ++i)
             {                
                 ASession session  = (ASession)sessions.get(i);
-
-                puts("if ($WIG_SESSION == \"" + session.getIdentifier().getText()+"\")\n{\n");
-                
+                puts("if ($WIG_SESSION == \"" + session.getIdentifier().getText()+"\")\n");                
                 session.apply(this);                
                 if(i!=sessions.size()-1)
                 {
-                    puts("}\nelse ");
-                }
-                else
-                {
-                    puts("}");
-                }                
+                    puts("else ");
+                }        
             }
         }
         outAService(node);
@@ -1118,14 +1135,12 @@ public class Emitter extends DepthFirstAdapter
         Symbol symbol = SymbolTable.getSymbol(currentSymbolTable, node.getIdentifier().getText());
         currentSymbolTable = SymbolTable.getScopedSymbolTable(symbol);
         currentSessionName = node.getIdentifier().getText().toUpperCase();
-    }
-    
+    }  
     public void outASession(ASession node)
     {
         currentSymbolTable = currentSymbolTable.getNext();
         currentSessionName = "";
     }
-    
     @Override
     public void caseASession(ASession node)
     {
@@ -1167,6 +1182,7 @@ public class Emitter extends DepthFirstAdapter
     @Override
     public void caseAShowStm(AShowStm node)
     {
+        String label = getNextLoopLabel(node);
         inAShowStm(node);
         if(node.getDocument() != null)
         {
@@ -1302,11 +1318,13 @@ public class Emitter extends DepthFirstAdapter
     @Override
     public void caseAWhileStm(AWhileStm node)
     {
-        String label = getNextLoopLabel(node);
-        
+        String label = getNextLoopLabel(node);       
         inAWhileStm(node);
         
-        saveWhileState(label)
+        puts("\nif(!");
+        printLocalsState();
+        puts("[\"" + label + "\"][\"skip\"])\n");
+        putOpenBrace();
         puts("while");
         puts("(");
         if(node.getExp() != null)
@@ -1318,6 +1336,9 @@ public class Emitter extends DepthFirstAdapter
         {
             node.getStm().apply(this);
         }
+        printLocalsState();
+        puts("[\"" + label + "\"][\"skip\"]=TRUE;");
+        putCloseBrace();
         outAWhileStm(node);
     }
 
@@ -1444,7 +1465,7 @@ public class Emitter extends DepthFirstAdapter
     public void caseACompoundstm(ACompoundstm node)
     {
         inACompoundstm(node);
-        puts("{\n");
+        putOpenBrace();      
         {
             List<PVariable> variables = new ArrayList<PVariable>(node.getVariable());
             for(PVariable e : variables)
@@ -1465,7 +1486,19 @@ public class Emitter extends DepthFirstAdapter
                 e.apply(this);
             }
         }
-        puts("}\n");
+        if(node.parent().parent() instanceof AWhileStm)
+        {
+            LoopLabelCollector labelcollector = new LoopLabelCollector(labelMap);
+            ArrayList<String> labels = labelcollector.generateLabels(node); 
+            
+            for(String label:labels)
+            {
+                puts("unset(");
+                printLocalsState();
+                puts("[\""+label+"\"])\n");
+            }
+        }
+        putCloseBrace();
         outACompoundstm(node);
     }
 
@@ -2667,8 +2700,7 @@ public class Emitter extends DepthFirstAdapter
         printLocalsState();
         puts("[\""+label+"\"]");
         puts("[\"globals\"]");
-    }
-    
+    }   
     private void saveWhileState(String label)
     {
         printLocalsState();
@@ -2682,11 +2714,10 @@ public class Emitter extends DepthFirstAdapter
         printLocalsState();
         puts("[\""+label+"\"]");
         puts("[\"skip\"]");
-    }
-    
+    }  
     private void printLocalsState()
     {
-        puts("$_SESSSION[\"" +currentSessionName + "\"][\"LOCALS\"]");
+        puts("$_SESSSION[\"" +currentSessionName + "\"][\"LOCALS_STATES\"]");
     }
     
     private String getNextShowLabel(Node node)
