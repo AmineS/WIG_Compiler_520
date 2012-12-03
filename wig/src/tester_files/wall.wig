@@ -34,7 +34,7 @@ service
   session Calculate() 
   {
   	string another;
-    string userMsg;
+    int userMsg;
 
   	while (another != "no")
   	{

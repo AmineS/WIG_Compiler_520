@@ -1644,7 +1644,6 @@ public class Emitter extends DepthFirstAdapter
                 puts("\n\n$_SESSION[\"" + currentSessionName + "\"]['locals']['show"+ showCounter +"']['"+ tupleName +"']['" + tupleField + "'] = ");
                 isTuple = true;                
             }
-            node.getLvalue().apply(this);
         }
         if(node.getIdentifier() != null)
         {
@@ -1665,11 +1664,11 @@ public class Emitter extends DepthFirstAdapter
             {
                 if(globalVariablesMap.containsKey(tupleName))
                 {
-                    
+                    defaultValue = getTupleDefaultValue(globalVariablesMap.get(tupleName), tupleField);
                 }
                 else
                 {
-                    
+                    defaultValue = getTupleDefaultValue(localVariableMaps.get(currentSessionName).get(tupleName), tupleField);
                 }
             }
             
@@ -1682,9 +1681,9 @@ public class Emitter extends DepthFirstAdapter
                 puts("intval($_GET['"+ inputFieldVar + "']);");
 
             }
-            else if(defaultValue.equals("\"\""))
+            else if(defaultValue.equals(""))
             {
-                puts("$_GET['"+ inputFieldVar + "']");
+                puts("$_GET['"+ inputFieldVar + "'];");
             }
             else
             {
@@ -1692,7 +1691,7 @@ public class Emitter extends DepthFirstAdapter
                 System.exit(-1);
             }
             
-            puts("\"\";\n");
+            puts("\n");
         }
         outAInput(node);
     }
