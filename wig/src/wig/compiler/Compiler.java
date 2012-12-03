@@ -74,7 +74,6 @@ public class Compiler
                     }
                     else
                     {
-                        System.out.println(file);
                         urlPrefix = file;
                     }
                 }
