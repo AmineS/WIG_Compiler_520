@@ -606,7 +606,7 @@ public class Emitter extends DepthFirstAdapter
         inATexttypeInputtype(node);
         if(node.getText() != null)
         {
-            node.getText().apply(this);
+            puts("\"" + node.getText() + "\"");//node.getText().apply(this);
         }
         outATexttypeInputtype(node);
     }
@@ -730,9 +730,13 @@ public class Emitter extends DepthFirstAdapter
             if(leftAttr instanceof AIdAttr)
             {
                 AIdAttr tagAttribute = (AIdAttr) assignAttribute.getLeftAttr();
-                if(tagAttribute.getIdentifier().getText().trim().equals("href") && node.getStringconst() != null)
+                if((tagAttribute.getIdentifier().getText().trim().equals("href")||tagAttribute.getIdentifier().getText().trim().equals("src")) && node.getStringconst() != null)
                 {
-                    htmlStr += node.getStringconst().getText().trim();
+                    htmlStr += "quot;&amp;" + node.getStringconst().getText().trim().replace("\"", "") + "&amp;quot;";
+                }
+                else
+                {
+                    htmlStr += HtmlEscape.escape(node.getStringconst().getText().trim());
                 }
             }
 
@@ -761,10 +765,29 @@ public class Emitter extends DepthFirstAdapter
     public void caseAIconstAttr(AIconstAttr node)
     {
         inAIconstAttr(node);
-        if(node.getIntconst() != null)
+        Node parentNode = node.parent();
+        if(parentNode instanceof AAssignAttribute)
         {
-            node.getIntconst().apply(this);
+            AAssignAttribute assignAttribute = (AAssignAttribute) parentNode;
+            Node leftAttr = assignAttribute.getLeftAttr(); 
+            if(leftAttr instanceof AIdAttr)
+            {
+                AIdAttr tagAttribute = (AIdAttr) assignAttribute.getLeftAttr();
+                if((tagAttribute.getIdentifier().getText().trim().equals("href")||tagAttribute.getIdentifier().getText().trim().equals("src")) && node.getIntconst() != null)
+                {
+                    htmlStr += node.getIntconst().toString();
+                }
+            }
+
         }
+        else
+        {
+            if(node.getIntconst() != null)
+            {
+                htmlStr += HtmlEscape.escape(node.getIntconst().toString());
+            }
+        }
+
         outAIconstAttr(node);
     }
 
