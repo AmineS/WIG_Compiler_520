@@ -1515,6 +1515,7 @@ public class Emitter extends DepthFirstAdapter
         {
             node.getExp().apply(this);
         }
+        puts(";\n");
         outAExpStm(node);
     }
 
@@ -2502,10 +2503,6 @@ public class Emitter extends DepthFirstAdapter
            }
         }
         puts(")");
-        if (needSemicolInCall)
-        {
-            puts(";\n");
-        }
         outACallExp(node);
     }
 
