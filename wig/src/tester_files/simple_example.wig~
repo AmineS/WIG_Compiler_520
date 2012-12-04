@@ -1,0 +1,34 @@
+
+service {
+  const html Nikolaj =  <html> <body>
+         <input name="itemAmt4" type="text" size="5" value="0">
+     <input name="itemAmt3" type="text" size="5" value="0">
+  <img src="http://www.brics.dk/~mis/babybath.jpg">
+     <p>      <i>You are visitor number! <[no]></i>
+  </body>  </html>;
+
+    schema player
+     {
+		int score;
+	}
+	
+	schema player2
+	{
+		int walou;
+		int blob;
+	}
+
+	tuple player2 tup0;
+	
+
+  session Access() {
+	int counter;
+	counter = 0;
+  
+  	
+	tup0 = tup0 \+ blob \+ blob;	
+   
+ 
+    exit plug Nikolaj[no = counter];
+  }
+}

@@ -17,7 +17,7 @@ service
     </div>
   </body> </html>;
 
-  const html Return1 = <html>
+  const html Return = <html>
     <div align="center">
     <h1><u>Ze Vall</u></h1>
     <[allMsg]>
@@ -52,19 +52,21 @@ string messages;
   {
   	
   	int x;
-  	tuple num num0;
+  	tuple num tup;
    string userMsg;
    string another;
    x=0;
    x = func(x);
-	num0.num1=1;
-	num0.num2 = 1;
-	x \+ num1;
+	tup.num1=x;
+	tup.num2=x;
+	tup.s = "aaa";
+	x \- (num1,num2);
+	
    while (x<10)
   	{
   		show setup receive[userMsg=userMsg];
       	messages = messages + "</br><center><i>" + userMsg + "</center></i>";
-  		show plug Return1 [allMsg=messages] receive[another=another];
+  		show plug Return [allMsg=messages] receive[another=another];
   	}
   	exit exitMsg;
   }

@@ -12,16 +12,14 @@ service
     <img src="arnold.jpg" alt="Smiley face" height="200" width="200">
     <br>COME AT ME BRO, ARGH!<br>
     <input type="text" name="userMsg" size=50>
-
     </h3>
     </div>
   </body> </html>;
 
-  const html Return1 = <html>
+  const html Return = <html>
     <div align="center">
     <h1><u>Ze Vall</u></h1>
     <[allMsg]>
-
     <br>
      Cool story bro, say it again! (yes or no)
     <input type="text" name="another" size=2>
@@ -31,40 +29,18 @@ service
   const html exitMsg = <html> <center> <h1>See you later</h1> <img src="alligator.jpg" alt="Smiley face" height="200" width="200"> </center> </html>;
 
 
-
-  schema num 
-	{
-    int num1; 
-    int num2;
-    string s;
-  }
-
-string messages;
-
-	int func(int a)
-	{
-		return a;
-	}
-
-  
+  string messages;
 
   session Calculate() 
   {
-  	
-  	int x;
-  	tuple num num0;
-   string userMsg;
-   string another;
-   x=0;
-   x = func(x);
-	num0.num1=1;
-	num0.num2 = 1;
-	x \+ num1;
-   while (x<10)
+  	string another;
+    string userMsg;
+
+  	while (another != "no")
   	{
   		show setup receive[userMsg=userMsg];
       	messages = messages + "</br><center><i>" + userMsg + "</center></i>";
-  		show plug Return1 [allMsg=messages] receive[another=another];
+  		show plug Return [allMsg=messages] receive[another=another];
   	}
   	exit exitMsg;
   }

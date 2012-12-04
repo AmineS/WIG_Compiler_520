@@ -16,7 +16,7 @@ service
     </div>
   </body> </html>;
 
-  const html Return = <html>
+  const html Return1 = <html>
     <div align="center">
     <h1><u>Ze Vall</u></h1>
     <[allMsg]>
@@ -40,7 +40,7 @@ service
   	{
   		show setup receive[userMsg=userMsg];
       	messages = messages + "</br><center><i>" + userMsg + "</center></i>";
-  		show plug Return [allMsg=messages] receive[another=another];
+  		show plug Return1 [allMsg=messages] receive[another=another];
   	}
   	exit exitMsg;
   }
