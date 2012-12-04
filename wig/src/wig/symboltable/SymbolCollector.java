@@ -273,8 +273,8 @@ public class SymbolCollector extends DepthFirstAdapter
         {
             if(SymbolTable.getSymbol(fCurrentSymTable, name) != null)
             {
-                puts("Error: Input name " + name + " already defined.");
-                System.exit(1);
+                //puts("Error: Input name " + name + " already defined.");
+                //System.exit(1);
             }
             else
             {

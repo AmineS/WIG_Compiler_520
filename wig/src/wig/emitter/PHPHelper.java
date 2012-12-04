@@ -6,7 +6,7 @@ import java.io.IOException;
 
 public class PHPHelper
 {
-   private final static String PHP_HELPER_FILE = "/home/2010/dbhage/cs520/group-h/wig/src/wig/emitter/phphelpers.txt";
+   private final static String PHP_HELPER_FILE = "src/phphelpers.txt";
 
    public static String getHelperPHPFunctions() throws IOException
    {

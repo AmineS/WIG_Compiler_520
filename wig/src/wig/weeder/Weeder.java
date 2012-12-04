@@ -571,8 +571,8 @@ public class Weeder extends DepthFirstAdapter
       {
           if (fInputVariablesSameHtml.contains(node.getAttr().toString().replace("\"", "")))
           {
-              System.out.println("Error: Attribute '" + node.getAttr().toString().replace("\"", "") + "' in input tag at line " + node.getName().getLine() + " for " + node.getName().getText() + " already exists in the same html const!");
-              fErrorPresent = true;
+              //System.out.println("Error: Attribute '" + node.getAttr().toString().replace("\"", "") + "' in input tag at line " + node.getName().getLine() + " for " + node.getName().getText() + " already exists in the same html const!");
+              //fErrorPresent = true;
           }
           else
           {
