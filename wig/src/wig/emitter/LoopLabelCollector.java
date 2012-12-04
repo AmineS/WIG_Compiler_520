@@ -23,6 +23,7 @@ public class LoopLabelCollector extends DepthFirstAdapter
     
     public void caseAWhileStm(AWhileStm node)
     {
+        labels.add(labelMap.get(node));
     }
     
     public void caseAShowStm(AShowStm node)

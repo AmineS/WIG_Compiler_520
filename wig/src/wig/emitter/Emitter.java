@@ -1161,6 +1161,8 @@ public class Emitter extends DepthFirstAdapter
             node.getCompoundstm().apply(this);
         }
         outAFunction(node);
+        
+        
     }
 
     public void inAArguments(AArguments node)
@@ -1440,13 +1442,16 @@ public class Emitter extends DepthFirstAdapter
         String label = getNextLoopLabel(node);       
         inAWhileStm(node);
 
-        initializeWhileState(label);
-        puts("\nif(!(isset(");
-        printLocalsState();
-        puts("[\""+label+"\"]) && ");
-        printLocalsState();
-        puts("[\"" + label + "\"][\"skip\"]))\n");
-        putOpenBrace();
+        if(!isInFunction(node))
+        {
+            initializeWhileState(label);
+            puts("\nif(!(isset(");
+            printLocalsState();
+            puts("[\""+label+"\"]) && ");
+            printLocalsState();
+            puts("[\"" + label + "\"][\"skip\"]))\n");
+            putOpenBrace();
+        }
         puts("while");
         puts("(");
         if(node.getExp() != null)
@@ -1468,14 +1473,17 @@ public class Emitter extends DepthFirstAdapter
                 putCloseBrace();
             }
         }
-        printLocalsState();
-        puts("[\"" + label + "\"][\"skip\"]=TRUE;");
-        puts("saveLocalsState(\""+label+"\",\""+currentSessionName+"\");\n");
-        putCloseBrace();
-        puts("else\n");
-        putOpenBrace();
-        puts("loadLocalsState(\""+label+"\",\""+currentSessionName+"\");\n");
-        putCloseBrace();
+        if(!isInFunction(node))
+        {
+            printLocalsState();
+            puts("[\"" + label + "\"][\"skip\"]=TRUE;");
+            puts("saveLocalsState(\""+label+"\",\""+currentSessionName+"\");\n");
+            putCloseBrace();
+            puts("else\n");
+            putOpenBrace();
+            puts("loadLocalsState(\""+label+"\",\""+currentSessionName+"\");\n");
+            putCloseBrace();
+        }
         outAWhileStm(node);
     }
 
@@ -1617,7 +1625,7 @@ public class Emitter extends DepthFirstAdapter
         inACompoundstm(node);
         putOpenBrace();
         
-        if(node.parent().parent() instanceof AWhileStm)
+        if(node.parent().parent() instanceof AWhileStm && !isInFunction(node))
         {
             AWhileStm whileNode = (AWhileStm) node.parent().parent();
             puts("if(isset(");
@@ -1651,7 +1659,7 @@ public class Emitter extends DepthFirstAdapter
                 e.apply(this);
             }
         }
-        if(node.parent().parent() instanceof AWhileStm)
+        if(node.parent().parent() instanceof AWhileStm && !isInFunction(node))
         {
             LoopLabelCollector labelcollector = new LoopLabelCollector(labelMap);
             ArrayList<String> labels = labelcollector.generateLabels(node); 
@@ -1663,9 +1671,26 @@ public class Emitter extends DepthFirstAdapter
                 puts("[\""+label+"\"]);\n");                
             }
             puts("saveLocalsState(\""+labelMap.get(whileNode)+"\", \""+ currentSessionName+ "\");\n");
+            
         }
         putCloseBrace();
         outACompoundstm(node);
+    }
+    
+    private boolean isInFunction(Node node)
+    {
+        while(!(node instanceof AService))
+        {
+            if(node instanceof AFunction)
+            {
+                return true;
+            }
+            else
+            {
+                node = node.parent();
+            }            
+        }
+        return false;
     }
 
     private void printSessionLocals(ASession session, List<PVariable> variables)
