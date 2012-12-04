@@ -26,7 +26,7 @@ function createJSON_file($json_file)
 
 function readGlobals($json_file)
 {
-    $GLOBALS_FILE = '.$json_file.';
+    $GLOBALS_FILE = $json_file;
     $line = file_get_contents($GLOBALS_FILE);
     $json_a = json_decode($line, TRUE);
     if(!empty($json_a))
@@ -37,7 +37,7 @@ function readGlobals($json_file)
 
 function writeGlobals($json_file)
 {
-    $GLOBALS_FILE = '.$json_file.';
+    $GLOBALS_FILE = $json_file;
     $global_file_handle = fopen($GLOBALS_FILE, 'w');
     $json_a = json_encode($_SESSION);
     fwrite($global_file_handle, $json_a);

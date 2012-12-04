@@ -233,7 +233,7 @@ public class Compiler
             String [] split = temp.split("/");
             fileName = split[split.length-1];
             
-            Emitter em = new Emitter(symAnalyzer.getServiceSymbolTable(), typeChecker.getTypeTable(), "", fileName);
+            Emitter em = new Emitter(symAnalyzer.getServiceSymbolTable(), typeChecker.getTypeTable(), urlPrefix, fileName);
             em.emit(tree);
         }
     }

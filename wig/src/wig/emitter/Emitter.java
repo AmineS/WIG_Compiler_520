@@ -26,7 +26,7 @@ import wig.type.TypeTable;
 public class Emitter extends DepthFirstAdapter
 {
     
-    private String pathToPublicHtml = "/home/2010/dbhage/public_html/";
+    private String pathToPublicHtml = "/Applications/MAMP/htdocs/wig_benchmarks_test/";
     
     private SymbolTable serviceSymbolTable;
     private SymbolTable currentSymbolTable;
@@ -49,9 +49,11 @@ public class Emitter extends DepthFirstAdapter
     private String globalJsonFileName = "globals.json";
     private boolean currHtmlHasInputOrSelect = false;
     private boolean isFirstTagInHtml = true;
+    private String originalFileName;
     
     public void emit(Node node) throws IOException
     {
+        originalFileName = fileName;
         fileName =  pathToPublicHtml + fileName;
         globalJsonFileName = pathToPublicHtml + globalJsonFileName;
         puts("<?php"); 
@@ -1549,7 +1551,7 @@ public class Emitter extends DepthFirstAdapter
         inAIdDocument(node);
         if(node.getIdentifier() != null)
         {
-            puts(node.getIdentifier().getText() + "(null, \"" + urlPrefix + "/" + fileName + ".php" + "\", \"" + currentSessionName + "\");\n");
+            puts(node.getIdentifier().getText() + "(null, \"" + urlPrefix + "/" + originalFileName + ".php" + "\", \"" + currentSessionName + "\");\n");
         }
         outAIdDocument(node);
     }
@@ -1586,7 +1588,7 @@ public class Emitter extends DepthFirstAdapter
             }
             puts("), ");
         }
-        puts("\"" + urlPrefix + "/" + fileName + ".php" + "\", \"" + currentSessionName + "\");\n");
+        puts("\"" + urlPrefix + "/" + originalFileName + ".php" + "\", \"" + currentSessionName + "\");\n");
         outAPlugDocument(node);
     }
 
