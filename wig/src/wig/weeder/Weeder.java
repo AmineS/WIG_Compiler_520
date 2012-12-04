@@ -261,6 +261,13 @@ public class Weeder extends DepthFirstAdapter
     public void caseASession(ASession node)
     {
         String sessionName = node.getIdentifier().toString().trim();
+        
+        if (sessionName.equals("destroy"))
+        {
+            System.out.println("A session cannot be named \"destroy\". Line no:" + node.getIdentifier().getLine());
+            fErrorPresent = true;
+        }
+        
         if(fSessionNames.contains(sessionName))
         {
             System.out.println("Error: Duplicate Session " + sessionName + " at line " + node.getIdentifier().getLine());
