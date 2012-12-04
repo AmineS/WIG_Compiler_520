@@ -14,8 +14,9 @@ public class Weeder extends DepthFirstAdapter
     private Set<String> fCurrentLocalVariableNames = new HashSet<String>();
     private Set<String> fHoleVariables = new HashSet<String>();
     private Set<String> fInputVariables = new HashSet<String>();
+    private Set<String> fInputVariablesSameHtml = new HashSet<String>();
     private static boolean fErrorPresent = false;
-    
+    private boolean inAHtml = false;
     /**
      * Weeder
      * @param node
@@ -29,12 +30,20 @@ public class Weeder extends DepthFirstAdapter
         }
     }
 
+   
     /**
      * Make sure no html's have the same name
      */
     public void caseAHtml(AHtml node)
     {
         String name = node.getIdentifier().getText();
+        
+        if (node.getIdentifier().getText().toLowerCase().equals("list") || node.getIdentifier().getText().toLowerCase().equals("Return"))
+        {
+            System.out.println("Reserved word \"" + node.getIdentifier().getText() + "\" is being used as a html const name. Line no:" + node.getIdentifier().getLine());
+            System.exit(-1);
+        }
+        
         if(fHtmlsGlobalVariablesNames.contains(name))
         {
             System.out.println("Error: Duplicate variable: " + node.getIdentifier().getText() + " at line " + node.getIdentifier().getLine());
@@ -49,6 +58,12 @@ public class Weeder extends DepthFirstAdapter
         {
             htmlbody.apply(this);
         }
+        outAHtml(node);
+    }
+    
+    public void outAHtml(AHtml node)
+    {
+        fInputVariablesSameHtml.clear();
     }
     
     /**
@@ -119,9 +134,9 @@ public class Weeder extends DepthFirstAdapter
         {
             for(TIdentifier identifier : node.getIdentifier())
             {
-                if (identifier.getText().equals("Return"))
+                if (identifier.getText().toLowerCase().equals("list") || identifier.getText().equals("Return"))
                 {
-                    System.out.println("Reserved word \"Return\" is being used as a variable name. Line no:" + identifier.getLine());
+                    System.out.println("Reserved word \"" + identifier.getText() + "\" or  is being used as a variable name. Line no:" + identifier.getLine());
                     System.exit(-1);
                 }
                 
@@ -145,7 +160,11 @@ public class Weeder extends DepthFirstAdapter
                     System.out.println("Reserved word \"Return\" is being used as a variable name. Line no:" + identifier.getLine());
                     System.exit(-1);
                 }
-                
+                if (identifier.getText().toLowerCase().equals("list"))
+                {
+                    System.out.println("Reserved word \"" + identifier.getText() + "\" or  is being used as a variable name. Line no:" + identifier.getLine());
+                    System.exit(-1);
+                }
                 if(fCurrentLocalVariableNames.contains(identifier.getText()) && !fHtmlsGlobalVariablesNames.contains(identifier.getText()))
                 {
                     System.out.println("Error: Duplicate local variable: " + identifier.getText() + " at line " + identifier.getLine());
@@ -550,14 +569,15 @@ public class Weeder extends DepthFirstAdapter
        */
       public void caseANameInputattr(ANameInputattr node)
       {
-          if (fInputVariables.contains(node.getAttr().toString().replace("\"", "")))
+          if (fInputVariablesSameHtml.contains(node.getAttr().toString().replace("\"", "")))
           {
-              System.out.println("Error: Attribute '" + node.getAttr().toString().replace("\"", "") + "' in input tag at line " + node.getName().getLine() + " for " + node.getName().getText() + " already exists!");
+              System.out.println("Error: Attribute '" + node.getAttr().toString().replace("\"", "") + "' in input tag at line " + node.getName().getLine() + " for " + node.getName().getText() + " already exists in the same html const!");
               fErrorPresent = true;
           }
           else
           {
               fInputVariables.add(node.getAttr().toString().replace("\"", ""));
+              fInputVariablesSameHtml.add(node.getAttr().toString().replace("\"", ""));
           }
           
           if(node.getAttr() != null)
@@ -891,11 +911,11 @@ public class Weeder extends DepthFirstAdapter
       
       public void caseAJoinExp(AJoinExp node)
       {
-//          if (node.getRight() instanceof AJoinExp)
-//          {
-//              System.out.println("Chained joins not allowed.");
-//              fErrorPresent = true;
-//          }
+          if (node.getRight() instanceof AJoinExp)
+          {
+              System.out.println("Chained joins not allowed.");
+              fErrorPresent = true;
+          }
           node.getLeft().apply(this);
           node.getRight().apply(this);
       }
@@ -1062,6 +1082,17 @@ public class Weeder extends DepthFirstAdapter
 
       }
 
+      public void caseTIdentifier(TIdentifier identifier)
+      {
+          
+          if (identifier.getText().equals("Return") || identifier.getText().toLowerCase().equals("list"))
+          {
+              System.out.println("Reserved word \"Return\" is being used as a variable name. Line no:" + identifier.getLine());
+              System.exit(-1);
+          }
+          
+      }
+      
       public void caseAIntType(AIntType node)
       {
           if(node.getInt() != null)
