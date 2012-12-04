@@ -1,6 +1,8 @@
 package wig.emitter;
 
 
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -41,7 +43,7 @@ public class Emitter extends DepthFirstAdapter
     private int tabCount = 0;
     private String urlPrefix = "";
     private String fileName;
-    
+    private String globalJsonFileName = "globals.json";
     private boolean currHtmlHasInputOrSelect = false;
     private boolean isFirstTagInHtml = true;
     
@@ -77,7 +79,7 @@ public class Emitter extends DepthFirstAdapter
         }
     }
     
-    public Emitter(SymbolTable symbolTable, TypeTable typeTable, String up, String fname)
+    public Emitter(SymbolTable symbolTable, TypeTable typeTable, String up, String fname) throws IOException
     {
         serviceSymbolTable = symbolTable;
         this.typeTable = typeTable;  
@@ -88,6 +90,9 @@ public class Emitter extends DepthFirstAdapter
         initializeGlobalVariablesMap();
         initializeLocalSymbolVariablesMaps();
         writeVariablesToFile(globalFname, globalVariablesMap);
+        FileWriter fr = new FileWriter(globalJsonFileName);
+        fr.write("");
+        fr.close();        
     }
     
     public void initializeGlobalVariablesMap()
