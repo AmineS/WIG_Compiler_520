@@ -354,13 +354,11 @@ public class Weeder extends DepthFirstAdapter
             {
                 System.out.println("show statement not allowed in functions!");
                 fErrorPresent = true;
-                System.exit(-1);
             } 
             if (ps instanceof AExitStm)
             {
                 System.out.println("exit statement not allowed in functions!");
                 fErrorPresent = true;
-                System.exit(-1);
             }
         }
         
