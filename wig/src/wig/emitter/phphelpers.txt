@@ -21,7 +21,10 @@ function readGlobals()
     $GLOBALS_FILE = 'globals.json';
     $line = file_get_contents($GLOBALS_FILE);
     $json_a = json_decode($line, TRUE);
-    $_SESSION['globals'] = $json_a['globals']; 
+    if(!empty($json_a))
+    {
+        $_SESSION['globals'] = $json_a['globals']; 
+    }
 }
 
 function writeGlobals()

@@ -305,7 +305,8 @@ public class Emitter extends DepthFirstAdapter
             }
         }
         {
-            puts("\n$WIG_SESSION = $_GET[\"session\"];\n");
+            puts("\n$WIG_SESSION = $_GET[\"session\"];\nreadGlobals();\n");
+            
             List<PSession> sessions = new ArrayList<PSession>(node.getSession());
             for(int i=0; i<sessions.size(); ++i)
             {                
@@ -1591,10 +1592,14 @@ public class Emitter extends DepthFirstAdapter
             AWhileStm whileNode = (AWhileStm) node.parent().parent();
             puts("if(isset(");
             printLocalsState();
-            puts("[\""+labelMap.get(whileNode)+"\"]))\n");
+            puts("[\""+labelMap.get(whileNode)+"\"][\"first\"]) && !");
+            printLocalsState();
+            puts("[\""+labelMap.get(whileNode)+"\"][\"first\"])\n");
             putOpenBrace();
             puts("loadLocalsState(\""+labelMap.get(whileNode)+"\", \""+ currentSessionName+ "\");\n");
             putCloseBrace();
+            printLocalsState();
+            puts("[\""+labelMap.get(whileNode)+"\"][\"first\"] = FALSE;\n");
         }
         {
             List<PVariable> variables = new ArrayList<PVariable>(node.getVariable());
@@ -2977,6 +2982,9 @@ public class Emitter extends DepthFirstAdapter
         printLocalsState();
         puts("[\""+label+"\"]");
         puts("[\"skip\"]=false;\n");
+        printLocalsState();
+        puts("[\""+label+"\"]");
+        puts("[\"first\"]=true;\n");
     }  
     private void printLocalsState()
     {
