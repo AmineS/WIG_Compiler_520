@@ -380,7 +380,7 @@ public class Emitter extends DepthFirstAdapter
         htmlStr += "</form>";
 
         htmlStr += "</body>";
-        htmlStr += "</html>\";\n\techo unescapeHTML($html); Kint::dump($_SESSION);\n\texit(0);\n}\n";
+        htmlStr += "</html>\";\n\techo unescapeHTML($html);\n\texit(0);\n}\n";
         outAHtml(node);
     }
 
@@ -1359,7 +1359,15 @@ public class Emitter extends DepthFirstAdapter
         puts(")\n");
         if(node.getStm() != null)
         {
+            if(!(node.getStm() instanceof ACompStm))
+            {
+                putOpenBrace();
+            }
             node.getStm().apply(this);
+            if(!(node.getStm() instanceof ACompStm))
+            {
+                putCloseBrace();
+            }
         }
         outAIfStm(node);
     }
@@ -1385,12 +1393,29 @@ public class Emitter extends DepthFirstAdapter
         puts(")\n");
         if(node.getThenStm() != null)
         {
+            if(!(node.getThenStm() instanceof ACompStm))
+            {
+                putOpenBrace();
+            }
             node.getThenStm().apply(this);
+            if(!(node.getThenStm() instanceof ACompStm))
+            {
+                putCloseBrace();
+            }
+            
         }
         puts("else");
         if(node.getElseStm() != null)
         {
+            if(!(node.getElseStm() instanceof ACompStm))
+            {
+                putOpenBrace();
+            }
             node.getElseStm().apply(this);
+            if(!(node.getElseStm() instanceof ACompStm))
+            {
+                putCloseBrace();
+            }
         }
         outAIfelseStm(node);
     }
@@ -1427,7 +1452,15 @@ public class Emitter extends DepthFirstAdapter
         puts(")\n");
         if(node.getStm() != null)
         {
+            if(!(node.getStm() instanceof ACompStm))
+            {
+                putOpenBrace();
+            }
             node.getStm().apply(this);
+            if(!(node.getStm() instanceof ACompStm))
+            {
+                putCloseBrace();
+            }
         }
         printLocalsState();
         puts("[\"" + label + "\"][\"skip\"]=TRUE;");
