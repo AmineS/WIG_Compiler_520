@@ -1515,7 +1515,7 @@ public class Emitter extends DepthFirstAdapter
         {
             node.getExp().apply(this);
         }
-        puts(";\n");
+        puts(";");
         outAExpStm(node);
     }
 
@@ -2793,11 +2793,11 @@ public class Emitter extends DepthFirstAdapter
     }
     public void caseTTrue(TTrue node)
     {
-        
+        puts(node.getText().toUpperCase());
     }
     public void caseTFalse(TFalse node)
     {
-        
+        puts(node.getText().toUpperCase());
     }
     public void caseTMeta(TMeta node)
     {

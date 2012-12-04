@@ -1,5 +1,6 @@
 List of Benchmarks that are known to work:
 
+
 Restrictions:
  - We do not support show/exit statements in functions.
  - Join operations cannot be chained with other joins or any other tuple operations. 
@@ -9,9 +10,12 @@ Restrictions:
    e.g.: “<input name = “name” type=”text” />”
  - Sessions cannot be named “destroy”.
 
-We can handle tuple ops, comparison and assignment.
-We handle string comparison and comparison between string and int.
+Apart from the above restrictions, everything else is handled.
+For more information, read our report.
 
+COMPILE, INSTALL and RUN WIG programs:
+ - compile: java wig.compiler.Compiler -cg 
+ - run: 
 
 
 
