@@ -25,6 +25,9 @@ import wig.type.TypeTable;
 
 public class Emitter extends DepthFirstAdapter
 {
+    
+    private String pathToPublicHtml = "/home/2010/dbhage/public_html/";
+    
     private SymbolTable serviceSymbolTable;
     private SymbolTable currentSymbolTable;
     private TypeTable typeTable = null;
@@ -49,6 +52,8 @@ public class Emitter extends DepthFirstAdapter
     
     public void emit(Node node) throws IOException
     {
+        fileName =  pathToPublicHtml + fileName;
+        globalJsonFileName = pathToPublicHtml + globalJsonFileName;
         puts("<?php"); 
         ++tabCount;
         puts("\nsession_start();\n");
@@ -57,7 +62,9 @@ public class Emitter extends DepthFirstAdapter
         --tabCount;
         puts("\n?>");
         printPhpCode();
-
+        FileWriter fw = new FileWriter(fileName + ".php");
+        fw.write(phpCode.toString());
+        fw.close();
     }      
 
     public void printLocalsAndGlobals()
@@ -279,6 +286,7 @@ public class Emitter extends DepthFirstAdapter
     @Override
     public void caseAService(AService node)
     {
+        puts("createJSON_file(\"" + globalJsonFileName + "\");");
         inAService(node);
         {
             List<PHtml> copy = new ArrayList<PHtml>(node.getHtml());
@@ -310,7 +318,7 @@ public class Emitter extends DepthFirstAdapter
             }
         }
         {
-            puts("\n$WIG_SESSION = $_GET[\"session\"];\nreadGlobals();\n");
+            puts("\n$WIG_SESSION = $_GET[\"session\"];\nreadGlobals(\"" + globalJsonFileName + "\");\n");
             
             List<PSession> sessions = new ArrayList<PSession>(node.getSession());
             for(int i=0; i<sessions.size(); ++i)
@@ -1269,7 +1277,7 @@ public class Emitter extends DepthFirstAdapter
         putOpenBrace();
         puts("$_SESSION[\"" + currentSessionName + "\"]['currShow'] = \"" + currShowLabel + "\";\n" );
         puts("saveLocalsState(\""+currShowLabel+"\",\""+currentSessionName+"\");\n");
-        puts("writeGlobals();\n");
+        puts("writeGlobals(\"" + globalJsonFileName + "\");\n");
         if(node.getDocument() != null)
         {
             node.getDocument().apply(this);
@@ -1278,7 +1286,7 @@ public class Emitter extends DepthFirstAdapter
         puts("loadLocalsState(\""+currShowLabel+"\",\""+currentSessionName+"\");\n");
         puts("if (strcmp($_SESSION[\"" + currentSessionName + "\"]['currShow'],'" + currShowLabel + "') == 0)\n");
         putOpenBrace();
-        puts("readGlobals();");
+        puts("readGlobals(\"" + globalJsonFileName + "\");");
         if(node.getReceive() != null)
         {
             node.getReceive().apply(this);
@@ -1302,7 +1310,7 @@ public class Emitter extends DepthFirstAdapter
         inAExitStm(node);
         if(node.getDocument() != null)
         {
-            puts("writeGlobals();\n");
+            puts("writeGlobals(\"" + globalJsonFileName + "\");\n");
             node.getDocument().apply(this);
         }
         outAExitStm(node);

@@ -1,5 +1,7 @@
 List of Benchmarks that are known to work:
-
+We tested on the 2009 benchmarks. 
+Groups which work:
+Groups which do not work:
 
 Restrictions:
  - We do not support show/exit statements in functions.
@@ -15,6 +17,8 @@ For more information, read our report.
 
 COMPILE, INSTALL and RUN WIG programs:
  - compile: java wig.compiler.Compiler -cg 
+ 	OR: 
+ 	
  - run: 
 
 

@@ -15,9 +15,18 @@ function array_remove_key($tuppy, $keys) {
     return $newTuppy; 
 }
 
-function readGlobals()
+function createJSON_file($json_file)
 {
-    $GLOBALS_FILE = 'home/2010/dbhage/public_html/globals.json';
+	if(!file_exists($json_file))
+	{ 
+		$fileHandle = fopen($json_file, 'w') or die("can't open file");
+		fclose($fileHandle);
+	}
+}
+
+function readGlobals($json_file)
+{
+    $GLOBALS_FILE = '.$json_file.';
     $line = file_get_contents($GLOBALS_FILE);
     $json_a = json_decode($line, TRUE);
     if(!empty($json_a))
@@ -26,9 +35,9 @@ function readGlobals()
     }
 }
 
-function writeGlobals()
+function writeGlobals($json_file)
 {
-    $GLOBALS_FILE = 'home/2010/dbhage/public_html/globals.json';
+    $GLOBALS_FILE = '.$json_file.';
     $global_file_handle = fopen($GLOBALS_FILE, 'w');
     $json_a = json_encode($_SESSION);
     fwrite($global_file_handle, $json_a);
