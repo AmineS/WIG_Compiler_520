@@ -496,7 +496,7 @@ public class Weeder extends DepthFirstAdapter
     public void caseADivExp(ADivExp node)
     {
         // report error if division by zero
-        if (node.getRight().toString().matches("[^0]*[0][^0]*"))
+        if (node.getRight().toString().matches("0"))
         {
             System.out.println("Error: Attempting division by zero: " + node.getLeft().toString().trim() + "/" + node.getRight());
             fErrorPresent = true;

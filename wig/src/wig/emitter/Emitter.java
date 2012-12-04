@@ -1962,15 +1962,34 @@ public class Emitter extends DepthFirstAdapter
     @Override
     public void caseAEqExp(AEqExp node)
     {
+
+        if (typeTable.getNodeType(node.getLeft()).equals(wig.type.Type.STRING) ||
+                typeTable.getNodeType(node.getRight()).equals(wig.type.Type.STRING))
+        {
+            puts("strcmp(");
+        }
         inAEqExp(node);
         if(node.getLeft() != null)
         {
             node.getLeft().apply(this);
         }
-        puts(" == ");
+        if ((typeTable.getNodeType(node.getLeft()).equals(wig.type.Type.STRING) ||
+                typeTable.getNodeType(node.getRight()).equals(wig.type.Type.STRING)))
+        {
+            puts(", ");
+        }
+        else
+        {
+            puts(" == ");
+        }
         if(node.getRight() != null)
         {
             node.getRight().apply(this);
+        }
+        if (typeTable.getNodeType(node.getLeft()).equals(wig.type.Type.STRING) ||
+                typeTable.getNodeType(node.getRight()).equals(wig.type.Type.STRING))
+        {
+            puts(")");
         }
         outAEqExp(node);
     }
