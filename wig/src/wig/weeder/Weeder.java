@@ -261,6 +261,13 @@ public class Weeder extends DepthFirstAdapter
     public void caseASession(ASession node)
     {
         String sessionName = node.getIdentifier().toString().trim();
+        
+        if (sessionName.equals("destroy"))
+        {
+            System.out.println("A session cannot be named \"destroy\". Line no:" + node.getIdentifier().getLine());
+            fErrorPresent = true;
+        }
+        
         if(fSessionNames.contains(sessionName))
         {
             System.out.println("Error: Duplicate Session " + sessionName + " at line " + node.getIdentifier().getLine());
@@ -347,13 +354,11 @@ public class Weeder extends DepthFirstAdapter
             {
                 System.out.println("show statement not allowed in functions!");
                 fErrorPresent = true;
-                System.exit(-1);
             } 
             if (ps instanceof AExitStm)
             {
                 System.out.println("exit statement not allowed in functions!");
                 fErrorPresent = true;
-                System.exit(-1);
             }
         }
         
@@ -491,7 +496,7 @@ public class Weeder extends DepthFirstAdapter
     public void caseADivExp(ADivExp node)
     {
         // report error if division by zero
-        if (node.getRight().toString().matches("[^0]*[0][^0]*"))
+        if (node.getRight().toString().matches("0"))
         {
             System.out.println("Error: Attempting division by zero: " + node.getLeft().toString().trim() + "/" + node.getRight());
             fErrorPresent = true;
