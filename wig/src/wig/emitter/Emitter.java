@@ -26,7 +26,7 @@ import wig.type.TypeTable;
 public class Emitter extends DepthFirstAdapter
 {
     
-    private String pathToPublicHtml = "/Applications/MAMP/htdocs/wig_benchmarks_test/";
+    private String pathToPublicHtml = "/home/2010/dbhage/public_html/";
     
     private SymbolTable serviceSymbolTable;
     private SymbolTable currentSymbolTable;
@@ -88,8 +88,9 @@ public class Emitter extends DepthFirstAdapter
         }
     }
     
-    public Emitter(SymbolTable symbolTable, TypeTable typeTable, String up, String fname) throws IOException
+    public Emitter(SymbolTable symbolTable, TypeTable typeTable, String up, String fname, String ph) throws IOException
     {
+        pathToPublicHtml = ph;
         serviceSymbolTable = symbolTable;
         this.typeTable = typeTable;  
         currentSymbolTable= serviceSymbolTable;

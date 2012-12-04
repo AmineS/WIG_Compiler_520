@@ -40,6 +40,7 @@ public class Compiler
     private static CommandLine commandLine;
     private static String urlPrefix = "";
     private static String fileName = "";
+    private static String pHtml = "";
     
     public static void main(String[] args)
     {             
@@ -74,12 +75,24 @@ public class Compiler
                     }
                     else
                     {
-                        urlPrefix = file;
+                        if (urlPrefix == "")
+                        {
+                            urlPrefix = file;
+                        }
+                        else
+                        {
+                            pHtml = file;
+                        }
                     }
                 }
                 if (commandLine.hasOption("up") && urlPrefix == "")
                 {
                     System.out.println("User asked for Code Generation without providing URL prefix!");
+                    System.exit(-1);
+                }
+                if (commandLine.hasOption("ph") && pHtml == "")
+                {
+                    System.out.println("User needs to add public html path!");
                     System.exit(-1);
                 }
                 System.out.println("------- Generating output: " + fileName + "-------");
@@ -233,7 +246,7 @@ public class Compiler
             String [] split = temp.split("/");
             fileName = split[split.length-1];
             
-            Emitter em = new Emitter(symAnalyzer.getServiceSymbolTable(), typeChecker.getTypeTable(), urlPrefix, fileName);
+            Emitter em = new Emitter(symAnalyzer.getServiceSymbolTable(), typeChecker.getTypeTable(), urlPrefix, fileName, pHtml);
             em.emit(tree);
         }
     }
