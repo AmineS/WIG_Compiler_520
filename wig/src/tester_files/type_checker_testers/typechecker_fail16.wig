@@ -17,7 +17,7 @@ service
     </div>
   </body> </html>;
 
-  const html Return = <html>
+  const html Return11 = <html>
     <div align="center">
     <h1><u>Ze Vall</u></h1>
     <[allMsg]>
@@ -50,7 +50,7 @@ session Calculate()
   	{
   		show setup receive[userMsg=userMsg];
       	messages = messages + "</br><center><i>" + userMsg + "</center></i>";
-  		show plug Return [allMsg=messages] receive[another=another];
+  		show plug Return11 [allMsg=messages] receive[another=another];
   	}
   	exit exitMsg;
   }

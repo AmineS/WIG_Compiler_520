@@ -15,7 +15,7 @@ all:
 
 # to compile the code
 code: clean grammar
-	javac wig/lexer/*.java wig/parser/*.java wig/node/*.java wig/analysis/*.java wig/compiler/*.java wig/weeder/*.java wig/commons/cli/*.java wig/symboltable/*.java wig/symboltable/symbols/*.java wig/type/*.java
+	javac wig/lexer/*.java wig/parser/*.java wig/node/*.java wig/analysis/*.java wig/compiler/*.java wig/weeder/*.java wig/commons/cli/*.java wig/symboltable/*.java wig/symboltable/symbols/*.java wig/type/*.java wig/emitter/*.java 
 
 # to generate the compiler code
 grammar: wig.sablecc
@@ -23,7 +23,7 @@ grammar: wig.sablecc
 
 # to clean
 clean:	
-	rm -rf wig/*.class wig/lexer/ wig/parser/ wig/node/ wig/analysis/ wig/compiler/*.class wig/weeder/*.class
+	rm -rf wig/*.class wig/lexer/ wig/parser/ wig/node/ wig/analysis/ wig/compiler/*.class wig/weeder/*.class wig/emitter/*.class wig/commons/cli/*.class wig/symboltable/*.class wig/symboltable/symbols/*.class wig/type/*.class
 
 # tests
 check: 
