@@ -381,15 +381,12 @@ public class Emitter extends DepthFirstAdapter
                 e.apply(this);
             }
         }
-        if(currHtmlHasInputOrSelect)
-        {
-            currHtmlHasInputOrSelect = false;
-            htmlStr += "<br/><input type='hidden' name='session' value='\".$currSessionName.\"'><input type='submit' value='Submit'></br>";
-        }
+
+        htmlStr += "<br/><input type='hidden' name='session' value='\".$currSessionName.\"'><input type='submit' value='Submit'></br>";
         htmlStr += "</form>";
 
         htmlStr += "</body>";
-        htmlStr += "</html>\";\n\techo unescapeHTML($html); Kint::dump($_SESSION);\n\texit(0);\n}\n";
+        htmlStr += "</html>\";\n\techo unescapeHTML($html);\n\texit(0);\n}\n";
         outAHtml(node);
     }
 
@@ -516,10 +513,6 @@ public class Emitter extends DepthFirstAdapter
     public void caseAInputHtmlbody(AInputHtmlbody node)
     {
         inAInputHtmlbody(node);
-        if(!currHtmlHasInputOrSelect)
-        {
-            currHtmlHasInputOrSelect = true; 
-        }
         htmlStr += "<"  + node.getInput().getText() + " ";
         {
             List<PInputattr> copy = new ArrayList<PInputattr>(node.getInputattr());
@@ -544,10 +537,6 @@ public class Emitter extends DepthFirstAdapter
     public void caseASelectHtmlbody(ASelectHtmlbody node)
     {
         inASelectHtmlbody(node);
-        if(!currHtmlHasInputOrSelect)
-        {
-            currHtmlHasInputOrSelect = true; 
-        }
         if(node.getSelectTag() != null)
         {
             node.getSelectTag().apply(this);
@@ -1313,6 +1302,7 @@ public class Emitter extends DepthFirstAdapter
         inAExitStm(node);
         if(node.getDocument() != null)
         {
+            puts("writeGlobals();\n");
             node.getDocument().apply(this);
         }
         outAExitStm(node);
@@ -1375,7 +1365,15 @@ public class Emitter extends DepthFirstAdapter
         puts(")\n");
         if(node.getStm() != null)
         {
+            if(!(node.getStm() instanceof ACompStm))
+            {
+                putOpenBrace();
+            }
             node.getStm().apply(this);
+            if(!(node.getStm() instanceof ACompStm))
+            {
+                putCloseBrace();
+            }
         }
         outAIfStm(node);
     }
@@ -1401,12 +1399,29 @@ public class Emitter extends DepthFirstAdapter
         puts(")\n");
         if(node.getThenStm() != null)
         {
+            if(!(node.getThenStm() instanceof ACompStm))
+            {
+                putOpenBrace();
+            }
             node.getThenStm().apply(this);
+            if(!(node.getThenStm() instanceof ACompStm))
+            {
+                putCloseBrace();
+            }
+            
         }
         puts("else");
         if(node.getElseStm() != null)
         {
+            if(!(node.getElseStm() instanceof ACompStm))
+            {
+                putOpenBrace();
+            }
             node.getElseStm().apply(this);
+            if(!(node.getElseStm() instanceof ACompStm))
+            {
+                putCloseBrace();
+            }
         }
         outAIfelseStm(node);
     }
@@ -1443,7 +1458,15 @@ public class Emitter extends DepthFirstAdapter
         puts(")\n");
         if(node.getStm() != null)
         {
+            if(!(node.getStm() instanceof ACompStm))
+            {
+                putOpenBrace();
+            }
             node.getStm().apply(this);
+            if(!(node.getStm() instanceof ACompStm))
+            {
+                putCloseBrace();
+            }
         }
         printLocalsState();
         puts("[\"" + label + "\"][\"skip\"]=TRUE;");
@@ -1767,15 +1790,32 @@ public class Emitter extends DepthFirstAdapter
             {
                 ASimpleLvalue lValue = (ASimpleLvalue) leftNode;
                 variableName = lValue.getIdentifier().getText().trim();
-
-                puts("$_SESSION[\"" + currentSessionName + "\"]['locals']['"+ variableName +"'] = ");                
+                String scope = "";
+                if (globalVariablesMap.get(variableName) != null)
+                {
+                    puts("$_SESSION['globals']['"+ variableName +"'] = ");  
+                }
+                else
+                {
+                    puts("$_SESSION[\"" + currentSessionName + "\"]['locals']['"+ variableName +"'] = ");  
+                }
+              
             }
             else if(leftNode instanceof AQualifiedLvalue)
             {
                 AQualifiedLvalue lQValue = (AQualifiedLvalue) leftNode;
                 tupleName = lQValue.getLeft().getText().trim();
+                String scope = "";
+                if (globalVariablesMap.get(tupleName) != null)
+                {
+                    scope = "globals";
+                }
+                else
+                {
+                    scope = "locals";
+                }
                 tupleField = lQValue.getRight().getText().trim();
-                puts("$_SESSION[\"" + currentSessionName + "\"]['locals']['"+ tupleName +"']['" + tupleField + "'] = ");
+                puts("$_SESSION[\"" + currentSessionName + "\"]['"+ scope + "']['"+ tupleName +"']['" + tupleField + "'] = ");
                 isTuple = true;                
             }
         }
