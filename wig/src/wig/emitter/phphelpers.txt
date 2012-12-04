@@ -1,4 +1,4 @@
-
+require '../kint-master/Kint.class.php';
 function unescapeHTML($html)
 {
     return strtr($html,Array("&lt;"=>"<","&amp;"=>"", "quot;"=>'\'', "&nbsp;" => " ", "&gt" => ">"));
@@ -21,7 +21,10 @@ function readGlobals()
     $GLOBALS_FILE = 'globals.json';
     $line = file_get_contents($GLOBALS_FILE);
     $json_a = json_decode($line, TRUE);
-    $_SESSION['globals'] = $json_a['globals']; 
+    if(!empty($json_a))
+    {
+        $_SESSION['globals'] = $json_a['globals']; 
+    }
 }
 
 function writeGlobals()
@@ -35,12 +38,20 @@ function writeGlobals()
 
 function saveLocalsState($label, $currentSession)
 {
-	$_SESSION[$currentSession]["LOCALS_STATES"][$label]["LOCALS"] = $_SESSION[$currentSession]["LOCALS"];
-	$_SESSION[$currentSession]["LOCALS_STATES"][$label]["GLOBALS"] = $_SESSION["GLOBALS"];
+	if(!isset($_SESSION[$currentSession]["locals_states"]))
+	{
+		$_SESSION[$currentSession]["locals_states"] = array();
+		if(!isset($_SESSION[$currentSession]["locals_states"][$label]))
+		{
+			$_SESSION[$currentSession]["locals_states"][$label] = array();
+		}
+	}
+	$_SESSION[$currentSession]["locals_states"][$label]["locals"] = $_SESSION[$currentSession]["locals"];
+	$_SESSION[$currentSession]["locals_states"][$label]["globals"] = $_SESSION["globals"];
 }
 
 function loadLocalsState($label, $currentSession)
 {
-	$_SESSION[$currentSession]["LOCALS"] = 	$_SESSION[$currentSession]["LOCALS_STATES"][$label]["LOCALS"];
-	$_SESSION["GLOBALS"] = $_SESSION[$currentSession]["LOCALS_STATES"][$label]["GLOBALS"];
+	$_SESSION[$currentSession]["locals"] = 	$_SESSION[$currentSession]["locals_states"][$label]["locals"];
+	$_SESSION["globals"] = $_SESSION[$currentSession]["locals_states"][$label]["globals"];
 }
