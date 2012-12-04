@@ -1470,6 +1470,7 @@ public class Emitter extends DepthFirstAdapter
         }
         printLocalsState();
         puts("[\"" + label + "\"][\"skip\"]=TRUE;");
+        puts("saveLocalsState(\""+label+"\",\""+currentSessionName+"\");\n");
         putCloseBrace();
         puts("else\n");
         putOpenBrace();
@@ -3016,20 +3017,63 @@ public class Emitter extends DepthFirstAdapter
     
     private void initializeWhileState(String label)
     {
+        puts("if(!isset(");
+        printLocalsState();
+        puts("[\""+label+"\"]");
+        puts("[\"locals\"]))\n");
+        putOpenBrace();
+        
         printLocalsState();
         puts("[\""+label+"\"]");
         puts("[\"locals\"]=array();\n");
-     
+ 
+        putCloseBrace();
+        
+        puts("if(!isset(");
+        printLocalsState();
+        puts("[\""+label+"\"]");
+        puts("[\"globals\"]))\n");
+        putOpenBrace();
+        
         printLocalsState();
         puts("[\""+label+"\"]");
         puts("[\"globals\"]=array();\n");
+ 
+        putCloseBrace();
+        
+        puts("if(!isset(");
+        printLocalsState();
+        puts("[\""+label+"\"]");
+        puts("[\"skip\"]))\n");
+        putOpenBrace();
+        
+        printLocalsState();
+        puts("[\""+label+"\"]");
+        puts("[\"skip\"]=FALSE;\n");
+ 
+        putCloseBrace();
+        
+        
+        puts("if(!isset(");
+        printLocalsState();
+        puts("[\""+label+"\"]");
+        puts("[\"first\"]))\n");
+        putOpenBrace();
+        
+        printLocalsState();
+        puts("[\""+label+"\"]");
+        puts("[\"first\"]=TRUE;\n");
+ 
+        putCloseBrace();
+        
+/*
         
         printLocalsState();
         puts("[\""+label+"\"]");
         puts("[\"skip\"]=false;\n");
         printLocalsState();
         puts("[\""+label+"\"]");
-        puts("[\"first\"]=true;\n");
+        puts("[\"first\"]=true;\n");*/
     }  
     private void printLocalsState()
     {
