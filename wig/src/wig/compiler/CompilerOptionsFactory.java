@@ -14,6 +14,7 @@ public class CompilerOptionsFactory
     private static Option typePrinting;
     private static Option codeEmission;
     private static Option urlPrefix;
+    private static Option publicHtml;
     
     /**
      * get all options
@@ -42,6 +43,7 @@ public class CompilerOptionsFactory
         typePrinting = new Option("tp", false, "pretty prints the types of each expression");
         codeEmission = new Option("cg", false, "generates code");
         urlPrefix = new Option("up", false, "pass the urlprefix e.g:-up localhost:1111.22 ...");        
+        publicHtml = new Option("ph", false, "the path to your public_html");
         
         options.addOption(help);
         options.addOption(disableWeeder);
@@ -52,5 +54,6 @@ public class CompilerOptionsFactory
         options.addOption(typePrinting);
         options.addOption(codeEmission);
         options.addOption(urlPrefix);
+        options.addOption(publicHtml);
     }
 }
